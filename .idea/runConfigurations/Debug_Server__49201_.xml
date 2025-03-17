@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Debug Server (49201)" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="docker-language-server" />
+    <working_directory value="$PROJECT_DIR$" />
+    <parameters value="start --address :49201" />
+    <kind value="PACKAGE" />
+    <package value="github.com/docker/docker-language-server/cmd/docker-language-server" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$/cmd/docker-language-server/main.go" />
+    <method v="2" />
+  </configuration>
+</component>

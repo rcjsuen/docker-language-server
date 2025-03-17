@@ -1,0 +1,1 @@
+The code in this folder was forked over from `tliron/glsp` on GitHub. The repository can be found [here](https://github.com/tliron/glsp) and the Git commit that the source of the fork came from was [`d7cfc1c7abca7d5d8addb034e99b4cb7c75e5c1e`](https://github.com/tliron/glsp/commit/d7cfc1c7abca7d5d8addb034e99b4cb7c75e5c1e).
