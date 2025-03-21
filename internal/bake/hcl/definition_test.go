@@ -184,6 +184,21 @@ func TestDefinition(t *testing.T) {
 			},
 		},
 		{
+			name:      "group block's targets attribute points to a valid target",
+			content:   "target \"t1\" {}\ngroup \"g1\" {\n  targets = [ \"t1\" ]\n}",
+			line:      2,
+			character: 16,
+			links: []protocol.Location{
+				{
+					URI: bakeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 8},
+						End:   protocol.Position{Line: 0, Character: 10},
+					},
+				},
+			},
+		},
+		{
 			name:      "inherits attribute points to an unquoted variable",
 			content:   "variable \"var\" {}\ntarget \"default\" {\n  inherits = [ var ]\n}",
 			line:      2,
