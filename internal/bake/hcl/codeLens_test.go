@@ -36,7 +36,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "build",
 								"target": "first",
 								"cwd":    "/tmp",
@@ -54,7 +53,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "check",
 								"target": "first",
 								"cwd":    "/tmp",
@@ -72,7 +70,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "print",
 								"target": "first",
 								"cwd":    "/tmp",
@@ -96,7 +93,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "build",
 								"target": "g1",
 								"cwd":    "/tmp",
@@ -114,7 +110,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "check",
 								"target": "g1",
 								"cwd":    "/tmp",
@@ -132,7 +127,6 @@ func TestCodeLens(t *testing.T) {
 						Command: types.BakeBuildCommandId,
 						Arguments: []any{
 							map[string]string{
-								"file":   "/tmp/docker-bake.hcl",
 								"call":   "print",
 								"target": "g1",
 								"cwd":    "/tmp",
