@@ -74,7 +74,7 @@ func TestCollectDiagnostics(t *testing.T) {
 			content: "target \"t1\" {\n  network = \"\"\n}",
 			diagnostics: []protocol.Diagnostic{
 				{
-					Message:  "network attribute must be one of: default, host, or none",
+					Message:  "network attribute must be either: default, host, or none",
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
@@ -89,7 +89,7 @@ func TestCollectDiagnostics(t *testing.T) {
 			content: "target \"t1\" {\n  entitlements = [ \"\" ]\n}",
 			diagnostics: []protocol.Diagnostic{
 				{
-					Message:  "entitlements attribute must be one of: network.host or security.insecure",
+					Message:  "entitlements attribute must be either: network.host or security.insecure",
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
@@ -114,7 +114,7 @@ func TestCollectDiagnostics(t *testing.T) {
 			content: "target \"t1\" {\n  args = {\n    missing = \"value\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{
 				{
-					Message:  "'missing' not defined as an ARG in the Dockerfile",
+					Message:  "'missing' not defined as an ARG in your Dockerfile",
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
@@ -134,7 +134,7 @@ func TestCollectDiagnostics(t *testing.T) {
 			content: "target \"t1\" {\n  target = \"nonexistent\"\n}",
 			diagnostics: []protocol.Diagnostic{
 				{
-					Message:  "target could not be found in the Dockerfile",
+					Message:  "target could not be found in your Dockerfile",
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
