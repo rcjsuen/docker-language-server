@@ -3,7 +3,7 @@ module github.com/docker/docker-language-server
 go 1.23.7
 
 require (
-	github.com/docker/buildx v0.21.3
+	github.com/docker/buildx v0.22.0
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
 	github.com/hashicorp/hcl/v2 v2.23.0
@@ -44,7 +44,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.0 // indirect
-	github.com/compose-spec/compose-go/v2 v2.4.7 // indirect
+	github.com/compose-spec/compose-go/v2 v2.4.8 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd/api v1.8.0 // indirect
 	github.com/containerd/containerd/v2 v2.0.3 // indirect
@@ -58,9 +58,9 @@ require (
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
-	github.com/docker/cli v28.0.0-rc.2+incompatible // indirect
+	github.com/docker/cli v28.0.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v28.0.0-rc.2+incompatible // indirect
+	github.com/docker/docker v28.0.1+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.8.2 // indirect
 	github.com/docker/go v1.5.1-1.0.20160303222718-d30aec9fd63c // indirect
 	github.com/docker/go-connections v0.5.0 // indirect
