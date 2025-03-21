@@ -58,7 +58,6 @@ func createCodeLens(title, filename, call, target string, rng protocol.Range) pr
 			Command: types.BakeBuildCommandId,
 			Arguments: []any{
 				map[string]string{
-					"file":   filename,
 					"call":   call,
 					"target": target,
 					"cwd":    filepath.Dir(types.StripLeadingSlash(filename)),
