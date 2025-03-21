@@ -526,6 +526,34 @@ func TestDefinition(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "group block with an invalid inherits attribute should not return a result",
+			content:   "target t1 {}\ngroup g1 { inherits = [\"t1\"] }",
+			line:      1,
+			character: 25,
+			links:     nil,
+		},
+		{
+			name:      "variable block with an invalid inherits attribute should not return a result",
+			content:   "target t1 {}\nvariable v1 { inherits = [\"t1\"] }",
+			line:      1,
+			character: 28,
+			links:     nil,
+		},
+		{
+			name:      "args key should not reference in a group block",
+			content:   "group g1 {\n  args = {\n    var = \"value\"\n  }\n}",
+			line:      2,
+			character: 6,
+			links:     nil,
+		},
+		{
+			name:      "args key should not reference in a variable block",
+			content:   "variable var {\n  args = {\n    var = \"value\"\n  }\n}",
+			line:      2,
+			character: 6,
+			links:     nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -684,6 +712,38 @@ func TestDefinitionVariedResults(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name:      "no-cache-filter attribute should not work in a group block",
+			content:   "group \"g1\" { no-cache-filter = [\"stage\"] }",
+			line:      0,
+			character: 39,
+			locations: nil,
+			links:     nil,
+		},
+		{
+			name:      "no-cache-filter attribute should not work in a variable block",
+			content:   "variable \"var\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\" }",
+			line:      2,
+			character: 13,
+			locations: nil,
+			links:     nil,
+		},
+		{
+			name:      "target attribute should not work in a group block",
+			content:   "group \"g1\" { target = \"stage\" }",
+			line:      0,
+			character: 25,
+			locations: nil,
+			links:     nil,
+		},
+		{
+			name:      "target attribute should not work in a variable block",
+			content:   "variable \"var\" { target = \"stage\" }",
+			line:      0,
+			character: 30,
+			locations: nil,
+			links:     nil,
 		},
 	}
 

@@ -127,7 +127,7 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 			if isInsideRange(e.Range(), position) {
 				if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
 					if templateExpr.IsStringLiteral() {
-						if attribute.Name == "inherits" {
+						if attribute.Name == "inherits" && sourceBlock.Type == "target" {
 							value, _ := templateExpr.Value(&hcl.EvalContext{})
 							target := value.AsString()
 							return CalculateBlockLocation(input, body, documentURI, "target", target, false)
@@ -210,7 +210,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 	if objectConsExpression, ok := expression.(*hclsyntax.ObjectConsExpr); ok {
 		for _, item := range objectConsExpression.Items {
 			if isInsideRange(item.KeyExpr.Range(), position) {
-				if attributeName == "args" {
+				if attributeName == "args" && sourceBlock.Type == "target" {
 					start := item.KeyExpr.Range().Start.Byte
 					end := item.KeyExpr.Range().End.Byte
 					if LiteralValue(item.KeyExpr) {
