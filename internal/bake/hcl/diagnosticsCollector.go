@@ -187,7 +187,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 								diagnostic := checkStringLiteral(
 									source,
 									value.AsString(),
-									"entitlements attribute must be one of: network.host or security.insecure",
+									"entitlements attribute must be either: network.host or security.insecure",
 									[]string{"network.host", "security.insecure"},
 									templateExpr.SrcRange,
 								)
@@ -208,7 +208,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 						diagnostic := checkStringLiteral(
 							source,
 							value.AsString(),
-							"network attribute must be one of: default, host, or none",
+							"network attribute must be either: default, host, or none",
 							[]string{"default", "host", "none"},
 							templateExpr.SrcRange,
 						)
@@ -275,7 +275,7 @@ func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(doc document.Document, inp
 			diagnostic := checkStringLiteral(
 				source,
 				arg,
-				fmt.Sprintf("'%v' not defined as an ARG in the Dockerfile", arg),
+				fmt.Sprintf("'%v' not defined as an ARG in your Dockerfile", arg),
 				args,
 				item.KeyExpr.Range(),
 			)
@@ -311,7 +311,7 @@ func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(doc document.Document, b
 
 		if !found {
 			return &protocol.Diagnostic{
-				Message:  "target could not be found in the Dockerfile",
+				Message:  "target could not be found in your Dockerfile",
 				Source:   types.CreateStringPointer(source),
 				Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 				Range: protocol.Range{
