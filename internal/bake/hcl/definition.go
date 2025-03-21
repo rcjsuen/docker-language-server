@@ -127,7 +127,11 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 			if isInsideRange(e.Range(), position) {
 				if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
 					if templateExpr.IsStringLiteral() {
-						if attribute.Name == "inherits" && sourceBlock.Type == "target" {
+						// look up a target reference if it's inside a
+						// target block's inherits attribute, or a
+						// group block's targets attribute
+						if (sourceBlock.Type == "target" && attribute.Name == "inherits") ||
+							(sourceBlock.Type == "group" && attribute.Name == "targets") {
 							value, _ := templateExpr.Value(&hcl.EvalContext{})
 							target := value.AsString()
 							return CalculateBlockLocation(input, body, documentURI, "target", target, false)
