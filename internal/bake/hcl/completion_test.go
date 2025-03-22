@@ -199,7 +199,7 @@ func TestCompletion(t *testing.T) {
 			},
 		},
 		{
-			name:              "target attribute in target block returns nothing for empty dockerfile-inline",
+			name:              "target attribute in target block returns content from manager (instead of what is on disk)",
 			content:           "target \"api\" {\n  target = \"\"\n}",
 			line:              1,
 			dockerfileContent: "FROM scratch AS override",
