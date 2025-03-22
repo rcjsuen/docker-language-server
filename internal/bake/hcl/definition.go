@@ -377,7 +377,7 @@ func ParseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {
 }
 
 func OpenDockerfile(ctx context.Context, manager *document.Manager, path string) ([]byte, []*parser.Node) {
-	doc := manager.Get(ctx, uri.URI(fmt.Sprintf("file://%v", path)))
+	doc := manager.Get(ctx, uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))))
 	if doc != nil {
 		if dockerfile, ok := doc.(document.DockerfileDocument); ok {
 			return dockerfile.Input(), dockerfile.Nodes()
