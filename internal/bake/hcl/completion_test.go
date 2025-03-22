@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -18,7 +19,7 @@ import (
 func TestCompletion(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	projectRoot := path.Join(wd, "..", "..", "..")
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 	completionTestFolderPath := path.Join(projectRoot, "testdata", "completion")
 
 	testCases := []struct {
