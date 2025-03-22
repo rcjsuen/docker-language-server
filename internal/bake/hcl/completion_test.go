@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -340,9 +341,15 @@ func TestCompletion(t *testing.T) {
 		},
 	}
 
-	bakeFilePath := path.Join(completionTestFolderPath, "docker-bake.hcl")
-	bakeFileURI := uri.URI(fmt.Sprintf("file://%v", bakeFilePath))
-	dockerfileURI := uri.URI(fmt.Sprintf("file://%v", path.Join(completionTestFolderPath, "Dockerfile")))
+	bakeFilePath := filepath.Join(completionTestFolderPath, "docker-bake.hcl")
+	bakeFilePath = filepath.ToSlash(bakeFilePath)
+
+	dockerfilePath := filepath.Join(completionTestFolderPath, "Dockerfile")
+	dockerfilePath = filepath.ToSlash(dockerfilePath)
+
+	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/")))
+	dockerfileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/")))
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
