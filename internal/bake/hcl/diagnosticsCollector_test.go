@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -197,7 +198,7 @@ target "lint2" {
 
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	projectRoot := path.Join(wd, "..", "..", "..")
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 	diagnosticsTestFolderPath := path.Join(projectRoot, "testdata", "diagnostics")
 	bakeFilePath := path.Join(diagnosticsTestFolderPath, "docker-bake.hcl")
 	bakeFileURI := uri.URI(fmt.Sprintf("file://%v", bakeFilePath))

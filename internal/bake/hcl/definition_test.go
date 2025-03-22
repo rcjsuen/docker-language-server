@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -44,7 +45,7 @@ func TestLocalDockerfileForWindows(t *testing.T) {
 func TestDefinition(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	projectRoot := path.Join(wd, "..", "..", "..")
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 	definitionTestFolderPath := path.Join(projectRoot, "testdata", "definition")
 	dockerfilePath := path.Join(definitionTestFolderPath, "Dockerfile")
 	dockerfileURI := fmt.Sprintf("file://%v", dockerfilePath)
@@ -585,7 +586,7 @@ func TestDefinition(t *testing.T) {
 func TestDefinitionVariedResults(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
-	projectRoot := path.Join(wd, "..", "..", "..")
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 	definitionTestFolderPath := path.Join(projectRoot, "testdata", "definition")
 	dockerfilePath := path.Join(definitionTestFolderPath, "Dockerfile")
 	dockerfileURI := fmt.Sprintf("file://%v", dockerfilePath)
