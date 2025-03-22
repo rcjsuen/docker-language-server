@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -215,8 +216,10 @@ func TestInlineCompletion(t *testing.T) {
 		},
 	}
 
-	temporaryDockerfile := uri.URI(fmt.Sprintf("file://%v", path.Join(os.TempDir(), "Dockerfile")))
-	temporaryBakeFile := uri.URI(fmt.Sprintf("file://%v", path.Join(os.TempDir(), "docker-bake.hcl")))
+	dockerfilePath := filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile"))
+	dockerBakePath := filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl"))
+	temporaryDockerfile := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/")))
+	temporaryBakeFile := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerBakePath, "/")))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
