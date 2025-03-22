@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -46,11 +46,16 @@ func TestDefinition(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
-	definitionTestFolderPath := path.Join(projectRoot, "testdata", "definition")
-	dockerfilePath := path.Join(definitionTestFolderPath, "Dockerfile")
-	dockerfileURI := fmt.Sprintf("file://%v", dockerfilePath)
-	bakeFilePath := path.Join(definitionTestFolderPath, "docker-bake.hcl")
-	bakeFileURI := fmt.Sprintf("file://%v", bakeFilePath)
+	definitionTestFolderPath := filepath.Join(projectRoot, "testdata", "definition")
+
+	dockerfilePath := filepath.Join(definitionTestFolderPath, "Dockerfile")
+	bakeFilePath := filepath.Join(definitionTestFolderPath, "docker-bake.hcl")
+
+	dockerfilePath = filepath.ToSlash(dockerfilePath)
+	bakeFilePath = filepath.ToSlash(bakeFilePath)
+
+	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/"))
+	bakeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/"))
 
 	testCases := []struct {
 		name      string
@@ -587,11 +592,16 @@ func TestDefinitionVariedResults(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
-	definitionTestFolderPath := path.Join(projectRoot, "testdata", "definition")
-	dockerfilePath := path.Join(definitionTestFolderPath, "Dockerfile")
-	dockerfileURI := fmt.Sprintf("file://%v", dockerfilePath)
-	bakeFilePath := path.Join(definitionTestFolderPath, "docker-bake.hcl")
-	bakeFileURI := fmt.Sprintf("file://%v", bakeFilePath)
+	definitionTestFolderPath := filepath.Join(projectRoot, "testdata", "definition")
+
+	dockerfilePath := filepath.Join(definitionTestFolderPath, "Dockerfile")
+	bakeFilePath := filepath.Join(definitionTestFolderPath, "docker-bake.hcl")
+
+	dockerfilePath = filepath.ToSlash(dockerfilePath)
+	bakeFilePath = filepath.ToSlash(bakeFilePath)
+
+	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/"))
+	bakeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/"))
 
 	testCases := []struct {
 		name      string
