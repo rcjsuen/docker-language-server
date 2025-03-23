@@ -2,15 +2,23 @@ package hcl
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestCodeLens(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), "codeLensTests")
+	bakeFilePath := filepath.Join(testsFolder, "docker-bake.hcl")
+	uriString := fmt.Sprintf("file:///%v", filepath.ToSlash(bakeFilePath))
+
 	testCases := []struct {
 		name     string
 		content  string
@@ -38,7 +46,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "build",
 								"target": "first",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -55,7 +63,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "check",
 								"target": "first",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -72,7 +80,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "print",
 								"target": "first",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -95,7 +103,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "build",
 								"target": "g1",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -112,7 +120,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "check",
 								"target": "g1",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -129,7 +137,7 @@ func TestCodeLens(t *testing.T) {
 							map[string]string{
 								"call":   "print",
 								"target": "g1",
-								"cwd":    "/tmp",
+								"cwd":    testsFolder,
 							},
 						},
 					},
@@ -144,8 +152,8 @@ func TestCodeLens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewBakeHCLDocument("file:///tmp/docker-bake.hcl", 1, []byte(tc.content))
-			codeLens, err := CodeLens(context.Background(), "file:///tmp/docker-bake.hcl", doc)
+			doc := document.NewBakeHCLDocument(uri.URI(uriString), 1, []byte(tc.content))
+			codeLens, err := CodeLens(context.Background(), uriString, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.codeLens, codeLens)
 		})
