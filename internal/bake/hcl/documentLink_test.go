@@ -18,7 +18,7 @@ func TestDocumentLink(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), "documentLinkTests")
 	userFolder := filepath.Join(testsFolder, "user")
 	bakeFilePath := filepath.Join(userFolder, "docker-bake.hcl")
-	bakeFileStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/"))
+	bakeFileStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(bakeFilePath), "/"))
 
 	testCases := []struct {
 		name      string
@@ -90,7 +90,7 @@ func TestDocumentLink(t *testing.T) {
 			} else {
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
-					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(tc.path, "/"))),
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
 					Tooltip: types.CreateStringPointer(tc.path),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
