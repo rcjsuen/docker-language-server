@@ -3,8 +3,8 @@ package hcl
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -199,9 +199,9 @@ target "lint2" {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
-	diagnosticsTestFolderPath := path.Join(projectRoot, "testdata", "diagnostics")
-	bakeFilePath := path.Join(diagnosticsTestFolderPath, "docker-bake.hcl")
-	bakeFileURI := uri.URI(fmt.Sprintf("file://%v", bakeFilePath))
+	diagnosticsTestFolderPath := filepath.Join(projectRoot, "testdata", "diagnostics")
+	bakeFilePath := filepath.Join(diagnosticsTestFolderPath, "docker-bake.hcl")
+	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(bakeFilePath), "/")))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
