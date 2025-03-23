@@ -2,6 +2,10 @@ package compose
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -11,6 +15,12 @@ import (
 )
 
 func TestDocumentLink(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), "composeDocumentLinkTests")
+	composeFilePath := filepath.Join(testsFolder, "docker-compose.yml")
+	referencedFilePath := filepath.Join(testsFolder, "file.yml")
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(composeFilePath), "/"))
+	referencedFileStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(referencedFilePath), "/"))
+
 	testCases := []struct {
 		name    string
 		content string
@@ -26,8 +36,8 @@ func TestDocumentLink(t *testing.T) {
 						Start: protocol.Position{Line: 1, Character: 4},
 						End:   protocol.Position{Line: 1, Character: 12},
 					},
-					Target:  types.CreateStringPointer("file:///home/user/file.yml"),
-					Tooltip: types.CreateStringPointer("/home/user/file.yml"),
+					Target:  types.CreateStringPointer(referencedFileStringURI),
+					Tooltip: types.CreateStringPointer(referencedFilePath),
 				},
 			},
 		},
@@ -36,7 +46,7 @@ func TestDocumentLink(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			doc := document.NewComposeDocument("docker-compose.yml", 1, []byte(tc.content))
-			links, err := DocumentLink(context.Background(), "file:///home/user/docker-compose.yml.hcl", doc)
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)
 		})
