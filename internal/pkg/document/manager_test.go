@@ -2,8 +2,10 @@ package document
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -12,20 +14,14 @@ import (
 	"go.lsp.dev/uri"
 )
 
-func TestReadLoadResolve(t *testing.T) {
-	f := newFixture(t)
-	require.NoError(t, os.Mkdir("exts", 0755))
-	cwd, err := os.Getwd()
-	require.NoError(t, err)
-	extsPath := filepath.Join(cwd, "exts")
-	WithReadDocumentFunc(func(u uri.URI) ([]byte, error) {
-		file := u.Filename()
-		return ReadDocument(uri.File(file))
-	})(f.m)
+func TestReadDocument(t *testing.T) {
+	testFile := filepath.Join(os.TempDir(), "TestReadDocument")
+	os.WriteFile(testFile, []byte("hello world"), 0644)
 
-	hello := filepath.Join(extsPath, "hello")
-	require.NoError(t, os.WriteFile(hello, []byte(`hello = lambda: print('Hi')`), 0644))
-	require.NoError(t, os.WriteFile("doc", []byte("load('ext://hello', 'hello')\nhello()"), 0644))
+	ReadDocument(uri.URI(""))
+	contents, err := ReadDocument(uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(testFile), "/"))))
+	require.NoError(t, err)
+	require.Equal(t, "hello world", string(contents))
 }
 
 func TestURIfilename(t *testing.T) {
