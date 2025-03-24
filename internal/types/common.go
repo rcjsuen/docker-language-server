@@ -3,6 +3,8 @@ package types
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -73,4 +75,12 @@ func StripLeadingSlash(folder string) string {
 		return folder[1:]
 	}
 	return folder
+}
+
+func AbsolutePath(documentURL *url.URL, path string) (string, error) {
+	documentPath := documentURL.Path
+	if runtime.GOOS == "windows" {
+		documentPath = documentURL.Path[1:]
+	}
+	return filepath.Abs(filepath.Join(filepath.Dir(documentPath), path))
 }

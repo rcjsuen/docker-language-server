@@ -8,9 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"os/exec"
-	"path"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 
@@ -408,11 +406,7 @@ func ParseDockerfileFromBakeOutput(documentURI uri.URI, target string) (string, 
 			dockerfilePath := *block.Dockerfile
 			dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
 			dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-			if runtime.GOOS == "windows" {
-				dockerfilePath, err = filepath.Abs(path.Join(url.Path[1:], fmt.Sprintf("../%v", dockerfilePath)))
-			} else {
-				dockerfilePath, err = filepath.Abs(path.Join(url.Path, fmt.Sprintf("../%v", dockerfilePath)))
-			}
+			dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
 			if err != nil {
 				return "", nil
 			}

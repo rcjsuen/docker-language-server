@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"path"
 	"path/filepath"
-	"runtime"
+	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -23,20 +22,12 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, document docume
 	results, _ := DocumentSymbol(ctx, document)
 	for _, result := range results {
 		if symbol, ok := result.(*protocol.DocumentSymbol); ok && symbol.Kind == protocol.SymbolKindModule {
-			var abs, tooltip string
-			if runtime.GOOS == "windows" {
-				abs, err = filepath.Abs(path.Join(url.Path[1:], fmt.Sprintf("../%v", symbol.Name)))
-				tooltip = abs
-				abs = "/" + filepath.ToSlash(abs)
-			} else {
-				abs, err = filepath.Abs(path.Join(url.Path, fmt.Sprintf("../%v", symbol.Name)))
-				tooltip = abs
-			}
+			abs, err := types.AbsolutePath(url, symbol.Name)
 			if err == nil {
 				links = append(links, protocol.DocumentLink{
 					Range:   symbol.Range,
-					Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file://%v", abs))),
-					Tooltip: types.CreateStringPointer(tooltip),
+					Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(abs), "/")))),
+					Tooltip: types.CreateStringPointer(abs),
 				})
 			}
 		}

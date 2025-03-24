@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/moby/buildkit/frontend/dockerfile/parser"
@@ -21,10 +20,7 @@ import (
 )
 
 func LocalDockerfile(u *url.URL) (string, error) {
-	if runtime.GOOS == "windows" {
-		return filepath.Abs(path.Join(u.Path[1:], "../Dockerfile"))
-	}
-	return filepath.Abs(path.Join(u.Path, "../Dockerfile"))
+	return types.AbsolutePath(u, "Dockerfile")
 }
 
 func ParseReferencedDockerfile(documentURI uri.URI, document document.BakeHCLDocument, hclLine, hclCharacter int) (string, error) {
@@ -50,11 +46,7 @@ func ParseReferencedDockerfile(documentURI uri.URI, document document.BakeHCLDoc
 				dockerfilePath = string(input[attribute.Expr.Range().Start.Byte:attribute.Expr.Range().End.Byte])
 				dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
 				dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-				if runtime.GOOS == "windows" {
-					dockerfilePath, err = filepath.Abs(path.Join(url.Path[1:], fmt.Sprintf("../%v", dockerfilePath)))
-				} else {
-					dockerfilePath, err = filepath.Abs(path.Join(url.Path, fmt.Sprintf("../%v", dockerfilePath)))
-				}
+				dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
 				if err != nil {
 					break
 				}
@@ -171,15 +163,12 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 							End:   protocol.Position{Line: uint32(child.EndLine) - 1, Character: uint32(len(lines[child.EndLine-1]))},
 						}
 
-						if runtime.GOOS == "windows" {
-							dockerfilePath = "/" + filepath.ToSlash(dockerfilePath)
-						}
-
+						linkURI := protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/")))
 						if !definitionLinkSupport {
 							return []protocol.Location{
 								{
 									Range: targetRange,
-									URI:   protocol.URI(fmt.Sprintf("file://%v", dockerfilePath)),
+									URI:   linkURI,
 								},
 							}
 						}
@@ -192,7 +181,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 								},
 								TargetRange:          targetRange,
 								TargetSelectionRange: targetRange,
-								TargetURI:            protocol.URI(fmt.Sprintf("file://%v", dockerfilePath)),
+								TargetURI:            linkURI,
 							},
 						}
 					}
@@ -236,16 +225,13 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 								}
 
 								if value == arg {
-									if runtime.GOOS == "windows" {
-										dockerfilePath = "/" + filepath.ToSlash(dockerfilePath)
-									}
 									return []protocol.Location{
 										{
 											Range: protocol.Range{
 												Start: protocol.Position{Line: uint32(node.StartLine) - 1, Character: 0},
 												End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(len(lines[node.EndLine-1]))},
 											},
-											URI: protocol.URI(fmt.Sprintf("file://%v", dockerfilePath)),
+											URI: protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
 										},
 									}
 								}

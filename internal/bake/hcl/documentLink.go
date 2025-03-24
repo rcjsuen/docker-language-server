@@ -5,9 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -39,23 +37,15 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, document docume
 
 				dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
 				dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-				var tooltip string
-				if runtime.GOOS == "windows" {
-					dockerfilePath, err = filepath.Abs(path.Join(url.Path[1:], fmt.Sprintf("../%v", dockerfilePath)))
-					tooltip = dockerfilePath
-					dockerfilePath = "/" + filepath.ToSlash(dockerfilePath)
-				} else {
-					dockerfilePath, err = filepath.Abs(path.Join(url.Path, fmt.Sprintf("../%v", dockerfilePath)))
-					tooltip = dockerfilePath
-				}
+				dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
 				if err == nil {
 					links = append(links, protocol.DocumentLink{
 						Range: protocol.Range{
 							Start: protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().Start.Column)},
 							End:   protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().End.Column - 2)},
 						},
-						Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file://%v", dockerfilePath))),
-						Tooltip: types.CreateStringPointer(tooltip),
+						Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/")))),
+						Tooltip: types.CreateStringPointer(dockerfilePath),
 					})
 				}
 			}
