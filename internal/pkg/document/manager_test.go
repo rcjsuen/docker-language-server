@@ -16,9 +16,9 @@ import (
 
 func TestReadDocument(t *testing.T) {
 	testFile := filepath.Join(os.TempDir(), "TestReadDocument")
-	os.WriteFile(testFile, []byte("hello world"), 0644)
+	err := os.WriteFile(testFile, []byte("hello world"), 0644)
+	require.NoError(t, err)
 
-	ReadDocument(uri.URI(""))
 	contents, err := ReadDocument(uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(testFile), "/"))))
 	require.NoError(t, err)
 	require.Equal(t, "hello world", string(contents))
@@ -112,22 +112,5 @@ func TestWrite(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, int32(2), version)
 		})
-	}
-}
-
-type fixture struct {
-	ctx context.Context
-	m   *Manager
-}
-
-func newFixture(t *testing.T) *fixture {
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = os.Chdir(wd) })
-	dir := t.TempDir()
-	require.NoError(t, os.Chdir(dir))
-	return &fixture{
-		ctx: context.Background(),
-		m:   NewDocumentManager(),
 	}
 }
