@@ -5,7 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -49,8 +50,8 @@ func TestInlineCompletion(t *testing.T) {
 		},
 	}
 
-	temporaryDockerfile := fmt.Sprintf("file://%v", path.Join(os.TempDir(), "Dockerfile"))
-	temporaryBakeFile := fmt.Sprintf("file://%v", path.Join(os.TempDir(), "docker-bake.hcl"))
+	temporaryDockerfile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile")), "/"))
+	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl")), "/"))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

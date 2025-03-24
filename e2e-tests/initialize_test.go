@@ -2,9 +2,11 @@ package server_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,7 +25,7 @@ func init() {
 func createDidOpenTextDocumentParams(homedir, testName, text string, languageID protocol.LanguageIdentifier) protocol.DidOpenTextDocumentParams {
 	return protocol.DidOpenTextDocumentParams{
 		TextDocument: protocol.TextDocumentItem{
-			URI:        protocol.URI(path.Join("file://", homedir, testName)),
+			URI:        protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(homedir, testName)), "/"))),
 			Text:       text,
 			LanguageID: languageID,
 			Version:    1,
@@ -35,7 +37,7 @@ func createDidChangeTextDocumentParams(homedir, testName, text string) protocol.
 	return protocol.DidChangeTextDocumentParams{
 		TextDocument: protocol.VersionedTextDocumentIdentifier{
 			TextDocumentIdentifier: protocol.TextDocumentIdentifier{
-				URI: protocol.URI(path.Join("file://", homedir, testName)),
+				URI: protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(homedir, testName)), "/"))),
 			},
 			Version: 1,
 		},

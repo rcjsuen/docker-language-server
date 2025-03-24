@@ -5,8 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -31,84 +31,58 @@ func TestDocumentLink(t *testing.T) {
 
 	homedir, err := os.UserHomeDir()
 	require.NoError(t, err)
-
-	testFolder := path.Join(homedir, t.Name())
-	parentFolder, err := filepath.Abs(path.Join(testFolder, ".."))
-	require.NoError(t, err)
+	testFolder := filepath.Join(homedir, t.Name())
 
 	testCases := []struct {
-		name    string
-		content string
-		links   []protocol.DocumentLink
+		name      string
+		content   string
+		linkRange protocol.Range
+		path      string
+		links     []protocol.DocumentLink
 	}{
 		{
 			name:    "dockerfile attribute in targets block",
 			content: "target \"api\" {\n  dockerfile = \"Dockerfile.api\"\n}",
-			links: []protocol.DocumentLink{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 16},
-						End:   protocol.Position{Line: 1, Character: 30},
-					},
-					Target:  types.CreateStringPointer(fmt.Sprintf("file://%v", path.Join(homedir, "TestDocumentLink", "Dockerfile.api"))),
-					Tooltip: types.CreateStringPointer(path.Join(homedir, "TestDocumentLink", "Dockerfile.api")),
-				},
+			path:    filepath.Join(homedir, "TestDocumentLink", "Dockerfile.api"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 30},
 			},
 		},
 		{
 			name:    "./dockerfile attribute in targets block",
 			content: "target \"api\" {\n  dockerfile = \"./Dockerfile.api\"\n}",
-			links: []protocol.DocumentLink{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 16},
-						End:   protocol.Position{Line: 1, Character: 32},
-					},
-					Target:  types.CreateStringPointer(fmt.Sprintf("file://%v", path.Join(homedir, "TestDocumentLink", "Dockerfile.api"))),
-					Tooltip: types.CreateStringPointer(path.Join(homedir, "TestDocumentLink", "Dockerfile.api")),
-				},
+			path:    filepath.Join(homedir, "TestDocumentLink", "Dockerfile.api"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 32},
 			},
 		},
 		{
 			name:    "../dockerfile attribute in targets block",
 			content: "target \"api\" {\n  dockerfile = \"../Dockerfile.api\"\n}",
-			links: []protocol.DocumentLink{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 16},
-						End:   protocol.Position{Line: 1, Character: 33},
-					},
-					Target:  types.CreateStringPointer(fmt.Sprintf("file://%v", path.Join(parentFolder, "Dockerfile.api"))),
-					Tooltip: types.CreateStringPointer(path.Join(parentFolder, "Dockerfile.api")),
-				},
+			path:    filepath.Join(homedir, "Dockerfile.api"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 33},
 			},
 		},
 		{
 			name:    "folder/dockerfile attribute in targets block",
 			content: "target \"api\" {\n  dockerfile = \"folder/Dockerfile.api\"\n}",
-			links: []protocol.DocumentLink{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 16},
-						End:   protocol.Position{Line: 1, Character: 37},
-					},
-					Target:  types.CreateStringPointer(fmt.Sprintf("file://%v", path.Join(homedir, "TestDocumentLink", "folder", "Dockerfile.api"))),
-					Tooltip: types.CreateStringPointer(path.Join(homedir, "TestDocumentLink", "folder", "Dockerfile.api")),
-				},
+			path:    filepath.Join(homedir, "TestDocumentLink", "folder", "Dockerfile.api"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 37},
 			},
 		},
 		{
 			name:    "../folder/dockerfile attribute in targets block",
 			content: "target \"api\" {\n  dockerfile = \"../folder/Dockerfile.api\"\n}",
-			links: []protocol.DocumentLink{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 16},
-						End:   protocol.Position{Line: 1, Character: 40},
-					},
-					Target:  types.CreateStringPointer(fmt.Sprintf("file://%v", path.Join(parentFolder, "folder/Dockerfile.api"))),
-					Tooltip: types.CreateStringPointer(path.Join(parentFolder, "folder/Dockerfile.api")),
-				},
+			path:    filepath.Join(homedir, "folder/Dockerfile.api"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 40},
 			},
 		},
 	}
@@ -128,7 +102,14 @@ func TestDocumentLink(t *testing.T) {
 				TextDocument: protocol.TextDocumentIdentifier{URI: didOpen.TextDocument.URI},
 			}, &result)
 			require.NoError(t, err)
-			require.Equal(t, tc.links, result)
+			links := []protocol.DocumentLink{
+				{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				},
+			}
+			require.Equal(t, links, result)
 		})
 	}
 }
