@@ -2,8 +2,10 @@ package document
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -29,11 +31,12 @@ func TestReadLoadResolve(t *testing.T) {
 }
 
 func TestURIfilename(t *testing.T) {
+	file := filepath.Join(os.TempDir(), "mod")
 	var fn string
 	var err error
-	fn, err = filename(uri.URI("file:///mod"))
+	fn, err = filename(uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(file), "/"))))
 	require.NoError(t, err)
-	assert.Equal(t, "/mod", fn)
+	assert.Equal(t, file, fn)
 	fn, err = filename(uri.URI("ext://mod"))
 	require.Error(t, err)
 	assert.Equal(t, "", fn)
