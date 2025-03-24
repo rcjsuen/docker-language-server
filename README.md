@@ -63,23 +63,6 @@ Use "docker-language-server [command] --help" for more information about a comma
 
 ## Configuration
 
-### Telemetry
-
-The Docker Language Server has telemetry which is **disabled** by default. Telemetry is only set on startup with the first incoming `initialized` request from the client. Please read our [privacy policy](https://www.docker.com/legal/docker-privacy-policy/) to learn more about how your data will be collected and used.
-
-```JSONC
-{
-  "clientInfo": {
-      "name": "clientName",
-      "version": "1.2.3"
-  },
-  "initializationOptions": {
-    // you can send enable all telemetry, only send errors, or disable it completely
-    "telemetry": "all" | "error" | "off"
-  }
-}
-```
-
 ### Experimental Capabilities
 
 To support `textDocument/codeLens`, the client must provide a command with the id `dockerLspClient.bake.build` for executing the build. If this is supported, the client can define its experimental capabilities as follows. The server will then respond that it supports code lens requests and return results for `textDocument/codeLens` requests for Bake HCL files.
@@ -97,6 +80,10 @@ To support `textDocument/codeLens`, the client must provide a command with the i
   }
 }
 ```
+
+## Telemetry
+
+See [TELEMETRY.md](./TELEMETRY.md) for details about what kind of telemetry we collect and how to configure your telemetry settings.
 
 ## tliron/glsp Fork
 
