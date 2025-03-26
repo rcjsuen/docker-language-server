@@ -81,6 +81,12 @@ To support `textDocument/codeLens`, the client must provide a command with the i
 }
 ```
 
+## Supported Clients
+
+The Docker Language Server team develops and maintains the [Docker DX Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=docker.docker).
+
+See [CLIENTS.md](./CLIENTS.md) for details about how to configure the Docker Language Server with other language clients.
+
 ## Telemetry
 
 See [TELEMETRY.md](./TELEMETRY.md) for details about what kind of telemetry we collect and how to configure your telemetry settings.
