@@ -36,6 +36,18 @@ func init() {
 	commandMajorityFlagRegexp, _ = regexp.Compile(`.*command majority \((uppercase|lowercase)\)`)
 }
 
+// shouldReport examines the build error and determines if this is something
+// that the language server should surface. If the string contains any of the
+// following, then false will be returned.
+//
+// - network is unreachable
+//
+// - failed to resolve source metadata
+func shouldReport(buildErrorMessage string) bool {
+	return !strings.Contains(buildErrorMessage, "network is unreachable") &&
+		!strings.Contains(buildErrorMessage, "failed to resolve source metadata")
+}
+
 func NewBuildKitDiagnosticsCollector() textdocument.DiagnosticsCollector {
 	return &BuildKitDiagnosticsCollector{}
 }
@@ -176,7 +188,7 @@ func lintWithBuildKitBinary(contextPath, source string, doc document.DockerfileD
 	lines := strings.Split(content, "\n")
 	diagnostics := convertToDiagnostics(source, doc, lines, output.Warnings)
 	// ignore unreachable network errors
-	if output.BuildError != nil && !strings.Contains(output.BuildError.Message, "network is unreachable") {
+	if output.BuildError != nil && shouldReport(output.BuildError.Message) {
 		diagnostic := protocol.Diagnostic{
 			Range:    createRange(lines, &output.BuildError.Location),
 			Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
