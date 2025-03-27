@@ -31,7 +31,7 @@ type TelemetryClientImpl struct {
 const telemetryUrl = "https://api.docker.com/events/v1/track"
 
 func NewClient() TelemetryClient {
-	return &TelemetryClientImpl{telemetry: configuration.TelemetrySettingOff}
+	return &TelemetryClientImpl{telemetry: configuration.TelemetrySettingAll}
 }
 
 func (c *TelemetryClientImpl) UpdateTelemetrySetting(value string) {
