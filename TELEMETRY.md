@@ -1,6 +1,6 @@
 # Telemetry
 
-The Docker Language Server collects telemetry and telemetry collection is **disabled** by default. We collect this telemetry so that we can improve the language server by understanding usage patterns and catching crashes and errors for diagnostic purposes.
+The Docker Language Server collects telemetry and telemetry collection is **enabled** by default. We collect this telemetry so that we can improve the language server by understanding usage patterns and catching crashes and errors for diagnostic purposes.
 
 ## Configuring Telemetry Collection
 
