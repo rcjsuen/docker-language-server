@@ -7,7 +7,7 @@ require (
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
 	github.com/hashicorp/hcl/v2 v2.23.0
-	github.com/moby/buildkit v0.20.1
+	github.com/moby/buildkit v0.20.2
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
@@ -47,7 +47,7 @@ require (
 	github.com/compose-spec/compose-go/v2 v2.4.8 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd/api v1.8.0 // indirect
-	github.com/containerd/containerd/v2 v2.0.3 // indirect
+	github.com/containerd/containerd/v2 v2.0.4 // indirect
 	github.com/containerd/continuity v0.4.5 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
