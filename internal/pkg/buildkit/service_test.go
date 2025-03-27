@@ -344,6 +344,16 @@ func TestParse(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:        "ignore failed to resolve source metadata errors from Docker Hub (https://hub.docker.com/_/docker123)",
+			content:     "FROM docker123",
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name:        "ignore failed to resolve source metadata errors from Amazon ECR",
+			content:     "FROM aws_account_id.dkr.ecr.region.amazonaws.com/docker123:testtag",
+			diagnostics: []protocol.Diagnostic{},
+		},
 	}
 
 	contextPath := os.TempDir()
