@@ -23,19 +23,25 @@ The Docker Language Server relies on some features that are dependent on [Buildx
 
 ## Installing
 
-Ensure you have Go 1.23 or greater installed, check out this repository and then run `make install`.
+Ensure you have Go 1.23 or greater installed, check out this repository and then run `make install`. Alternatively, if you have Go installed then you can run `go install github.com/docker/docker-language-server/cmd/docker-language-server@latest` to get the latest version.
 
-## Building
+## Development
+
+### Building
 
 Run `make build` to generate a binary of the Docker Language Server.
 
-## Testing
+### Testing
 
 Run `make test` to run the unit tests. If the BuildKit tests do not work, make sure that `docker buildx build` works from the command line.
 
 If you would like to run the tests inside of a Docker container, run `make test-docker` which will build a Docker image with the test code and then execute the tests from within the Docker container. Note that this requires the Docker daemon's UNIX socket to be mounted.
 
-## CLI
+### Releasing
+
+To create a new release of the Docker Language Server, create a release on [GitHub](https://github.com/docker/docker-language-server/releases) with a new tag and a build will kick off in GitHub Actions. When the build completes the built binaries will be attached to the corresponding GitHub release.
+
+## CLI Usage
 
 The main command for docker-language-server is `docker-language-server start` with `--stdio` or `--address :12345`:
 
@@ -61,7 +67,7 @@ Flags:
 Use "docker-language-server [command] --help" for more information about a command.
 ```
 
-## Configuration
+## Language Server Configuration
 
 ### Experimental Capabilities
 
