@@ -16,7 +16,7 @@ func TestAllow(t *testing.T) {
 				client := TelemetryClientImpl{}
 				client.UpdateTelemetrySetting(eventSettings[i])
 
-				if eventSettings[i] == string(configuration.TelemetrySettingAll) {
+				if eventSettings[i] == string(configuration.TelemetrySettingAll) || eventSettings[i] == "" {
 					require.True(t, client.allow(true))
 					require.True(t, client.allow(false))
 				} else if eventSettings[i] == string(configuration.TelemetrySettingError) {
@@ -29,7 +29,7 @@ func TestAllow(t *testing.T) {
 
 				client.UpdateTelemetrySetting(eventSettings[j])
 
-				if eventSettings[j] == string(configuration.TelemetrySettingAll) {
+				if eventSettings[j] == string(configuration.TelemetrySettingAll) || eventSettings[j] == "" {
 					require.True(t, client.allow(true))
 					require.True(t, client.allow(false))
 				} else if eventSettings[j] == string(configuration.TelemetrySettingError) {

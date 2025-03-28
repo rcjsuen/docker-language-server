@@ -43,7 +43,7 @@ func (c *TelemetryClientImpl) UpdateTelemetrySetting(value string) {
 	case "off":
 		c.telemetry = configuration.TelemetrySettingOff
 	default:
-		c.telemetry = configuration.TelemetrySettingOff
+		c.telemetry = configuration.TelemetrySettingAll
 	}
 }
 
