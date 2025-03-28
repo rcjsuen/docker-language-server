@@ -31,7 +31,7 @@ type Experimental struct {
 var configurations = make(map[protocol.DocumentUri]Configuration)
 var lock = sync.RWMutex{}
 var defaultConfiguration = Configuration{
-	Telemetry: TelemetrySettingOff,
+	Telemetry: TelemetrySettingAll,
 	Experimental: Experimental{
 		VulnerabilityScanning: true,
 	},
