@@ -62,6 +62,7 @@ func TestDefinition(t *testing.T) {
 		content   string
 		line      uint32
 		character uint32
+		locations any
 		links     any
 	}{
 		{
@@ -69,6 +70,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"default\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\" }",
 			line:      2,
 			character: 0, // point to the attribute's name instead of value
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -76,6 +78,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"default\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\" }",
 			line:      1, // point to the dockerfile attribute instead of the target attribute
 			character: 13,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -83,6 +86,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"default\" {\n  network = \"stage\"\n}",
 			line:      1,
 			character: 17,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -90,6 +94,7 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {\n  target = \"stage\"\n}",
 			line:      1,
 			character: 17,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -97,10 +102,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {\n  default = \"stageName\"\n}\ntarget \"default\" {\n  context = var\n}",
 			line:      4,
 			character: 13,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 12},
+						End:   protocol.Position{Line: 4, Character: 15},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -112,10 +134,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {\n  default = \"stageName\"\n}\ntarget \"default\" {\n  target = var\n}",
 			line:      4,
 			character: 13,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 11},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -127,10 +166,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable var {\n  default = \"stageName\"\n}\ntarget \"default\" {\n  target = var\n}",
 			line:      4,
 			character: 13,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 11},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 9},
 						End:   protocol.Position{Line: 0, Character: 12},
 					},
@@ -142,10 +198,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable var {\n  default = \"stageName\"\n}\ntarget \"default\" {\n  target = \"${var}\"\n}",
 			line:      4,
 			character: 15,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 17},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 9},
 						End:   protocol.Position{Line: 0, Character: 12},
 					},
@@ -157,6 +230,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"default\" {\n  target = undefinedVariable\n}",
 			line:      1,
 			character: 20,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -164,10 +238,27 @@ func TestDefinition(t *testing.T) {
 			content:   "stageName = \"abc\"\ntarget \"default\" {\n  target = stageName\n}",
 			line:      2,
 			character: 16,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 9},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 11},
+						End:   protocol.Position{Line: 2, Character: 20},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 9},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 9},
 					},
@@ -179,10 +270,27 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"source\" {}\ntarget \"default\" {\n  inherits = [ \"source\" ]\n}",
 			line:      2,
 			character: 20,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 8},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 16},
+						End:   protocol.Position{Line: 2, Character: 22},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 8},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 8},
 						End:   protocol.Position{Line: 0, Character: 14},
 					},
@@ -194,10 +302,27 @@ func TestDefinition(t *testing.T) {
 			content:   "target \"t1\" {}\ngroup \"g1\" {\n  targets = [ \"t1\" ]\n}",
 			line:      2,
 			character: 16,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 8},
+						End:   protocol.Position{Line: 0, Character: 10},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 15},
+						End:   protocol.Position{Line: 2, Character: 17},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 8},
+						End:   protocol.Position{Line: 0, Character: 10},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 8},
 						End:   protocol.Position{Line: 0, Character: 10},
 					},
@@ -209,10 +334,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {}\ntarget \"default\" {\n  inherits = [ var ]\n}",
 			line:      2,
 			character: 17,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 15},
+						End:   protocol.Position{Line: 2, Character: 18},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -224,10 +366,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {}\ntarget \"default\" {\n  inherits = [ \"${var}\" ]\n}",
 			line:      2,
 			character: 20,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 18},
+						End:   protocol.Position{Line: 2, Character: 21},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -239,10 +398,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {}\nvariable \"var2\" {}\ntarget \"default\" {\n  inherits = [ var, \"${var2}\" ]\n}",
 			line:      3,
 			character: 24,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 23},
+						End:   protocol.Position{Line: 3, Character: 27},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 10},
 						End:   protocol.Position{Line: 1, Character: 14},
 					},
@@ -254,10 +430,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"var\" {}\ntarget \"default\" {\n  inherits = [ \"\", \"${var}\" ]\n}",
 			line:      2,
 			character: 24,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 22},
+						End:   protocol.Position{Line: 2, Character: 25},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -269,6 +462,7 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"source\" {}\ntarget \"default\" {\n  inherits = [ \"source\" ]\n}",
 			line:      2,
 			character: 20,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -276,10 +470,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"source\" {}\ntarget \"default\" {\n  entitlements = [ source ]\n}",
 			line:      2,
 			character: 22,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 19},
+						End:   protocol.Position{Line: 2, Character: 25},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 16},
 					},
@@ -291,10 +502,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"source\" {}\ntarget \"default\" {\n  inherits = [ source ]\n}",
 			line:      2,
 			character: 18,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 15},
+						End:   protocol.Position{Line: 2, Character: 21},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 16},
 					},
@@ -306,10 +534,27 @@ func TestDefinition(t *testing.T) {
 			content:   "default_network = \"none\"\nvariable \"networkType\" {\n  default = \"default\"\n}\ntarget \"default\" {\n  network = networkType == \"host\" ? networkType : default_network\n}",
 			line:      5,
 			character: 19,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 12},
+						End:   protocol.Position{Line: 5, Character: 23},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 10},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
@@ -321,10 +566,27 @@ func TestDefinition(t *testing.T) {
 			content:   "default_network = \"none\"\nvariable \"networkType\" {\n  default = \"default\"\n}\ntarget \"default\" {\n  network = networkType == \"host\" ? networkType : default_network\n}",
 			line:      5,
 			character: 43,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 36},
+						End:   protocol.Position{Line: 5, Character: 47},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 10},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 10},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
@@ -336,10 +598,27 @@ func TestDefinition(t *testing.T) {
 			content:   "default_network = \"none\"\nvariable \"networkType\" {\n  default = \"default\"\n}\ntarget \"default\" {\n  network = networkType == \"host\" ? networkType : default_network\n}",
 			line:      5,
 			character: 56,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 15},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 50},
+						End:   protocol.Position{Line: 5, Character: 65},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 15},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 15},
 					},
@@ -351,6 +630,7 @@ func TestDefinition(t *testing.T) {
 			content:   "default_network = \"none\"\nnetworkType2 = \"none\"\ntarget \"default\" {\n  network = networkType  == networkType2 ? networkType : default_network\n}",
 			line:      3,
 			character: 24,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -358,6 +638,7 @@ func TestDefinition(t *testing.T) {
 			content:   "default_network = \"none\"\ntarget \"default\" {\n  network = networkType == \"host\" ? networkType :  default_network\n}",
 			line:      2,
 			character: 50,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -365,10 +646,27 @@ func TestDefinition(t *testing.T) {
 			content:   "var = \"value\"\ntarget \"default\" {\n  args = {\n    arg = var\n  }\n}",
 			line:      3,
 			character: 12,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 3},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 10},
+						End:   protocol.Position{Line: 3, Character: 13},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 3},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 3},
 					},
@@ -380,10 +678,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"TAG\" {}\ntarget \"default\" {\n  tags = [ notequal(\"\", TAG) ? \"image:${TAG}\" : \"image:latest\"\n}",
 			line:      2,
 			character: 26,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 24},
+						End:   protocol.Position{Line: 2, Character: 27},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -395,10 +710,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable \"TAG\" {}\ntarget \"default\" {\n  tags = [ notequal(\"\", TAG) ? \"image:${TAG}\" : \"image:latest\"\n}",
 			line:      2,
 			character: 42,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 40},
+						End:   protocol.Position{Line: 2, Character: 43},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -410,10 +742,27 @@ func TestDefinition(t *testing.T) {
 			content:   "function \"tag\" {\n  params = [param]\n  result = [\"${param}\"]\n}\ntarget \"default\" {\n  tags = tag(\"v1\")\n}",
 			line:      5,
 			character: 10,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 9},
+						End:   protocol.Position{Line: 5, Character: 12},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -424,11 +773,28 @@ func TestDefinition(t *testing.T) {
 			name:      "referenced function name inside ${}",
 			content:   "function \"tag\" {\n  params = [param]\n  result = [\"${param}\"]\n}\ntarget \"default\" {\n  tags = \"${tag(\"v1\")}\"\n}",
 			line:      5,
-			character: 15,
-			links: []protocol.Location{
+			character: 14,
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 12},
+						End:   protocol.Position{Line: 5, Character: 15},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 10},
+						End:   protocol.Position{Line: 0, Character: 13},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 10},
 						End:   protocol.Position{Line: 0, Character: 13},
 					},
@@ -440,6 +806,7 @@ func TestDefinition(t *testing.T) {
 			content:   "a1 = \"value\"\n",
 			line:      0,
 			character: 9,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -447,10 +814,27 @@ func TestDefinition(t *testing.T) {
 			content:   "a1 = \"value\"\na2 = a1",
 			line:      1,
 			character: 6,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 5},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 2},
 					},
@@ -462,10 +846,27 @@ func TestDefinition(t *testing.T) {
 			content:   "a1 = \"value\"\na2 = a1",
 			line:      1,
 			character: 1,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 2},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 2},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 2},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 2},
 					},
@@ -477,10 +878,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable num { default = 3 }\nvariable varList { default = [\"tag\"] }\ntarget default {\n  tags = [for var in varList : upper(var) if num > 2]\n}",
 			line:      3,
 			character: 46,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 45},
+						End:   protocol.Position{Line: 3, Character: 48},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 12},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 9},
 						End:   protocol.Position{Line: 0, Character: 12},
 					},
@@ -492,10 +910,27 @@ func TestDefinition(t *testing.T) {
 			content:   "variable varList { default = [\"tag\"] }\ntarget default {\n  tags = [for var in varList : upper(var)]\n}",
 			line:      2,
 			character: 24,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: bakeFileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 21},
+						End:   protocol.Position{Line: 2, Character: 28},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 9},
+						End:   protocol.Position{Line: 0, Character: 16},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 9},
 						End:   protocol.Position{Line: 0, Character: 16},
 					},
@@ -507,10 +942,27 @@ func TestDefinition(t *testing.T) {
 			content:   "target default {\n  args = {\n    var = \"value\"\n  }\n}",
 			line:      2,
 			character: 6,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: dockerfileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 7},
+					},
+					TargetURI: dockerfileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 7},
 					},
@@ -522,10 +974,27 @@ func TestDefinition(t *testing.T) {
 			content:   "target default {\n  args = {\n    defined = \"value\"\n  }\n}",
 			line:      2,
 			character: 8,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: dockerfileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 0},
+						End:   protocol.Position{Line: 2, Character: 19},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 11},
+					},
+					TargetURI: dockerfileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 0},
+						End:   protocol.Position{Line: 2, Character: 19},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 2, Character: 0},
 						End:   protocol.Position{Line: 2, Character: 19},
 					},
@@ -537,10 +1006,27 @@ func TestDefinition(t *testing.T) {
 			content:   "target default {\n  args = {\n    \"var\" = \"value\"\n  }\n}",
 			line:      2,
 			character: 7,
-			links: []protocol.Location{
+			locations: []protocol.Location{
 				{
 					URI: dockerfileURI,
 					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 5},
+						End:   protocol.Position{Line: 2, Character: 8},
+					},
+					TargetURI: dockerfileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 7},
 					},
@@ -552,6 +1038,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target t1 {}\ngroup g1 { inherits = [\"t1\"] }",
 			line:      1,
 			character: 25,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -559,6 +1046,7 @@ func TestDefinition(t *testing.T) {
 			content:   "target t1 {}\nvariable v1 { inherits = [\"t1\"] }",
 			line:      1,
 			character: 28,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -566,6 +1054,7 @@ func TestDefinition(t *testing.T) {
 			content:   "group g1 {\n  args = {\n    var = \"value\"\n  }\n}",
 			line:      2,
 			character: 6,
+			locations: nil,
 			links:     nil,
 		},
 		{
@@ -573,44 +1062,9 @@ func TestDefinition(t *testing.T) {
 			content:   "variable var {\n  args = {\n    var = \"value\"\n  }\n}",
 			line:      2,
 			character: 6,
+			locations: nil,
 			links:     nil,
 		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			manager := document.NewDocumentManager()
-			doc := document.NewBakeHCLDocument(uri.URI(bakeFileURI), 1, []byte(tc.content))
-			links, err := Definition(context.Background(), true, manager, uri.URI(bakeFileURI), doc, protocol.Position{Line: tc.line, Character: tc.character})
-			require.NoError(t, err)
-			require.Equal(t, tc.links, links)
-		})
-	}
-}
-
-func TestDefinitionVariedResults(t *testing.T) {
-	wd, err := os.Getwd()
-	require.NoError(t, err)
-	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
-	definitionTestFolderPath := filepath.Join(projectRoot, "testdata", "definition")
-
-	dockerfilePath := filepath.Join(definitionTestFolderPath, "Dockerfile")
-	bakeFilePath := filepath.Join(definitionTestFolderPath, "docker-bake.hcl")
-
-	dockerfilePath = filepath.ToSlash(dockerfilePath)
-	bakeFilePath = filepath.ToSlash(bakeFilePath)
-
-	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/"))
-	bakeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/"))
-
-	testCases := []struct {
-		name      string
-		content   string
-		line      uint32
-		character uint32
-		locations any
-		links     any
-	}{
 		{
 			name:      "reference valid stage (target block, target attribute)",
 			content:   "target \"default\" { target = \"stage\" }",
@@ -774,17 +1228,16 @@ func TestDefinitionVariedResults(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		manager := document.NewDocumentManager()
+		doc := document.NewBakeHCLDocument(uri.URI(bakeFileURI), 1, []byte(tc.content))
+
 		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
-			manager := document.NewDocumentManager()
-			doc := document.NewBakeHCLDocument(uri.URI(bakeFileURI), 1, []byte(tc.content))
 			locations, err := Definition(context.Background(), false, manager, uri.URI(bakeFileURI), doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.locations, locations)
 		})
 
 		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
-			manager := document.NewDocumentManager()
-			doc := document.NewBakeHCLDocument(uri.URI(bakeFileURI), 1, []byte(tc.content))
 			links, err := Definition(context.Background(), true, manager, uri.URI(bakeFileURI), doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)
