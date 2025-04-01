@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## Unreleased
+
+### Added
+
+- Dockerfile
+  - textDocument/publishDiagnostics
+    - introduce a setting to ignore certain diagnostics to not duplicate the ones from the Dockerfile Language Server
+
 ## 0.1.0 - 2025-03-31
 
 ### Added
