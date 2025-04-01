@@ -89,21 +89,30 @@ func Definition(ctx context.Context, definitionLinkSupport bool, manager *docume
 
 	for _, attribute := range body.Attributes {
 		if isInsideRange(attribute.NameRange, position) {
-			return []protocol.Location{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{
-							Line:      uint32(attribute.NameRange.Start.Line) - 1,
-							Character: uint32(attribute.NameRange.Start.Column) - 1,
-						},
-						End: protocol.Position{
-							Line:      uint32(attribute.NameRange.End.Line) - 1,
-							Character: uint32(attribute.NameRange.End.Column) - 1,
-						},
+			return createDefinitionResult(
+				definitionLinkSupport,
+				protocol.Range{
+					Start: protocol.Position{
+						Line:      uint32(attribute.NameRange.Start.Line) - 1,
+						Character: uint32(attribute.NameRange.Start.Column) - 1,
 					},
-					URI: string(documentURI),
+					End: protocol.Position{
+						Line:      uint32(attribute.NameRange.End.Line) - 1,
+						Character: uint32(attribute.NameRange.End.Column) - 1,
+					},
 				},
-			}, nil
+				&protocol.Range{
+					Start: protocol.Position{
+						Line:      uint32(attribute.NameRange.Start.Line) - 1,
+						Character: uint32(attribute.NameRange.Start.Column) - 1,
+					},
+					End: protocol.Position{
+						Line:      uint32(attribute.NameRange.End.Line) - 1,
+						Character: uint32(attribute.NameRange.End.Column) - 1,
+					},
+				},
+				string(documentURI),
+			), nil
 		}
 
 		if isInsideRange(attribute.SrcRange, position) {
@@ -126,7 +135,18 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 							(sourceBlock.Type == "group" && attribute.Name == "targets") {
 							value, _ := templateExpr.Value(&hcl.EvalContext{})
 							target := value.AsString()
-							return CalculateBlockLocation(input, body, documentURI, "target", target, false)
+							templateExprRange := templateExpr.Range()
+							sourceRange := hcl.Range{
+								Start: hcl.Pos{
+									Line:   templateExprRange.Start.Line,
+									Column: templateExprRange.Start.Column + 1,
+								},
+								End: hcl.Pos{
+									Line:   templateExprRange.End.Line,
+									Column: templateExprRange.End.Column - 1,
+								},
+							}
+							return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, sourceRange, "target", target, false)
 						}
 					}
 				}
@@ -158,32 +178,30 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
 					if child.Next != nil && child.Next.Next != nil && strings.EqualFold(child.Next.Next.Value, "AS") && child.Next.Next.Next != nil && child.Next.Next.Next.Value == target {
-						targetRange := protocol.Range{
-							Start: protocol.Position{Line: uint32(child.StartLine) - 1, Character: 0},
-							End:   protocol.Position{Line: uint32(child.EndLine) - 1, Character: uint32(len(lines[child.EndLine-1]))},
-						}
-
-						linkURI := protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/")))
-						if !definitionLinkSupport {
-							return []protocol.Location{
-								{
-									Range: targetRange,
-									URI:   linkURI,
+						return createDefinitionResult(
+							definitionLinkSupport,
+							protocol.Range{
+								Start: protocol.Position{
+									Line:      uint32(child.StartLine) - 1,
+									Character: 0,
 								},
-							}
-						}
-
-						return []protocol.LocationLink{
-							{
-								OriginSelectionRange: &protocol.Range{
-									Start: protocol.Position{Line: uint32(literalValueExpr.Range().Start.Line) - 1, Character: uint32(literalValueExpr.Range().Start.Column) - 1},
-									End:   protocol.Position{Line: uint32(literalValueExpr.Range().End.Line) - 1, Character: uint32(uint32(literalValueExpr.Range().End.Column) - 1)},
+								End: protocol.Position{
+									Line:      uint32(child.EndLine) - 1,
+									Character: uint32(len(lines[child.EndLine-1])),
 								},
-								TargetRange:          targetRange,
-								TargetSelectionRange: targetRange,
-								TargetURI:            linkURI,
 							},
-						}
+							&protocol.Range{
+								Start: protocol.Position{
+									Line:      uint32(literalValueExpr.Range().Start.Line) - 1,
+									Character: uint32(literalValueExpr.Range().Start.Column) - 1,
+								},
+								End: protocol.Position{
+									Line:      uint32(literalValueExpr.Range().End.Line) - 1,
+									Character: uint32(uint32(literalValueExpr.Range().End.Column) - 1),
+								},
+							},
+							protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
+						)
 					}
 				}
 			}
@@ -225,15 +243,29 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 								}
 
 								if value == arg {
-									return []protocol.Location{
-										{
-											Range: protocol.Range{
-												Start: protocol.Position{Line: uint32(node.StartLine) - 1, Character: 0},
-												End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(len(lines[node.EndLine-1]))},
-											},
-											URI: protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
+									originSelectionRange := protocol.Range{
+										Start: protocol.Position{
+											Line:      uint32(item.KeyExpr.Range().Start.Line) - 1,
+											Character: uint32(item.KeyExpr.Range().Start.Column) - 1,
+										},
+										End: protocol.Position{
+											Line:      uint32(item.KeyExpr.Range().End.Line) - 1,
+											Character: uint32(item.KeyExpr.Range().End.Column) - 1,
 										},
 									}
+									if LiteralValue(item.KeyExpr) {
+										originSelectionRange.Start.Character = originSelectionRange.Start.Character + 1
+										originSelectionRange.End.Character = originSelectionRange.End.Character - 1
+									}
+									return createDefinitionResult(
+										definitionLinkSupport,
+										protocol.Range{
+											Start: protocol.Position{Line: uint32(node.StartLine) - 1, Character: 0},
+											End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(len(lines[node.EndLine-1]))},
+										},
+										&originSelectionRange,
+										protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
+									)
 								}
 								child = child.Next
 							}
@@ -278,7 +310,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if _, ok := expression.(*hclsyntax.ScopeTraversalExpr); ok {
 		name := string(input[expression.Range().Start.Byte:expression.Range().End.Byte])
-		return CalculateBlockLocation(input, body, documentURI, "variable", name, true)
+		return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, expression.Range(), "variable", name, true)
 	}
 
 	if templateWrapExpr, ok := expression.(*hclsyntax.TemplateWrapExpr); ok {
@@ -287,7 +319,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if functionCallExpr, ok := expression.(*hclsyntax.FunctionCallExpr); ok {
 		if isInsideRange(functionCallExpr.NameRange, position) {
-			return CalculateBlockLocation(input, body, documentURI, "function", functionCallExpr.Name, true)
+			return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, functionCallExpr.NameRange, "function", functionCallExpr.Name, true)
 		}
 
 		for _, arg := range functionCallExpr.Args {
@@ -303,7 +335,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 // returns it. If variable is true then it will also look at the
 // top-level attributes of the HCL file and resolve to those if the
 // names match.
-func CalculateBlockLocation(input []byte, body *hclsyntax.Body, documentURI uri.URI, blockName, name string, variable bool) any {
+func CalculateBlockLocation(definitionLinkSupport bool, input []byte, body *hclsyntax.Body, documentURI uri.URI, sourceRange hcl.Range, blockName, name string, variable bool) any {
 	for _, b := range body.Blocks {
 		if b.Type == blockName && b.Labels[0] == name {
 			startCharacter := uint32(b.LabelRanges[0].Start.Column)
@@ -315,42 +347,80 @@ func CalculateBlockLocation(input []byte, body *hclsyntax.Body, documentURI uri.
 				startCharacter--
 				endCharacter--
 			}
-			return []protocol.Location{
-				{
-					Range: protocol.Range{
-						Start: protocol.Position{
-							Line:      uint32(b.LabelRanges[0].Start.Line) - 1,
-							Character: startCharacter,
-						},
-						End: protocol.Position{
-							Line:      uint32(b.LabelRanges[0].End.Line) - 1,
-							Character: endCharacter,
-						},
+			return createDefinitionResult(
+				definitionLinkSupport,
+				protocol.Range{
+					Start: protocol.Position{
+						Line:      uint32(b.LabelRanges[0].Start.Line) - 1,
+						Character: startCharacter,
 					},
-					URI: string(documentURI),
+					End: protocol.Position{
+						Line:      uint32(b.LabelRanges[0].End.Line) - 1,
+						Character: endCharacter,
+					},
 				},
-			}
+				&protocol.Range{
+					Start: protocol.Position{
+						Line:      uint32(sourceRange.Start.Line) - 1,
+						Character: uint32(sourceRange.Start.Column) - 1,
+					},
+					End: protocol.Position{
+						Line:      uint32(sourceRange.End.Line) - 1,
+						Character: uint32(sourceRange.End.Column) - 1,
+					},
+				},
+				string(documentURI),
+			)
 		}
 	}
 
 	if attribute, ok := body.Attributes[name]; ok && variable {
+		return createDefinitionResult(
+			definitionLinkSupport,
+			protocol.Range{
+				Start: protocol.Position{
+					Line:      uint32(attribute.NameRange.Start.Line) - 1,
+					Character: uint32(attribute.NameRange.Start.Column) - 1,
+				},
+				End: protocol.Position{
+					Line:      uint32(attribute.NameRange.End.Line) - 1,
+					Character: uint32(attribute.NameRange.End.Column) - 1,
+				},
+			},
+			&protocol.Range{
+				Start: protocol.Position{
+					Line:      uint32(sourceRange.Start.Line) - 1,
+					Character: uint32(sourceRange.Start.Column) - 1,
+				},
+				End: protocol.Position{
+					Line:      uint32(sourceRange.End.Line) - 1,
+					Character: uint32(sourceRange.End.Column) - 1,
+				},
+			},
+			string(documentURI),
+		)
+	}
+	return nil
+}
+
+func createDefinitionResult(definitionLinkSupport bool, targetRange protocol.Range, originSelectionRange *protocol.Range, linkURI protocol.URI) any {
+	if !definitionLinkSupport {
 		return []protocol.Location{
 			{
-				Range: protocol.Range{
-					Start: protocol.Position{
-						Line:      uint32(attribute.NameRange.Start.Line) - 1,
-						Character: uint32(attribute.NameRange.Start.Column) - 1,
-					},
-					End: protocol.Position{
-						Line:      uint32(attribute.NameRange.End.Line) - 1,
-						Character: uint32(attribute.NameRange.End.Column) - 1,
-					},
-				},
-				URI: string(documentURI),
+				Range: targetRange,
+				URI:   linkURI,
 			},
 		}
 	}
-	return nil
+
+	return []protocol.LocationLink{
+		{
+			OriginSelectionRange: originSelectionRange,
+			TargetRange:          targetRange,
+			TargetSelectionRange: targetRange,
+			TargetURI:            linkURI,
+		},
+	}
 }
 
 func ParseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {

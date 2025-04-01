@@ -10,6 +10,12 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/publishDiagnostics
     - introduce a setting to ignore certain diagnostics to not duplicate the ones from the Dockerfile Language Server
 
+### Fixed
+
+- Docker Bake
+  - textDocument/definition
+    - always return LocationLinks to help disambiguate word boundaries for clients ([#31](https://github.com/docker/docker-language-server/issues/31))
+
 ## 0.1.0 - 2025-03-31
 
 ### Added
