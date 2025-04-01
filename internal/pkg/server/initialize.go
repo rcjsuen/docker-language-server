@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/pkg/buildkit"
 	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
 	"github.com/docker/docker-language-server/internal/telemetry"
 	"github.com/docker/docker-language-server/internal/tliron/glsp"
@@ -26,6 +27,12 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	}
 
 	if clientConfig, ok := params.InitializationOptions.(map[string]any); ok {
+		if settings, ok := clientConfig["dockerfileExperimental"].(map[string]any); ok {
+			if value, ok := settings["removeOverlappingIssues"].(bool); ok {
+				buildkit.RemoveOverlappingIssues = value
+			}
+		}
+
 		if value, ok := clientConfig["telemetry"].(string); ok {
 			s.updateTelemetrySetting(value)
 		}

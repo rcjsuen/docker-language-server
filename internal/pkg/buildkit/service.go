@@ -28,6 +28,11 @@ type BuildOutput struct {
 type BuildKitDiagnosticsCollector struct {
 }
 
+// RemoveOverlappingIssues can be used to decide if diagnostics that
+// overlap with what dockerfile-utils generates should be removed or
+// not.
+var RemoveOverlappingIssues = false
+
 var unknownFlagRegexp *regexp.Regexp
 var commandMajorityFlagRegexp *regexp.Regexp
 
@@ -256,8 +261,42 @@ func parse(contextPath, source string, doc document.DockerfileDocument, content 
 	return lintWithBuildKitBinary(escapedPath, source, doc, content)
 }
 
+func shouldIgnore(diagnostic protocol.Diagnostic) bool {
+	if *diagnostic.Severity == protocol.DiagnosticSeverityError {
+		return true
+	}
+	if diagnostic.Code != nil {
+		if value, ok := diagnostic.Code.Value.(string); ok {
+			switch value {
+			case "ConsistentInstructionCasing":
+				return true
+			case "DuplicateStageName":
+				return true
+			case "MaintainerDeprecated":
+				return true
+			case "MultipleInstructionsDisallowed":
+				return true
+			case "NoEmptyContinuation":
+				return true
+			case "WorkdirRelativePath":
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (c *BuildKitDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder string, doc document.Document, text string) []protocol.Diagnostic {
 	diagnostics, _ := parse(workspaceFolder, source, doc.(document.DockerfileDocument), text)
+	if RemoveOverlappingIssues {
+		filtered := []protocol.Diagnostic{}
+		for i := range diagnostics {
+			if !shouldIgnore(diagnostics[i]) {
+				filtered = append(filtered, diagnostics[i])
+			}
+		}
+		return filtered
+	}
 	return diagnostics
 }
 

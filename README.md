@@ -69,6 +69,20 @@ Use "docker-language-server [command] --help" for more information about a comma
 
 ## Language Server Configuration
 
+### Initialization Options
+
+On startup, the client can include initizliation options on the initial `initialize` request. If the client is also using [rcjsuen/dockerfile-language-server](https://github.com/rcjsuen/dockerfile-language-server), then some results in `textDocument/publishDiagnostics` will be duplicated across the two language servers. By setting the _experimental_ `dockerfileExperimental.removeOverlappingIssues` to `true`, the Docker Language Server will suppress the duplicated results. Note that this setting may be renamed or removed at any time.
+
+```JSONC
+{
+  "initializationOptions": {
+    "dockerfileExperimental": {
+      "removeOverlappingIssues:": true | false
+    }
+  }
+}
+```
+
 ### Experimental Capabilities
 
 To support `textDocument/codeLens`, the client must provide a command with the id `dockerLspClient.bake.build` for executing the build. If this is supported, the client can define its experimental capabilities as follows. The server will then respond that it supports code lens requests and return results for `textDocument/codeLens` requests for Bake HCL files.

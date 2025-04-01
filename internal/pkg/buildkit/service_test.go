@@ -15,11 +15,13 @@ func TestParse(t *testing.T) {
 	testCases := []struct {
 		name        string
 		content     string
+		overlaps    bool
 		diagnostics []protocol.Diagnostic
 	}{
 		{
-			name:    "empty file",
-			content: "",
+			name:     "empty file",
+			content:  "",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -33,8 +35,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "unrecognized instruction",
-			content: "FROM scratch\nUNKNOWN abc",
+			name:     "unrecognized instruction",
+			content:  "FROM scratch\nUNKNOWN abc",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -48,8 +51,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "unrecognized flag, suggestion provided",
-			content: "FROM --platform2=linux/amd64 scratch",
+			name:     "unrecognized flag, suggestion provided",
+			content:  "FROM --platform2=linux/amd64 scratch",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -69,8 +73,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "unrecognized flag, no suggestion provided",
-			content: "FROM --abc=linux/amd64 scratch",
+			name:     "unrecognized flag, no suggestion provided",
+			content:  "FROM --abc=linux/amd64 scratch",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -90,8 +95,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "deprecated MAINTAINER is a warning",
-			content: "FROM scratch\nMAINTAINER test123@docker.com",
+			name:     "deprecated MAINTAINER is a warning",
+			content:  "FROM scratch\nMAINTAINER test123@docker.com",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -116,8 +122,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "MAINTAINER with multiple words",
-			content: "FROM scratch\nMAINTAINER hello world",
+			name:     "MAINTAINER with multiple words",
+			content:  "FROM scratch\nMAINTAINER hello world",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -142,8 +149,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "MAINTAINER does not add additional quotes if already enclosed",
-			content: "FROM scratch\nMAINTAINER \"hello world\"",
+			name:     "MAINTAINER does not add additional quotes if already enclosed",
+			content:  "FROM scratch\nMAINTAINER \"hello world\"",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -168,8 +176,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "MAINTAINER code action only adds trailing quote",
-			content: "FROM scratch\nMAINTAINER \"hello world",
+			name:     "MAINTAINER code action only adds trailing quote",
+			content:  "FROM scratch\nMAINTAINER \"hello world",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -194,8 +203,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "MAINTAINER code action only adds leading quote",
-			content: "FROM scratch\nMAINTAINER hello world\"",
+			name:     "MAINTAINER code action only adds leading quote",
+			content:  "FROM scratch\nMAINTAINER hello world\"",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -220,8 +230,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "stage name all uppercase",
-			content: "FROM scratch AS TEST",
+			name:     "stage name all uppercase",
+			content:  "FROM scratch AS TEST",
+			overlaps: false,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -245,8 +256,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "stage name mixed case",
-			content: "FROM scratch AS MixeD",
+			name:     "stage name mixed case",
+			content:  "FROM scratch AS MixeD",
+			overlaps: false,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -270,8 +282,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "redundant $TARGETPLATFORM suggests code action to remove the flag",
-			content: "FROM --platform=$TARGETPLATFORM alpine AS builder",
+			name:     "redundant $TARGETPLATFORM suggests code action to remove the flag",
+			content:  "FROM --platform=$TARGETPLATFORM alpine AS builder",
+			overlaps: false,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -295,8 +308,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "inconsistent casing suggests uppercase code action",
-			content: "FROM scratch\ncopy  --link . .",
+			name:     "inconsistent casing suggests uppercase code action",
+			content:  "FROM scratch\ncopy  --link . .",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -320,8 +334,9 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
-			name:    "inconsistent casing suggests lowercase code action",
-			content: "from scratch\nfrom scratch\nCOPY  --link . .",
+			name:     "inconsistent casing suggests lowercase code action",
+			content:  "from scratch\nfrom scratch\nCOPY  --link . .",
+			overlaps: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Range: protocol.Range{
@@ -347,12 +362,94 @@ func TestParse(t *testing.T) {
 		{
 			name:        "ignore failed to resolve source metadata errors from Docker Hub (https://hub.docker.com/_/docker123)",
 			content:     "FROM docker123",
+			overlaps:    true,
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
 			name:        "ignore failed to resolve source metadata errors from Amazon ECR",
 			content:     "FROM aws_account_id.dkr.ecr.region.amazonaws.com/docker123:testtag",
+			overlaps:    true,
 			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name:     "DuplicateStageName",
+			content:  "FROM scratch AS base\nFROM scratch AS base",
+			overlaps: true,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 20},
+					},
+					Message:  "Stage names should be unique (Duplicate stage name \"base\", stage names should be unique)",
+					Source:   types.CreateStringPointer("buildkit-testing-source"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "DuplicateStageName"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/duplicate-stage-name/",
+					},
+				},
+			},
+		},
+		{
+			name:     "MultipleInstructionsDisallowed",
+			content:  "FROM scratch\nCMD [ \"ls\" ]\nCMD [ \"ls\" ]",
+			overlaps: true,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 12},
+					},
+					Message:  "Multiple instructions of the same type should not be used in the same stage (Multiple CMD instructions should not be used in the same stage because only the last one will be used)",
+					Source:   types.CreateStringPointer("buildkit-testing-source"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "MultipleInstructionsDisallowed"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/multiple-instructions-disallowed/",
+					},
+				},
+			},
+		},
+		{
+			name:     "NoEmptyContinuation",
+			content:  "FROM scratch\nRUN ls \\\n\nls",
+			overlaps: true,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 0},
+						End:   protocol.Position{Line: 3, Character: 2},
+					},
+					Message:  "Empty continuation lines will become errors in a future release (Empty continuation line)",
+					Source:   types.CreateStringPointer("buildkit-testing-source"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "NoEmptyContinuation"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/no-empty-continuation/",
+					},
+				},
+			},
+		},
+		{
+			name:     "WorkdirRelativePath",
+			content:  "FROM scratch\nWORKDIR dir",
+			overlaps: true,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 11},
+					},
+					Message:  "Relative workdir without an absolute workdir declared within the build can have unexpected results if the base image changes (Relative workdir \"dir\" can have unexpected results if the base image changes)",
+					Source:   types.CreateStringPointer("buildkit-testing-source"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "WorkdirRelativePath"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/workdir-relative-path/",
+					},
+				},
+			},
 		},
 	}
 
@@ -360,9 +457,19 @@ func TestParse(t *testing.T) {
 	collector := NewBuildKitDiagnosticsCollector()
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			RemoveOverlappingIssues = false
 			doc := document.NewDocument(uri.URI("uri:///Dockerfile"), protocol.DockerfileLanguage, 1, []byte(tc.content))
 			diagnostics := collector.CollectDiagnostics("buildkit-testing-source", contextPath, doc, tc.content)
 			require.Equal(t, tc.diagnostics, diagnostics)
+
+			RemoveOverlappingIssues = true
+			if tc.overlaps {
+				diagnostics := collector.CollectDiagnostics("buildkit-testing-source", contextPath, doc, tc.content)
+				require.Len(t, diagnostics, 0)
+			} else {
+				diagnostics := collector.CollectDiagnostics("buildkit-testing-source", contextPath, doc, tc.content)
+				require.Equal(t, tc.diagnostics, diagnostics)
+			}
 		})
 	}
 }
