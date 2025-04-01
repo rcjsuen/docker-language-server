@@ -289,12 +289,13 @@ func shouldIgnore(diagnostic protocol.Diagnostic) bool {
 func (c *BuildKitDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder string, doc document.Document, text string) []protocol.Diagnostic {
 	diagnostics, _ := parse(workspaceFolder, source, doc.(document.DockerfileDocument), text)
 	if RemoveOverlappingIssues {
+		filtered := []protocol.Diagnostic{}
 		for i := range diagnostics {
-			if shouldIgnore(diagnostics[i]) {
-				diagnostics = slices.Delete(diagnostics, i, i+1)
-				i--
+			if !shouldIgnore(diagnostics[i]) {
+				filtered = append(filtered, diagnostics[i])
 			}
 		}
+		return filtered
 	}
 	return diagnostics
 }
