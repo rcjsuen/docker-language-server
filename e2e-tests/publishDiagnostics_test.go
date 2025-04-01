@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/pkg/buildkit"
 	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
@@ -26,6 +27,8 @@ func (h *PublishDiagnosticsHandler) Handle(_ context.Context, conn *jsonrpc2.Con
 	switch request.Method {
 	case protocol.ServerTextDocumentPublishDiagnostics:
 		if request.Notif && request.Params != nil {
+			// always deserialize to a completely new struct
+			h.diagnostics = protocol.PublishDiagnosticsParams{}
 			require.NoError(h.t, json.Unmarshal(*request.Params, &h.diagnostics))
 			h.responseChannel <- nil
 		}
@@ -39,6 +42,13 @@ func (h *PublishDiagnosticsHandler) Handle(_ context.Context, conn *jsonrpc2.Con
 func TestPublishDiagnostics(t *testing.T) {
 	// ensure the language server works without any workspace folders
 	testPublishDiagnostics(t, protocol.InitializeParams{})
+
+	// ensure the language server works without any workspace folders
+	testPublishDiagnostics(t, protocol.InitializeParams{
+		InitializationOptions: map[string]any{
+			"dockerfileExperimental": map[string]bool{"removeOverlappingIssues": true},
+		},
+	})
 
 	homedir, err := os.UserHomeDir()
 	require.NoError(t, err)
@@ -106,27 +116,33 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 		clientStream,
 		handler,
 	)
+	defer func() {
+		buildkit.RemoveOverlappingIssues = false
+	}()
 	initialize(t, conn, initializeParams)
 
 	homedir, err := os.UserHomeDir()
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name        string
-		content     string
-		included    []bool
-		diagnostics []protocol.Diagnostic
+		name             string
+		content          string
+		included         []bool
+		overlappingIssue bool
+		diagnostics      []protocol.Diagnostic
 	}{
 		{
-			name:        "no diagnostics",
-			content:     "FROM scratch",
-			included:    []bool{},
-			diagnostics: []protocol.Diagnostic{},
+			name:             "no diagnostics",
+			content:          "FROM scratch",
+			included:         []bool{},
+			overlappingIssue: false,
+			diagnostics:      []protocol.Diagnostic{},
 		},
 		{
-			name:     "MAINTAINER is deprecated",
-			content:  "FROM alpine:3.16.1\nMAINTAINER x",
-			included: []bool{true, false, false, false},
+			name:             "MAINTAINER is deprecated",
+			content:          "FROM scratch\nMAINTAINER x",
+			included:         []bool{true},
+			overlappingIssue: true,
 			diagnostics: []protocol.Diagnostic{
 				{
 					Message:  "The MAINTAINER instruction is deprecated, use a label instead to define an image author (Maintainer instruction is deprecated in favor of using label)",
@@ -146,6 +162,27 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 							"edit":  "LABEL org.opencontainers.image.authors=\"x\"",
 							"title": "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 						},
+					},
+				},
+			},
+		},
+		{
+			name:             "JSON args",
+			content:          "FROM alpine:3.16.1\nCMD ls",
+			included:         []bool{true, false, false, false},
+			overlappingIssue: false,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "JSON arguments recommended for ENTRYPOINT/CMD to prevent unintended behavior related to OS signals (JSON arguments recommended for CMD to prevent unintended behavior related to OS signals)",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "JSONArgsRecommended"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/json-args-recommended/",
+					},
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 6},
 					},
 				},
 				{
@@ -205,8 +242,17 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 		},
 	}
 
+	removeOverlappingIssues := false
+	if options, ok := initializeParams.InitializationOptions.(map[string]any); ok {
+		if settings, ok := options["dockerfileExperimental"].(map[string]bool); ok {
+			if value, ok := settings["removeOverlappingIssues"]; ok {
+				removeOverlappingIssues = value
+			}
+		}
+	}
+
 	for _, tc := range testCases {
-		t.Run(fmt.Sprintf("%v (len(workspaceFolders) == %v)", tc.name, len(initializeParams.WorkspaceFolders)), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%v (len(workspaceFolders) == %v, removeOverlappingIssues=%v)", tc.name, len(initializeParams.WorkspaceFolders), removeOverlappingIssues), func(t *testing.T) {
 			didOpen := createDidOpenTextDocumentParams(homedir, t.Name(), tc.content, "dockerfile")
 			err := conn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
 			require.NoError(t, err)
@@ -224,6 +270,12 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 			} else {
 				filteredDiagnostics = tc.diagnostics
 			}
+
+			if removeOverlappingIssues && tc.overlappingIssue {
+				filteredDiagnostics = []protocol.Diagnostic{}
+			}
+
+			require.Equal(t, didOpen.TextDocument.URI, params.URI)
 			require.Equal(t, filteredDiagnostics, params.Diagnostics)
 			require.Equal(t, int32(1), *params.Version)
 		})
