@@ -264,7 +264,7 @@ func TestCompletion(t *testing.T) {
 			items:     []protocol.CompletionItem{},
 		},
 		{
-			name:      "network attribute suggests default/host/none",
+			name:      "network attribute suggests default/host/none when there is no value",
 			content:   "target \"t\" {\n  network = \n}",
 			line:      1,
 			character: 12,
@@ -304,6 +304,23 @@ func TestCompletion(t *testing.T) {
 						},
 						NewText: "\"none\"",
 					},
+				},
+			},
+		},
+		{
+			name:      "network attribute suggests default/host/none when value is the empty string",
+			content:   "target \"t\" {\n  network = \"\"\n}",
+			line:      1,
+			character: 13,
+			items: []protocol.CompletionItem{
+				{
+					Label: "default",
+				},
+				{
+					Label: "host",
+				},
+				{
+					Label: "none",
 				},
 			},
 		},

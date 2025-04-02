@@ -12,6 +12,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 - telemetry
   - records the language identifier of modified files, this will only include Dockerfiles, Bake files, and Compose files
 
+- Docker Bake
+  - textDocument/completion
+    - suggest network attributes when the text cursor is inside of a string
+
 ### Fixed
 
 - Docker Bake
