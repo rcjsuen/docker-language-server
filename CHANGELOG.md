@@ -9,6 +9,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Dockerfile
   - textDocument/publishDiagnostics
     - introduce a setting to ignore certain diagnostics to not duplicate the ones from the Dockerfile Language Server
+- telemetry
+  - records the language identifier of modified files, this will only include Dockerfiles, Bake files, and Compose files
 
 ### Fixed
 
