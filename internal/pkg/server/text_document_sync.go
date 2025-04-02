@@ -16,6 +16,8 @@ import (
 func (s *Server) TextDocumentDidOpen(ctx *glsp.Context, params *protocol.DidOpenTextDocumentParams) error {
 	_, _ = s.docs.Write(ctx.Context, uri.URI(params.TextDocument.URI), params.TextDocument.LanguageID, params.TextDocument.Version, []byte(params.TextDocument.Text))
 	go func() {
+		defer s.handlePanic("TextDocumentDidOpen")
+
 		s.FetchConfigurations([]protocol.DocumentUri{params.TextDocument.URI})
 		_ = s.computeDiagnostics(ctx.Context, params.TextDocument.URI, params.TextDocument.Text, params.TextDocument.Version)
 	}()

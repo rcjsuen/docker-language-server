@@ -247,6 +247,8 @@ func (s *Server) updateTelemetrySetting(value string) {
 // rather than doing it globally.
 func (s *Server) registerFormattingCapability() {
 	go func() {
+		defer s.handlePanic("registerFormattingCapability")
+
 		time.Sleep(registerCapabilityDelay)
 		dockerbakeLanguage := string(protocol.DockerBakeLanguage)
 		dockerbakeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}}
