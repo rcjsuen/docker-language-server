@@ -48,6 +48,7 @@ client->>server: workspace/configuration response
 - stack trace of a crash
 - hash of the Git remote of modified files
 - hash of the path of modified files
+- language identifier of modified files
 
 ## Privacy Policy
 

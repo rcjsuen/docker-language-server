@@ -59,19 +59,19 @@ func (s *Server) TextDocumentDidClose(ctx *glsp.Context, params *protocol.DidClo
 }
 
 func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.DocumentUri, text string, version int32) error {
+	doc := s.docs.Get(ctx, uri.URI(documentURI))
 	folder, absolutePath, relativePath := types.WorkspaceFolder(documentURI, s.workspaceFolders)
 	if folder == "" {
-		s.recordAnalysis("unversioned", absolutePath)
+		s.recordAnalysis(doc.LanguageIdentifier(), "unversioned", absolutePath)
 	} else {
 		remote := s.gitRemotes[folder]
 		if remote == "" {
-			s.recordAnalysis("unversioned", absolutePath)
+			s.recordAnalysis(doc.LanguageIdentifier(), "unversioned", absolutePath)
 		} else {
-			s.recordAnalysis(remote, relativePath)
+			s.recordAnalysis(doc.LanguageIdentifier(), remote, relativePath)
 		}
 	}
 
-	doc := s.docs.Get(ctx, uri.URI(documentURI))
 	go func() {
 		defer s.handlePanic("computeDiagnostics")
 
@@ -107,7 +107,7 @@ func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.Do
 // recordAnalysis queues a telemetry event to record that the given path
 // under the specified Git remote has been analyzed. gitRemote and path
 // will be hashed before it is sent to the telemetry backend.
-func (s *Server) recordAnalysis(gitRemote string, path string) {
+func (s *Server) recordAnalysis(languageIdentifier protocol.LanguageIdentifier, gitRemote, path string) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if _, ok := s.analyzedFiles[gitRemote]; !ok {
@@ -129,9 +129,10 @@ func (s *Server) recordAnalysis(gitRemote string, path string) {
 			document := hasher.Sum32()
 
 			s.Enqueue(telemetry.EventServerUserAction, map[string]any{
-				"action":     telemetry.ServerUserActionTypeFileAnalyzed,
-				"git_remote": remote,
-				"document":   document,
+				"action":              telemetry.ServerUserActionTypeFileAnalyzed,
+				"language_identifier": string(languageIdentifier),
+				"git_remote":          remote,
+				"document":            document,
 			})
 		}()
 	}
