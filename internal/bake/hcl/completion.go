@@ -60,6 +60,20 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					}
 				}
 
+				if attribute, ok := attributes["network"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
+					if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
+						if _, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
+							return &protocol.CompletionList{
+								Items: []protocol.CompletionItem{
+									{Label: "default"},
+									{Label: "host"},
+									{Label: "none"},
+								},
+							}, nil
+						}
+					}
+				}
+
 				_, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
 				if nodes != nil {
 					if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
