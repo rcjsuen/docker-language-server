@@ -18,6 +18,8 @@ func (s *Server) WorkspaceDidChangeConfiguration(ctx *glsp.Context, params *prot
 			scopes := configuration.Documents()
 			if len(scopes) > 0 {
 				go func() {
+					defer s.handlePanic("WorkspaceDidChangeConfiguration")
+
 					s.FetchConfigurations(scopes)
 					s.recomputeDiagnostics()
 				}()
