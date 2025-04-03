@@ -2,19 +2,20 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## Unreleased
+## [0.2.0] - 2025-04-03
 
 ### Added
 
 - Dockerfile
   - textDocument/publishDiagnostics
     - introduce a setting to ignore certain diagnostics to not duplicate the ones from the Dockerfile Language Server
-- telemetry
-  - records the language identifier of modified files, this will only include Dockerfiles, Bake files, and Compose files
 
 - Docker Bake
   - textDocument/completion
     - suggest network attributes when the text cursor is inside of a string
+
+- telemetry
+  - records the language identifier of modified files, this will only include Dockerfiles, Bake files, and Compose files
 
 ### Fixed
 
@@ -66,3 +67,5 @@ All notable changes to the Docker Language Server will be documented in this fil
     - scan and report the Bake file for errors
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
+
+[0.2.0]: https://github.com/docker/docker-language-server/compare/v0.1.0...v0.2.0
