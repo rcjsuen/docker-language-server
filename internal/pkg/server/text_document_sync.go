@@ -48,6 +48,8 @@ func (s *Server) TextDocumentDidClose(ctx *glsp.Context, params *protocol.DidClo
 
 	go func() {
 		defer s.handlePanic("TextDocumentDidClose")
+		s.docs.LockDocument(uri.URI(params.TextDocument.URI))
+		defer s.docs.UnlockDocument(uri.URI(params.TextDocument.URI))
 		configuration.Remove(params.TextDocument.URI)
 		// clear out all existing diagnostics when the editor has been closed
 		s.client.PublishDiagnostics(context.Background(), protocol.PublishDiagnosticsParams{
@@ -74,6 +76,8 @@ func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.Do
 
 	s.docs.Queue(ctx, uri.URI(documentURI), func() {
 		defer s.handlePanic("computeDiagnostics")
+		s.docs.LockDocument(uri.URI(documentURI))
+		defer s.docs.UnlockDocument(uri.URI(documentURI))
 		doc := s.docs.Get(context.Background(), uri.URI(documentURI))
 
 		folder = types.StripLeadingSlash(folder)

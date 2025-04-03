@@ -22,15 +22,20 @@ type DocumentMap map[uri.URI]Document
 type Manager struct {
 	mu                    sync.Mutex
 	docs                  DocumentMap
-	diagnosticsProcessing map[uri.URI]func(func())
+	diagnosticsProcessing map[uri.URI]*documentLock
 	newDocFunc            NewDocumentFunc
 	readDocFunc           ReadDocumentFunc
+}
+
+type documentLock struct {
+	mu    sync.Mutex
+	queue func(func())
 }
 
 func NewDocumentManager(opts ...ManagerOpt) *Manager {
 	m := Manager{
 		docs:                  make(DocumentMap),
-		diagnosticsProcessing: make(map[uri.URI]func(func())),
+		diagnosticsProcessing: make(map[uri.URI]*documentLock),
 		newDocFunc:            NewDocument,
 		readDocFunc:           ReadDocument,
 	}
@@ -114,8 +119,11 @@ func (m *Manager) Read(ctx context.Context, u uri.URI) (doc Document, err error)
 func (m *Manager) Queue(ctx context.Context, u uri.URI, fn func()) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	queue := m.diagnosticsProcessing[u]
-	queue(fn)
+
+	lock := m.diagnosticsProcessing[u]
+	lock.mu.Lock()
+	defer lock.mu.Unlock()
+	lock.queue(fn)
 }
 
 func (m *Manager) Get(ctx context.Context, u uri.URI) Document {
@@ -197,7 +205,7 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	if !loaded {
 		doc = m.newDocFunc(uri, identifier, version, input)
 		m.docs[uri] = doc
-		m.diagnosticsProcessing[uri] = debounce.New(time.Millisecond * 50)
+		m.diagnosticsProcessing[uri] = &documentLock{queue: debounce.New(time.Millisecond * 50)}
 	} else {
 		changed = doc.Update(version, input)
 	}
@@ -205,16 +213,31 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	return changed, nil
 }
 
+func (m *Manager) LockDocument(uri uri.URI) {
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Lock()
+	}
+}
+
+func (m *Manager) UnlockDocument(uri uri.URI) {
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Unlock()
+	}
+}
+
 // removeAndCleanup removes a Document and frees associated resources.
 func (m *Manager) removeAndCleanup(uri uri.URI) {
 	if existing, ok := m.docs[uri]; ok {
 		existing.Close()
+		delete(m.docs, uri)
 	}
-	if fn, ok := m.diagnosticsProcessing[uri]; ok {
+
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Lock()
+		defer lock.mu.Unlock()
 		// resets the debounced function to avoid parsing a document
 		// that has already been closed
-		fn(func() {})
+		lock.queue(func() {})
+		delete(m.diagnosticsProcessing, uri)
 	}
-	delete(m.diagnosticsProcessing, uri)
-	delete(m.docs, uri)
 }
