@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
-	"github.com/docker/docker-language-server/internal/pkg/document"
 )
 
 var logLevel slog.LevelVar
@@ -24,9 +23,8 @@ type RootCmd struct {
 // Creates a new RootCmd
 // params:
 //
-//	commandName: what to call the base command in examples (e.g., "docker-language-server", "tilt lsp")
-//	managerOpts: a variable number of ManagerOpt arguments to configure the document manager.
-func NewRootCmd(commandName string, managerOpts ...document.ManagerOpt) *RootCmd {
+//	commandName: what to call the base command in examples (e.g., "docker-language-server")
+func NewRootCmd(commandName string) *RootCmd {
 	cmd := RootCmd{
 		Command: &cobra.Command{
 			Use:     commandName,
@@ -46,7 +44,7 @@ func NewRootCmd(commandName string, managerOpts ...document.ManagerOpt) *RootCmd
 		}
 	}
 
-	cmd.AddCommand(newStartCmd(commandName, managerOpts...).Command)
+	cmd.AddCommand(newStartCmd(commandName).Command)
 
 	return &cmd
 }

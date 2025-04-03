@@ -38,12 +38,6 @@ func NewDocumentManager(opts ...ManagerOpt) *Manager {
 	return &m
 }
 
-func WithNewDocumentFunc(newDocFunc NewDocumentFunc) ManagerOpt {
-	return func(manager *Manager) {
-		manager.newDocFunc = newDocFunc
-	}
-}
-
 func WithReadDocumentFunc(readDocFunc ReadDocumentFunc) ManagerOpt {
 	return func(manager *Manager) {
 		manager.readDocFunc = readDocFunc
