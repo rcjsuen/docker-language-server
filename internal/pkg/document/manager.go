@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/bep/debounce"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"go.lsp.dev/uri"
 )
@@ -18,17 +20,19 @@ type DocumentMap map[uri.URI]Document
 
 // Manager provides simplified file read/write operations for the LSP server.
 type Manager struct {
-	mu          sync.Mutex
-	docs        DocumentMap
-	newDocFunc  NewDocumentFunc
-	readDocFunc ReadDocumentFunc
+	mu                    sync.Mutex
+	docs                  DocumentMap
+	diagnosticsProcessing map[uri.URI]func(func())
+	newDocFunc            NewDocumentFunc
+	readDocFunc           ReadDocumentFunc
 }
 
 func NewDocumentManager(opts ...ManagerOpt) *Manager {
 	m := Manager{
-		docs:        make(DocumentMap),
-		newDocFunc:  NewDocument,
-		readDocFunc: ReadDocument,
+		docs:                  make(DocumentMap),
+		diagnosticsProcessing: make(map[uri.URI]func(func())),
+		newDocFunc:            NewDocument,
+		readDocFunc:           ReadDocument,
 	}
 
 	for _, opt := range opts {
@@ -102,7 +106,21 @@ func (m *Manager) Read(ctx context.Context, u uri.URI) (doc Document, err error)
 	return doc, err
 }
 
+// Queue enqueues the given function as something that should be run in
+// the near future. The URI will be used as a key so if another function
+// had previously enqueued for this function and it had not yet been run
+// that the previously enqueued function will be discarded and replaced
+// with the provided function.
+func (m *Manager) Queue(ctx context.Context, u uri.URI, fn func()) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	queue := m.diagnosticsProcessing[u]
+	queue(fn)
+}
+
 func (m *Manager) Get(ctx context.Context, u uri.URI) Document {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.docs[u]
 }
 
@@ -179,6 +197,7 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	if !loaded {
 		doc = m.newDocFunc(uri, identifier, version, input)
 		m.docs[uri] = doc
+		m.diagnosticsProcessing[uri] = debounce.New(time.Millisecond * 50)
 	} else {
 		changed = doc.Update(version, input)
 	}
@@ -191,5 +210,11 @@ func (m *Manager) removeAndCleanup(uri uri.URI) {
 	if existing, ok := m.docs[uri]; ok {
 		existing.Close()
 	}
+	if fn, ok := m.diagnosticsProcessing[uri]; ok {
+		// resets the debounced function to avoid parsing a document
+		// that has already been closed
+		fn(func() {})
+	}
+	delete(m.diagnosticsProcessing, uri)
 	delete(m.docs, uri)
 }

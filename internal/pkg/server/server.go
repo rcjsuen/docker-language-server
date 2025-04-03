@@ -160,7 +160,7 @@ func (s *Server) recomputeDiagnostics() {
 	for _, uri := range s.docs.Keys() {
 		doc := s.docs.Get(context.Background(), uri)
 		if doc != nil {
-			_ = s.computeDiagnostics(context.Background(), string(uri), string(doc.Input()), 1)
+			s.computeDiagnostics(context.Background(), string(uri))
 		}
 	}
 }

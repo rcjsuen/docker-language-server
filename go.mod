@@ -3,6 +3,7 @@ module github.com/docker/docker-language-server
 go 1.23.7
 
 require (
+	github.com/bep/debounce v1.2.1
 	github.com/docker/buildx v0.22.0
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
