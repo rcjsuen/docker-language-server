@@ -28,8 +28,6 @@ type exampleTemplateParams struct {
 	BaseCommandName string
 }
 
-var providedManagerOptions []document.ManagerOpt
-
 // creates a new startCmd
 // params:
 //
@@ -84,14 +82,14 @@ For socket mode, pass the --address option.
 }
 
 func runStdioServer(_ context.Context) error {
-	docManager := document.NewDocumentManager(providedManagerOptions...)
+	docManager := document.NewDocumentManager()
 	s := server.NewServer(docManager)
 	s.StartBackgrondProcesses(context.Background())
 	return s.RunStdio()
 }
 
 func runSocketServer(_ context.Context, addr string) error {
-	docManager := document.NewDocumentManager(providedManagerOptions...)
+	docManager := document.NewDocumentManager()
 	s := server.NewServer(docManager)
 	s.StartBackgrondProcesses(context.Background())
 	return s.RunTCP(addr)
