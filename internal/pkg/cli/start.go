@@ -34,9 +34,7 @@ var providedManagerOptions []document.ManagerOpt
 // params:
 //
 //	commandName: what to call the base command in examples (e.g., "docker-language-server")
-//	builtinFSProvider: provides an fs.FS from which tilt builtin docs should be read
-//	                   if nil, a --builtin-paths param will be added for specifying paths
-func newStartCmd(baseCommandName string, managerOpts ...document.ManagerOpt) *startCmd {
+func newStartCmd(baseCommandName string) *startCmd {
 	cmd := startCmd{
 		Command: &cobra.Command{
 			Use:   "start",
@@ -51,8 +49,6 @@ For socket mode, pass the --address option.
 `,
 		},
 	}
-
-	providedManagerOptions = managerOpts
 
 	var example bytes.Buffer
 	p := exampleTemplateParams{
