@@ -69,14 +69,14 @@ jobs:
       - run: make build
         working-directory: docker-language-server
 
-      - run: mkdir bin
-        working-directory: vscode-extension
-
       - run: npm install
         working-directory: vscode-extension
 
-      - run: mv ../docker-language-server/docker-language-server-linux-amd64 bin
+      - name: Replace the downloaded binary with the one from the build
         working-directory: vscode-extension
+        run: |
+          rm bin/*
+          mv ../docker-language-server/docker-language-server-linux-amd64 bin
 
       - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
         working-directory: vscode-extension
