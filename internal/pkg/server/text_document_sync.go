@@ -45,18 +45,12 @@ func (s *Server) TextDocumentDidChange(ctx *glsp.Context, params *protocol.DidCh
 
 func (s *Server) TextDocumentDidClose(ctx *glsp.Context, params *protocol.DidCloseTextDocumentParams) error {
 	s.docs.Remove(uri.URI(params.TextDocument.URI))
-
-	go func() {
-		defer s.handlePanic("TextDocumentDidClose")
-		s.docs.LockDocument(uri.URI(params.TextDocument.URI))
-		defer s.docs.UnlockDocument(uri.URI(params.TextDocument.URI))
-		configuration.Remove(params.TextDocument.URI)
-		// clear out all existing diagnostics when the editor has been closed
-		s.client.PublishDiagnostics(context.Background(), protocol.PublishDiagnosticsParams{
-			URI:         params.TextDocument.URI,
-			Diagnostics: []protocol.Diagnostic{},
-		})
-	}()
+	configuration.Remove(params.TextDocument.URI)
+	// clear out all existing diagnostics when the editor has been closed
+	s.client.PublishDiagnostics(context.Background(), protocol.PublishDiagnosticsParams{
+		URI:         params.TextDocument.URI,
+		Diagnostics: []protocol.Diagnostic{},
+	})
 	return nil
 }
 
@@ -76,7 +70,9 @@ func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.Do
 
 	s.docs.Queue(ctx, uri.URI(documentURI), func() {
 		defer s.handlePanic("computeDiagnostics")
-		s.docs.LockDocument(uri.URI(documentURI))
+		if !s.docs.LockDocument(uri.URI(documentURI)) {
+			return
+		}
 		defer s.docs.UnlockDocument(uri.URI(documentURI))
 		doc := s.docs.Get(context.Background(), uri.URI(documentURI))
 

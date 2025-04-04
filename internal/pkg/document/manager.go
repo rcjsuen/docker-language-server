@@ -213,10 +213,15 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	return changed, nil
 }
 
-func (m *Manager) LockDocument(uri uri.URI) {
+// LockDocument locks the specified document in preparation of
+// publishing diagnostics. False may be returned if the document is not
+// recognized as being opened in the client.
+func (m *Manager) LockDocument(uri uri.URI) bool {
 	if lock, ok := m.diagnosticsProcessing[uri]; ok {
 		lock.mu.Lock()
+		return true
 	}
+	return false
 }
 
 func (m *Manager) UnlockDocument(uri uri.URI) {
