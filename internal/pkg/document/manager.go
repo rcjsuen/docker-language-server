@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/bep/debounce"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"go.lsp.dev/uri"
 )
@@ -18,17 +20,24 @@ type DocumentMap map[uri.URI]Document
 
 // Manager provides simplified file read/write operations for the LSP server.
 type Manager struct {
-	mu          sync.Mutex
-	docs        DocumentMap
-	newDocFunc  NewDocumentFunc
-	readDocFunc ReadDocumentFunc
+	mu                    sync.Mutex
+	docs                  DocumentMap
+	diagnosticsProcessing map[uri.URI]*documentLock
+	newDocFunc            NewDocumentFunc
+	readDocFunc           ReadDocumentFunc
+}
+
+type documentLock struct {
+	mu    sync.Mutex
+	queue func(func())
 }
 
 func NewDocumentManager(opts ...ManagerOpt) *Manager {
 	m := Manager{
-		docs:        make(DocumentMap),
-		newDocFunc:  NewDocument,
-		readDocFunc: ReadDocument,
+		docs:                  make(DocumentMap),
+		diagnosticsProcessing: make(map[uri.URI]*documentLock),
+		newDocFunc:            NewDocument,
+		readDocFunc:           ReadDocument,
 	}
 
 	for _, opt := range opts {
@@ -102,7 +111,24 @@ func (m *Manager) Read(ctx context.Context, u uri.URI) (doc Document, err error)
 	return doc, err
 }
 
+// Queue enqueues the given function as something that should be run in
+// the near future. The URI will be used as a key so if another function
+// had previously enqueued for this function and it had not yet been run
+// that the previously enqueued function will be discarded and replaced
+// with the provided function.
+func (m *Manager) Queue(ctx context.Context, u uri.URI, fn func()) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	lock := m.diagnosticsProcessing[u]
+	lock.mu.Lock()
+	defer lock.mu.Unlock()
+	lock.queue(fn)
+}
+
 func (m *Manager) Get(ctx context.Context, u uri.URI) Document {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return m.docs[u]
 }
 
@@ -179,6 +205,7 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	if !loaded {
 		doc = m.newDocFunc(uri, identifier, version, input)
 		m.docs[uri] = doc
+		m.diagnosticsProcessing[uri] = &documentLock{queue: debounce.New(time.Millisecond * 50)}
 	} else {
 		changed = doc.Update(version, input)
 	}
@@ -186,10 +213,36 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	return changed, nil
 }
 
+// LockDocument locks the specified document in preparation of
+// publishing diagnostics. False may be returned if the document is not
+// recognized as being opened in the client.
+func (m *Manager) LockDocument(uri uri.URI) bool {
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Lock()
+		return true
+	}
+	return false
+}
+
+func (m *Manager) UnlockDocument(uri uri.URI) {
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Unlock()
+	}
+}
+
 // removeAndCleanup removes a Document and frees associated resources.
 func (m *Manager) removeAndCleanup(uri uri.URI) {
 	if existing, ok := m.docs[uri]; ok {
 		existing.Close()
+		delete(m.docs, uri)
 	}
-	delete(m.docs, uri)
+
+	if lock, ok := m.diagnosticsProcessing[uri]; ok {
+		lock.mu.Lock()
+		defer lock.mu.Unlock()
+		// resets the debounced function to avoid parsing a document
+		// that has already been closed
+		lock.queue(func() {})
+		delete(m.diagnosticsProcessing, uri)
+	}
 }

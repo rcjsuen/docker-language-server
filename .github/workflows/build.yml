@@ -43,8 +43,51 @@ jobs:
 
       - run: docker run --rm -v /var/run/docker.sock:/var/run/docker.sock docker/lsp:test make test
 
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: actions/checkout@v4 (docker/docker-language-server)
+        uses: actions/checkout@v4
+        with:
+          repository: docker/docker-language-server
+          path: docker-language-server
+
+      - name: actions/checkout@v4 (docker/vscode-extension)
+        uses: actions/checkout@v4
+        with:
+          repository: docker/vscode-extension
+          path: vscode-extension
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.7"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.x"
+
+      - run: make build
+        working-directory: docker-language-server
+
+      - run: npm install
+        working-directory: vscode-extension
+
+      - name: Replace the downloaded binary with the one from the build
+        working-directory: vscode-extension
+        run: |
+          rm bin/*
+          mv ../docker-language-server/docker-language-server-linux-amd64 bin
+
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        working-directory: vscode-extension
+
+      - run: xvfb-run --auto-servernum --server-args='-screen 0 1920x1080x24' npm test
+        working-directory: vscode-extension
+
   upload:
-    needs: build
+    needs:
+      - build
+      - integration-test
     runs-on: ubuntu-latest
 
     strategy:

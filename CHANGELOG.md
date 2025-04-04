@@ -2,6 +2,13 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- textDocument/publishDiagnostics
+  - stop diagnostics from being sent to the client if a file with errors or warnings were opened by the client and then quickly closed
+
 ## [0.2.0] - 2025-04-03
 
 ### Added
@@ -68,4 +75,5 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.2.0...main
 [0.2.0]: https://github.com/docker/docker-language-server/compare/v0.1.0...v0.2.0
