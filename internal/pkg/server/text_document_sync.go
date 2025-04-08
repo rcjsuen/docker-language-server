@@ -56,6 +56,10 @@ func (s *Server) TextDocumentDidClose(ctx *glsp.Context, params *protocol.DidClo
 
 func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.DocumentUri) {
 	doc := s.docs.Get(ctx, uri.URI(documentURI))
+	if doc == nil {
+		return
+	}
+
 	folder, absolutePath, relativePath := types.WorkspaceFolder(documentURI, s.workspaceFolders)
 	if folder == "" {
 		s.recordAnalysis(doc.LanguageIdentifier(), "unversioned", absolutePath)
