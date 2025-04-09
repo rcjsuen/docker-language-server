@@ -39,6 +39,39 @@ func TestSemanticTokensFull(t *testing.T) {
 			content: "target {}",
 			result:  []uint32{0, 0, 6, hcl.SemanticTokenTypeIndex(hcl.TokenType_Type), 0},
 		},
+		{
+			name:    "single line comment after content with no newlines after it",
+			content: "variable \"port\" {default = true} # hello",
+			result: []uint32{
+				0, 0, 8, hcl.SemanticTokenTypeIndex(hcl.TokenType_Type), 0,
+				0, 9, 6, hcl.SemanticTokenTypeIndex(hcl.TokenType_Class), 0,
+				0, 8, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Property), 0,
+				0, 10, 4, hcl.SemanticTokenTypeIndex(hcl.TokenType_Keyword), 0,
+				0, 6, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Comment), 0,
+			},
+		},
+		{
+			name:    "single line comment after content followed by LF",
+			content: "variable \"port\" {default = true} # hello\n",
+			result: []uint32{
+				0, 0, 8, hcl.SemanticTokenTypeIndex(hcl.TokenType_Type), 0,
+				0, 9, 6, hcl.SemanticTokenTypeIndex(hcl.TokenType_Class), 0,
+				0, 8, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Property), 0,
+				0, 10, 4, hcl.SemanticTokenTypeIndex(hcl.TokenType_Keyword), 0,
+				0, 6, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Comment), 0,
+			},
+		},
+		{
+			name:    "single line comment after content followed by CRLF",
+			content: "variable \"port\" {default = true} # hello\r\n",
+			result: []uint32{
+				0, 0, 8, hcl.SemanticTokenTypeIndex(hcl.TokenType_Type), 0,
+				0, 9, 6, hcl.SemanticTokenTypeIndex(hcl.TokenType_Class), 0,
+				0, 8, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Property), 0,
+				0, 10, 4, hcl.SemanticTokenTypeIndex(hcl.TokenType_Keyword), 0,
+				0, 6, 7, hcl.SemanticTokenTypeIndex(hcl.TokenType_Comment), 0,
+			},
+		},
 	}
 
 	for _, tc := range testCases {

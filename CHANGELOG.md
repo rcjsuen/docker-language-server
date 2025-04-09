@@ -2,6 +2,12 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- refactored the panic handler so that crashes from handling the JSON-RPC messages would no longer cause the language server to crash
+
 ## [0.3.2] - 2025-04-09
 
 ### Fixed
