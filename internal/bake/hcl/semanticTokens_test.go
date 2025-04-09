@@ -391,6 +391,39 @@ func TestSemanticTokensFull(t *testing.T) {
 				{0, 7, 5, SemanticTokenTypeIndex(TokenType_Keyword), 0},
 			},
 		},
+		{
+			name:    "single line comment after content with no newlines after it",
+			content: "variable \"port\" {default = true} # hello",
+			result: [][]uint32{
+				{0, 0, 8, SemanticTokenTypeIndex(TokenType_Type), 0},
+				{0, 9, 6, SemanticTokenTypeIndex(TokenType_Class), 0},
+				{0, 8, 7, SemanticTokenTypeIndex(TokenType_Property), 0},
+				{0, 10, 4, SemanticTokenTypeIndex(TokenType_Keyword), 0},
+				{0, 6, 7, SemanticTokenTypeIndex(TokenType_Comment), 0},
+			},
+		},
+		{
+			name:    "single line comment after content followed by LF",
+			content: "variable \"port\" {default = true} # hello\n",
+			result: [][]uint32{
+				{0, 0, 8, SemanticTokenTypeIndex(TokenType_Type), 0},
+				{0, 9, 6, SemanticTokenTypeIndex(TokenType_Class), 0},
+				{0, 8, 7, SemanticTokenTypeIndex(TokenType_Property), 0},
+				{0, 10, 4, SemanticTokenTypeIndex(TokenType_Keyword), 0},
+				{0, 6, 7, SemanticTokenTypeIndex(TokenType_Comment), 0},
+			},
+		},
+		{
+			name:    "single line comment after content followed by CRLF",
+			content: "variable \"port\" {default = true} # hello\r\n",
+			result: [][]uint32{
+				{0, 0, 8, SemanticTokenTypeIndex(TokenType_Type), 0},
+				{0, 9, 6, SemanticTokenTypeIndex(TokenType_Class), 0},
+				{0, 8, 7, SemanticTokenTypeIndex(TokenType_Property), 0},
+				{0, 10, 4, SemanticTokenTypeIndex(TokenType_Keyword), 0},
+				{0, 6, 7, SemanticTokenTypeIndex(TokenType_Comment), 0},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

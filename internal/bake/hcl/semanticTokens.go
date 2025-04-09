@@ -295,7 +295,7 @@ func convertSingleLineCommentToken(bytes []byte, token hclsyntax.Token) lang.Sem
 	endColumn := token.Range.Start.Column + (token.Range.End.Byte - token.Range.Start.Byte)
 	// decrement by one for the \n
 	endColumn--
-	if bytes[token.Range.Start.Byte+endColumn-2] == 13 {
+	if bytes[endColumn-2] == 13 {
 		// decrement by one more for the \r if found (ASCII 13)
 		endColumn--
 	}
