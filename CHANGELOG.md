@@ -10,6 +10,12 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - prevent single line comments from crashing the server
 
+## [0.3.1] - 2025-04-09
+
+### Changed
+
+- binaries are now built with `CGO_ENABLED=0` to allow for greater interoperability
+
 ## [0.3.0] - 2025-04-08
 
 ### Fixed
