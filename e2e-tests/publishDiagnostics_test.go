@@ -59,7 +59,11 @@ func TestPublishDiagnostics(t *testing.T) {
 }
 
 func initialize(t *testing.T, conn *jsonrpc2.Conn, initializeParams protocol.InitializeParams) {
-	initializeParams.InitializationOptions = map[string]string{"telemetry": "off"}
+	if options, ok := initializeParams.InitializationOptions.(map[string]any); ok {
+		options["telemetry"] = "off"
+	} else {
+		initializeParams.InitializationOptions = map[string]string{"telemetry": "off"}
+	}
 	var initializeResult *protocol.InitializeResult
 	err := conn.Call(context.Background(), protocol.MethodInitialize, initializeParams, &initializeResult)
 	require.NoError(t, err)
