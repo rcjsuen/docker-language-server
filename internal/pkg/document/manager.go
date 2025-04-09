@@ -120,10 +120,12 @@ func (m *Manager) Queue(ctx context.Context, u uri.URI, fn func()) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	lock := m.diagnosticsProcessing[u]
-	lock.mu.Lock()
-	defer lock.mu.Unlock()
-	lock.queue(fn)
+	if m.LockDocument(u) {
+		defer m.UnlockDocument(u)
+		if lock, ok := m.diagnosticsProcessing[u]; ok {
+			lock.queue(fn)
+		}
+	}
 }
 
 func (m *Manager) Get(ctx context.Context, u uri.URI) Document {
