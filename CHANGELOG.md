@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Docker Bake
+  - textDocument/semanticTokens/full
+    - prevent single line comments from crashing the server
+
 ## [0.3.0] - 2025-04-08
 
 ### Fixed
