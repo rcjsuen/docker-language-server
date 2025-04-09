@@ -86,7 +86,7 @@ type Handler struct {
 	TextDocumentInlineValue             TextDocumentInlineValueFunc
 	TextDocumentInlineCompletion        TextDocumentInlineCompletionFunc
 
-	Recover func(method string) error
+	Recover func(method string, recovered interface{}) error
 
 	initialized bool
 	lock        sync.Mutex
@@ -95,9 +95,12 @@ type Handler struct {
 // ([glsp.Handler] interface)
 func (self *Handler) Handle(context *glsp.Context) (r any, validMethod bool, validParams bool, err error) {
 	defer func() {
-		recovered := self.Recover(context.Method)
-		if recovered != nil {
-			err = recovered
+		r := recover()
+		if r != nil {
+			recovered := self.Recover(context.Method, r)
+			if recovered != nil {
+				err = recovered
+			}
 		}
 	}()
 

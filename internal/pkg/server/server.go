@@ -114,8 +114,8 @@ func NewServer(docManager *document.Manager) *Server {
 	handler.WorkspaceDidChangeConfiguration = s.WorkspaceDidChangeConfiguration
 	handler.WorkspaceExecuteCommand = s.WorkspaceExecuteCommand
 
-	handler.Recover = func(method string) error {
-		if s.handlePanic(method) {
+	handler.Recover = func(method string, recovered interface{}) error {
+		if s.handleRecovered(method, recovered) {
 			return &jsonrpc2.Error{Code: -32803, Message: "Internal server error"}
 		}
 		return nil
@@ -185,19 +185,26 @@ func (s *Server) publishTelemetry(ctx context.Context) {
 	}()
 }
 
-func (s *Server) handlePanic(method string) bool {
-	if r := recover(); r != nil {
+func (s *Server) handleRecovered(method string, recovered interface{}) bool {
+	if recovered != nil {
 		debug.PrintStack()
 		properties := map[string]any{
 			"type":        telemetry.ServerHeartbeatTypePanic,
 			"method":      method,
 			"stack_trace": string(debug.Stack()),
 		}
-		if err, ok := r.(error); ok {
+		if err, ok := recovered.(error); ok {
 			properties["recover"] = err.Error()
 		}
 		s.Enqueue(telemetry.EventServerHeartbeat, properties)
 		return true
+	}
+	return false
+}
+
+func (s *Server) handlePanic(method string) bool {
+	if r := recover(); r != nil {
+		return s.handleRecovered(method, r)
 	}
 	return false
 }
