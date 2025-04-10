@@ -107,7 +107,8 @@ func DocumentSymbol(ctx context.Context, doc document.ComposeDocument) (result [
 }
 
 func createSymbol(nodes []*yaml.Node, idx int, kind protocol.SymbolKind) (result []any) {
-	for _, service := range nodes[idx].Content {
+	for i := 0; i < len(nodes[idx].Content); i += 2 {
+		service := nodes[idx].Content[i]
 		if service.Value != "" {
 			character := uint32(service.Column - 1)
 			rng := protocol.Range{
