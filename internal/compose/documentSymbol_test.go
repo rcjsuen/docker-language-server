@@ -60,6 +60,26 @@ func TestDocumentSymbol(t *testing.T) {
 			},
 		},
 		{
+			name: "services block with a piped scalar value",
+			content: `services:
+  web: |
+    this is a string`,
+			symbols: []*protocol.DocumentSymbol{
+				{
+					Name: "web",
+					Kind: protocol.SymbolKindClass,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 5},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 5},
+					},
+				},
+			},
+		},
+		{
 			name: "networks block",
 			content: `networks:
   frontend:`,
