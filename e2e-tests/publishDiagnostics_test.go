@@ -86,7 +86,8 @@ func initialize(t *testing.T, conn *jsonrpc2.Conn, initializeParams protocol.Ini
 			InlineCompletionProvider: protocol.InlineCompletionOptions{},
 			SemanticTokensProvider: protocol.SemanticTokensOptions{
 				Legend: protocol.SemanticTokensLegend{
-					TokenTypes: hcl.SemanticTokenTypes,
+					TokenModifiers: []string{},
+					TokenTypes:     hcl.SemanticTokenTypes,
 				},
 				Full:  true,
 				Range: false,
