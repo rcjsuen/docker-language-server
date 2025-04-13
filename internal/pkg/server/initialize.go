@@ -108,7 +108,8 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 			InlineCompletionProvider: protocol.InlineCompletionOptions{},
 			SemanticTokensProvider: protocol.SemanticTokensOptions{
 				Legend: protocol.SemanticTokensLegend{
-					TokenTypes: hcl.SemanticTokenTypes,
+					TokenModifiers: []string{},
+					TokenTypes:     hcl.SemanticTokenTypes,
 				},
 				Full:  true,
 				Range: false,
