@@ -2,6 +2,13 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [0.3.5] - 2025-04-13
+
+### Fixed
+
+- initialize
+  - when responding to the initialize request, we should send an empty array back for tokenModifiers instead of a null
+
 ## [0.3.4] - 2025-04-11
 
 ### Fixed
@@ -103,7 +110,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.4...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.5...main
+[0.3.5]: https://github.com/docker/docker-language-server/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/docker/docker-language-server/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/docker/docker-language-server/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/docker/docker-language-server/compare/v0.3.1...v0.3.2
