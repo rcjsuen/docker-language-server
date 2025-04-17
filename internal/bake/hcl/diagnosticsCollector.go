@@ -244,15 +244,7 @@ func EvaluateDockerfilePath(block *hclsyntax.Block, doc document.Document) (stri
 		// if the target block has no label we cannot ask Bake to try and print it
 		return "", errors.New("target block has no label")
 	}
-
-	if _, ok := block.Body.Attributes["target"]; ok {
-		return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
-	}
-
-	if _, ok := block.Body.Attributes["args"]; ok {
-		return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
-	}
-	return "", nil
+	return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
 }
 
 // checkTargetArgs examines the args attribute of a target block.
