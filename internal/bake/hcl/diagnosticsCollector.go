@@ -146,13 +146,6 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			if attribute, ok := block.Body.Attributes["args"]; ok {
-				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
-					argsDiagnostics := c.checkTargetArgs(doc, input, expr, source)
-					diagnostics = append(diagnostics, argsDiagnostics...)
-				}
-			}
-
 			if attribute, ok := block.Body.Attributes["tags"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
 					for _, e := range expr.Exprs {
@@ -218,111 +211,128 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
+			dockerfilePath, err := evaluateDockerfilePath(block, doc.URI())
+			if dockerfilePath == "" || err != nil {
+				continue
+			}
+
 			if attribute, ok := block.Body.Attributes["target"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
 					if literalValueExpr, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
-						diagnostic := c.checkTargetTarget(doc, block.Labels[0], expr, literalValueExpr, source)
+						diagnostic := c.checkTargetTarget(dockerfilePath, expr, literalValueExpr, source)
 						if diagnostic != nil {
 							diagnostics = append(diagnostics, *diagnostic)
 						}
 					}
 				}
 			}
+
+			if attribute, ok := block.Body.Attributes["args"]; ok {
+				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
+					argsDiagnostics := c.checkTargetArgs(dockerfilePath, input, expr, source)
+					diagnostics = append(diagnostics, argsDiagnostics...)
+				}
+			}
 		}
 	}
 	return diagnostics
 }
 
-func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(doc document.Document, input []byte, expr *hclsyntax.ObjectConsExpr, source string) []protocol.Diagnostic {
-	dockerfilePath, err := ParseReferencedDockerfile(doc.URI(), doc.(document.BakeHCLDocument), expr.SrcRange.Start.Line, expr.SrcRange.Start.Column)
-	if err != nil {
-		return nil
+// evaluateDockerfilePath uses the output of `docker buildx bake --print`
+// to identify the location of the Dockerfile that block is using.
+func evaluateDockerfilePath(block *hclsyntax.Block, documentURI uri.URI) (string, error) {
+	if len(block.Labels) == 0 {
+		// if the target block has no label we cannot ask Bake to try and print it
+		return "", errors.New("target block has no label")
+	}
+
+	if _, ok := block.Body.Attributes["target"]; ok {
+		return ParseDockerfileFromBakeOutput(documentURI, block.Labels[0])
+	}
+
+	if _, ok := block.Body.Attributes["args"]; ok {
+		return ParseDockerfileFromBakeOutput(documentURI, block.Labels[0])
+	}
+	return "", nil
+}
+
+// checkTargetArgs examines the args attribute of a target block.
+func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(dockerfilePath string, input []byte, expr *hclsyntax.ObjectConsExpr, source string) []protocol.Diagnostic {
+	_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+	args := []string{}
+	for _, child := range nodes {
+		if strings.EqualFold(child.Value, "ARG") {
+			child = child.Next
+			for child != nil {
+				value := child.Value
+				idx := strings.Index(value, "=")
+				if idx != -1 {
+					value = value[:idx]
+				}
+				args = append(args, value)
+				child = child.Next
+			}
+		}
 	}
 
 	diagnostics := []protocol.Diagnostic{}
-	if dockerfilePath != "" {
-		_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
-		args := []string{}
-		for _, child := range nodes {
-			if strings.EqualFold(child.Value, "ARG") {
-				child = child.Next
-				for child != nil {
-					value := child.Value
-					idx := strings.Index(value, "=")
-					if idx != -1 {
-						value = value[:idx]
-					}
-					args = append(args, value)
-					child = child.Next
-				}
-			}
+	for _, item := range expr.Items {
+		start := item.KeyExpr.Range().Start.Byte
+		end := item.KeyExpr.Range().End.Byte
+		if LiteralValue(item.KeyExpr) {
+			start++
+			end--
+		}
+		arg := string(input[start:end])
+		if slices.Contains(builtinArgs, arg) {
+			continue
 		}
 
-		for _, item := range expr.Items {
-			start := item.KeyExpr.Range().Start.Byte
-			end := item.KeyExpr.Range().End.Byte
-			if LiteralValue(item.KeyExpr) {
-				start++
-				end--
-			}
-			arg := string(input[start:end])
-			if slices.Contains(builtinArgs, arg) {
-				continue
-			}
+		diagnostic := checkStringLiteral(
+			source,
+			arg,
+			fmt.Sprintf("'%v' not defined as an ARG in your Dockerfile", arg),
+			args,
+			item.KeyExpr.Range(),
+		)
 
-			diagnostic := checkStringLiteral(
-				source,
-				arg,
-				fmt.Sprintf("'%v' not defined as an ARG in your Dockerfile", arg),
-				args,
-				item.KeyExpr.Range(),
-			)
-
-			if diagnostic != nil {
-				diagnostics = append(diagnostics, *diagnostic)
-			}
+		if diagnostic != nil {
+			diagnostics = append(diagnostics, *diagnostic)
 		}
 	}
 	return diagnostics
 }
 
-func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(doc document.Document, bakeTarget string, expr *hclsyntax.TemplateExpr, literalValueExpr *hclsyntax.LiteralValueExpr, source string) *protocol.Diagnostic {
+func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(dockerfilePath string, expr *hclsyntax.TemplateExpr, literalValueExpr *hclsyntax.LiteralValueExpr, source string) *protocol.Diagnostic {
 	value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 	target := value.AsString()
 
-	dockerfilePath, err := ParseDockerfileFromBakeOutput(doc.URI(), bakeTarget)
-	if err != nil {
-		return nil
-	}
-
-	if dockerfilePath != "" {
-		_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
-		found := false
-		for _, child := range nodes {
-			if strings.EqualFold(child.Value, "FROM") {
-				if child.Next != nil && child.Next.Next != nil && child.Next.Next.Next != nil && child.Next.Next.Next.Value == target {
-					found = true
-					break
-				}
+	_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+	found := false
+	for _, child := range nodes {
+		if strings.EqualFold(child.Value, "FROM") {
+			if child.Next != nil && child.Next.Next != nil && child.Next.Next.Next != nil && child.Next.Next.Next.Value == target {
+				found = true
+				break
 			}
 		}
+	}
 
-		if !found {
-			return &protocol.Diagnostic{
-				Message:  "target could not be found in your Dockerfile",
-				Source:   types.CreateStringPointer(source),
-				Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
-				Range: protocol.Range{
-					Start: protocol.Position{
-						Line:      uint32(expr.SrcRange.Start.Line) - 1,
-						Character: uint32(expr.SrcRange.Start.Column) - 1,
-					},
-					End: protocol.Position{
-						Line:      uint32(expr.SrcRange.End.Line) - 1,
-						Character: uint32(expr.SrcRange.End.Column) - 1,
-					},
+	if !found {
+		return &protocol.Diagnostic{
+			Message:  "target could not be found in your Dockerfile",
+			Source:   types.CreateStringPointer(source),
+			Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+			Range: protocol.Range{
+				Start: protocol.Position{
+					Line:      uint32(expr.SrcRange.Start.Line) - 1,
+					Character: uint32(expr.SrcRange.Start.Column) - 1,
 				},
-			}
+				End: protocol.Position{
+					Line:      uint32(expr.SrcRange.End.Line) - 1,
+					Character: uint32(expr.SrcRange.End.Column) - 1,
+				},
+			},
 		}
 	}
 	return nil
@@ -395,23 +405,29 @@ func ParseDockerfileFromBakeOutput(documentURI uri.URI, target string) (string, 
 		return "", nil
 	}
 
+	url, err := url.Parse(string(documentURI))
+	if err != nil {
+		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
+	}
+	contextPath, err := types.AbsoluteFolder(url)
+	if err != nil {
+		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
+	}
 	if block, ok := output.Target[target]; ok {
 		if block.DockerfileInline != nil {
 			return "", nil
-		} else if block.Dockerfile != nil {
-			url, err := url.Parse(string(documentURI))
-			if err != nil {
-				return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
-			}
-			dockerfilePath := *block.Dockerfile
-			dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
-			dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-			dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
+		} else if block.Context != nil {
+			contextPath = *block.Context
+			contextPath, err = types.AbsolutePath(url, contextPath)
 			if err != nil {
 				return "", nil
 			}
-			return dockerfilePath, nil
 		}
+
+		if block.Dockerfile != nil {
+			return filepath.Join(contextPath, *block.Dockerfile), nil
+		}
+		return filepath.Join(contextPath, "Dockerfile"), nil
 	}
 	return "", nil
 }

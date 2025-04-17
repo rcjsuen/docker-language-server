@@ -194,6 +194,11 @@ target "lint2" {
 			content:     "target \"child\" {\n  inherits = [\"parent\"]\n  target = \"build\"\n}",
 			diagnostics: []protocol.Diagnostic{},
 		},
+		{
+			name:        "context folder used for looking for the Dockerfile",
+			content:     "target \"backend\" {\n  context = \"./backend\"\n  args = {\n    BACKEND_VAR=\"changed\"\n  }\n}",
+			diagnostics: []protocol.Diagnostic{},
+		},
 	}
 
 	wd, err := os.Getwd()
