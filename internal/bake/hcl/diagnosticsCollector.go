@@ -211,7 +211,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			dockerfilePath, err := evaluateDockerfilePath(block, doc.URI())
+			dockerfilePath, err := EvaluateDockerfilePath(block, doc.URI())
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
@@ -238,9 +238,9 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 	return diagnostics
 }
 
-// evaluateDockerfilePath uses the output of `docker buildx bake --print`
+// EvaluateDockerfilePath uses the output of `docker buildx bake --print`
 // to identify the location of the Dockerfile that block is using.
-func evaluateDockerfilePath(block *hclsyntax.Block, documentURI uri.URI) (string, error) {
+func EvaluateDockerfilePath(block *hclsyntax.Block, documentURI uri.URI) (string, error) {
 	if len(block.Labels) == 0 {
 		// if the target block has no label we cannot ask Bake to try and print it
 		return "", errors.New("target block has no label")

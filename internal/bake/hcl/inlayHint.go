@@ -22,15 +22,11 @@ func InlayHint(docs *document.Manager, doc document.BakeHCLDocument, rng protoco
 	input := doc.Input()
 	hints := []protocol.InlayHint{}
 	for _, block := range body.Blocks {
-		if block.Type == "target" {
+		if block.Type == "target" && len(block.Labels) > 0 {
 			if attribute, ok := block.Body.Attributes["args"]; ok {
-				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
-					dockerfilePath, err := ParseReferencedDockerfile(doc.URI(), doc, expr.SrcRange.Start.Line, expr.SrcRange.Start.Column)
-					if err != nil || len(expr.Items) == 0 {
-						continue
-					}
-
-					if dockerfilePath != "" {
+				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok && len(expr.Items) > 0 {
+					dockerfilePath, err := EvaluateDockerfilePath(block, doc.URI())
+					if dockerfilePath != "" && err == nil {
 						_, nodes := OpenDockerfile(context.Background(), docs, dockerfilePath)
 						args := map[string]string{}
 						for _, child := range nodes {
