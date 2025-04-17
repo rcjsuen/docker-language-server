@@ -49,20 +49,50 @@ func TestInlayHint(t *testing.T) {
 			},
 			items: []protocol.InlayHint{},
 		},
+		{
+			name:    "args lookup to a different context folder",
+			content: "target \"backend\" {\n  context = \"./backend\"\n  args = {\n    BACKEND_VAR=\"changed\"\n  }\n}",
+			rng: protocol.Range{
+				Start: protocol.Position{Line: 0, Character: 0},
+				End:   protocol.Position{Line: 4, Character: 0},
+			},
+			items: []protocol.InlayHint{
+				{
+					Label:       "(default value: backend_value)",
+					PaddingLeft: types.CreateBoolPointer(true),
+					Position:    protocol.Position{Line: 3, Character: 25},
+				},
+			},
+		},
 	}
 
-	dockerfilePath := filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile"))
-	dockerBakePath := filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl"))
-	temporaryDockerfile := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/")))
-	temporaryBakeFile := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerBakePath, "/")))
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
+	inlayHintTestFolderPath := filepath.Join(projectRoot, "testdata", "inlayHint")
+	dockerfilePath := filepath.Join(inlayHintTestFolderPath, "Dockerfile")
+	bakeFilePath := filepath.Join(inlayHintTestFolderPath, "docker-bake.hcl")
+	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(bakeFilePath), "/")))
+	dockerfileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/")))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
-			changed, err := manager.Write(context.Background(), temporaryDockerfile, protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+			if len(tc.content) > 0 {
+				changed, err := manager.Write(context.Background(), dockerfileURI, protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+				defer manager.Remove(dockerfileURI)
+				require.NoError(t, err)
+				require.True(t, changed)
+			}
+			bytes := []byte(tc.content)
+			err := os.WriteFile(bakeFilePath, bytes, 0644)
 			require.NoError(t, err)
-			require.True(t, changed)
-			doc := document.NewBakeHCLDocument(temporaryBakeFile, 1, []byte(tc.content))
+			t.Cleanup(func() {
+				err := os.Remove(bakeFilePath)
+				require.NoError(t, err)
+			})
+
+			doc := document.NewBakeHCLDocument(bakeFileURI, 1, []byte(tc.content))
 			items, err := InlayHint(manager, doc, tc.rng)
 			require.NoError(t, err)
 			require.Equal(t, tc.items, items)
