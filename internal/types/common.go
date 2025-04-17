@@ -84,3 +84,11 @@ func AbsolutePath(documentURL *url.URL, path string) (string, error) {
 	}
 	return filepath.Abs(filepath.Join(filepath.Dir(documentPath), path))
 }
+
+func AbsoluteFolder(documentURL *url.URL) (string, error) {
+	documentPath := documentURL.Path
+	if runtime.GOOS == "windows" {
+		documentPath = documentURL.Path[1:]
+	}
+	return filepath.Abs(filepath.Dir(documentPath))
+}
