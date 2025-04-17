@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/moby/buildkit/solver/errdefs"
-	"go.lsp.dev/uri"
 )
 
 type BakePrintOutput struct {
@@ -211,7 +210,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			dockerfilePath, err := EvaluateDockerfilePath(block, doc.URI())
+			dockerfilePath, err := EvaluateDockerfilePath(block, doc)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
@@ -240,18 +239,18 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 
 // EvaluateDockerfilePath uses the output of `docker buildx bake --print`
 // to identify the location of the Dockerfile that block is using.
-func EvaluateDockerfilePath(block *hclsyntax.Block, documentURI uri.URI) (string, error) {
+func EvaluateDockerfilePath(block *hclsyntax.Block, doc document.Document) (string, error) {
 	if len(block.Labels) == 0 {
 		// if the target block has no label we cannot ask Bake to try and print it
 		return "", errors.New("target block has no label")
 	}
 
 	if _, ok := block.Body.Attributes["target"]; ok {
-		return ParseDockerfileFromBakeOutput(documentURI, block.Labels[0])
+		return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
 	}
 
 	if _, ok := block.Body.Attributes["args"]; ok {
-		return ParseDockerfileFromBakeOutput(documentURI, block.Labels[0])
+		return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
 	}
 	return "", nil
 }
@@ -371,9 +370,10 @@ func checkStringLiteral(diagnosticSource, attributeValue, message string, expect
 	}
 }
 
-func PrintOutput(directory, target string) *BakePrintOutput {
+func PrintOutput(directory, target string, bakeFileContent []byte) *BakePrintOutput {
 	var buf bytes.Buffer
-	cmd := exec.Command("docker", "buildx", "bake", "--print", target)
+	cmd := exec.Command("docker", "buildx", "bake", "-f-", "--print", target)
+	cmd.Stdin = bytes.NewBuffer(bakeFileContent)
 	cmd.Dir = directory
 	cmd.Stdout = &buf
 	err := cmd.Start()
@@ -399,8 +399,9 @@ func PrintOutput(directory, target string) *BakePrintOutput {
 	return output
 }
 
-func ParseDockerfileFromBakeOutput(documentURI uri.URI, target string) (string, error) {
-	output := PrintOutput(filepath.Dir(documentURI.Filename()), target)
+func ParseDockerfileFromBakeOutput(doc document.Document, target string) (string, error) {
+	documentURI := doc.URI()
+	output := PrintOutput(filepath.Dir(documentURI.Filename()), target, doc.Input())
 	if output == nil {
 		return "", nil
 	}
