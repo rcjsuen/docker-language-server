@@ -17,7 +17,7 @@ test-docker-disconnected: build-docker-test
 	docker run -e DOCKER_NETWORK_NONE=true --rm -v /var/run/docker.sock:/var/run/docker.sock --network none docker/lsp:test make test
 
 lint:
-	golangci-lint run --exclude-dirs lsp
+	golangci-lint run --exclude-dirs internal/tliron
 
 tidy:
 	go mod tidy
