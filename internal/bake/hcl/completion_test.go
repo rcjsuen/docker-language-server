@@ -356,6 +356,17 @@ func TestCompletion(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:      "resolve build stage targets from a Dockerfile inside a context folder",
+			content:   "target \"backend\" {\n  context = \"./backend\"\n  target=\"\"\n}",
+			line:      2,
+			character: 10,
+			items: []protocol.CompletionItem{
+				{
+					Label: "nested",
+				},
+			},
+		},
 	}
 
 	bakeFilePath := filepath.Join(completionTestFolderPath, "docker-bake.hcl")

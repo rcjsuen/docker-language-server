@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/hcl-lang/lang"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"go.lsp.dev/uri"
 )
 
 func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, document document.BakeHCLDocument) (*protocol.CompletionList, error) {
@@ -36,92 +35,91 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return nil, errors.New("unrecognized body in HCL document")
 	}
 
-	dockerfilePath, err := ParseReferencedDockerfile(uri.URI(params.TextDocument.URI), document, int(params.Position.Line)+1, int(params.Position.Character)+1)
-	if err != nil {
-		return nil, fmt.Errorf("textDocument/completion encountered an error: %w", err)
-	}
 	for _, b := range body.Blocks {
 		if isInsideBodyRangeLines(b.Body, int(params.Position.Line)+1) {
-			if dockerfilePath != "" {
-				attributes := b.Body.Attributes
-				if attribute, ok := attributes["inherits"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
-					if tupleConsExpr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
-						if len(tupleConsExpr.Exprs) == 0 {
-							return createTargetBlockCompletionItems(body.Blocks, true), nil
-						}
+			attributes := b.Body.Attributes
+			if attribute, ok := attributes["inherits"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
+				if tupleConsExpr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
+					if len(tupleConsExpr.Exprs) == 0 {
+						return createTargetBlockCompletionItems(body.Blocks, true), nil
+					}
 
-						for _, e := range tupleConsExpr.Exprs {
-							if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
-								if templateExpr.IsStringLiteral() {
-									return createTargetBlockCompletionItems(body.Blocks, false), nil
-								}
+					for _, e := range tupleConsExpr.Exprs {
+						if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
+							if templateExpr.IsStringLiteral() {
+								return createTargetBlockCompletionItems(body.Blocks, false), nil
 							}
 						}
 					}
 				}
+			}
 
-				if attribute, ok := attributes["network"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
-					if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
-						if _, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
-							return &protocol.CompletionList{
-								Items: []protocol.CompletionItem{
-									{Label: "default"},
-									{Label: "host"},
-									{Label: "none"},
-								},
-							}, nil
-						}
+			if attribute, ok := attributes["network"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
+				if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
+					if _, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
+						return &protocol.CompletionList{
+							Items: []protocol.CompletionItem{
+								{Label: "default"},
+								{Label: "host"},
+								{Label: "none"},
+							},
+						}, nil
 					}
 				}
+			}
 
-				_, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
-				if nodes != nil {
-					if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
-						if _, ok := attributes["dockerfile-inline"]; ok {
-							return &protocol.CompletionList{Items: []protocol.CompletionItem{}}, nil
-						}
+			dockerfilePath, err := EvaluateDockerfilePath(b, document)
+			if dockerfilePath == "" || err != nil {
+				continue
+			}
 
-						list := &protocol.CompletionList{}
-						for _, child := range nodes {
-							if strings.EqualFold(child.Value, "FROM") && child.Next != nil && child.Next.Next != nil && child.Next.Next.Next != nil {
-								item := protocol.CompletionItem{
-									Label: child.Next.Next.Next.Value,
-								}
-								list.Items = append(list.Items, item)
-							}
-						}
-						return list, nil
+			_, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
+			if nodes != nil {
+				if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
+					if _, ok := attributes["dockerfile-inline"]; ok {
+						return &protocol.CompletionList{Items: []protocol.CompletionItem{}}, nil
 					}
 
-					if attribute, ok := attributes["args"]; ok {
-						if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
-							for _, item := range expr.Items {
-								if isInsideRange(item.KeyExpr.Range(), params.Position) {
-									list := &protocol.CompletionList{}
-									for _, child := range nodes {
-										if child.Value == "ARG" && child.Next != nil {
-											node := child.Next
-											for node != nil {
-												value := node.Value
-												idx := strings.Index(value, "=")
-												if idx != -1 {
-													value = value[0:idx]
-												}
-												item := protocol.CompletionItem{
-													Label: value,
-												}
-												list.Items = append(list.Items, item)
-												node = node.Next
+					list := &protocol.CompletionList{}
+					for _, child := range nodes {
+						if strings.EqualFold(child.Value, "FROM") && child.Next != nil && child.Next.Next != nil && child.Next.Next.Next != nil {
+							item := protocol.CompletionItem{
+								Label: child.Next.Next.Next.Value,
+							}
+							list.Items = append(list.Items, item)
+						}
+					}
+					return list, nil
+				}
+
+				if attribute, ok := attributes["args"]; ok {
+					if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
+						for _, item := range expr.Items {
+							if isInsideRange(item.KeyExpr.Range(), params.Position) {
+								list := &protocol.CompletionList{}
+								for _, child := range nodes {
+									if child.Value == "ARG" && child.Next != nil {
+										node := child.Next
+										for node != nil {
+											value := node.Value
+											idx := strings.Index(value, "=")
+											if idx != -1 {
+												value = value[0:idx]
 											}
+											item := protocol.CompletionItem{
+												Label: value,
+											}
+											list.Items = append(list.Items, item)
+											node = node.Next
 										}
 									}
-									return list, nil
 								}
+								return list, nil
 							}
 						}
 					}
-					break
 				}
+				break
 			}
 		}
 	}
