@@ -74,7 +74,7 @@ func Definition(ctx context.Context, definitionLinkSupport bool, manager *docume
 	return nil, nil
 }
 
-func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.Document, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attribute *hclsyntax.Attribute) any {
+func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.BakeHCLDocument, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attribute *hclsyntax.Attribute) any {
 	if tupleConsExpr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
 		for _, e := range tupleConsExpr.Exprs {
 			if isInsideRange(e.Range(), position) {
@@ -111,7 +111,7 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 	return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attribute.Name, attribute.Expr)
 }
 
-func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.Document, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attributeName string, expression hclsyntax.Expression) any {
+func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.BakeHCLDocument, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attributeName string, expression hclsyntax.Expression) any {
 	if templateExpr, ok := expression.(*hclsyntax.TemplateExpr); ok {
 		for _, part := range templateExpr.Parts {
 			if isInsideRange(part.Range(), position) {
@@ -122,7 +122,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if literalValueExpr, ok := expression.(*hclsyntax.LiteralValueExpr); ok && sourceBlock != nil && sourceBlock.Type == "target" {
 		if attributeName == "no-cache-filter" || attributeName == "target" {
-			dockerfilePath, err := EvaluateDockerfilePath(sourceBlock, doc)
+			dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
 			if dockerfilePath == "" || err != nil {
 				return nil
 			}
@@ -179,7 +179,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 		for _, item := range objectConsExpression.Items {
 			if isInsideRange(item.KeyExpr.Range(), position) {
 				if attributeName == "args" && sourceBlock.Type == "target" {
-					dockerfilePath, err := EvaluateDockerfilePath(sourceBlock, doc)
+					dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
 					if dockerfilePath == "" || err != nil {
 						return nil
 					}

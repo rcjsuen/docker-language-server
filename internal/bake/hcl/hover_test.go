@@ -2,12 +2,17 @@ package hcl
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl/parser"
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestHover(t *testing.T) {
@@ -221,12 +226,13 @@ func TestHover(t *testing.T) {
 		},
 	}
 
+	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewBakeHCLDocument("", 1, []byte(tc.content))
+			doc := document.NewBakeHCLDocument(uri.URI(temporaryBakeFile), 1, []byte(tc.content))
 			result, err := Hover(context.Background(), &protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
-					TextDocument: protocol.TextDocumentIdentifier{URI: ""},
+					TextDocument: protocol.TextDocumentIdentifier{URI: temporaryBakeFile},
 					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
 			}, doc)

@@ -2,11 +2,16 @@ package hcl
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestDocumentSymbol(t *testing.T) {
@@ -101,10 +106,11 @@ func TestDocumentSymbol(t *testing.T) {
 		},
 	}
 
+	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewBakeHCLDocument("docker-bake.hcl", 1, []byte(tc.content))
-			symbols, err := DocumentSymbol(context.Background(), "docker-bake.hcl", doc)
+			doc := document.NewBakeHCLDocument(uri.URI(temporaryBakeFile), 1, []byte(tc.content))
+			symbols, err := DocumentSymbol(context.Background(), temporaryBakeFile, doc)
 			require.NoError(t, err)
 			var result []any
 			for _, symbol := range tc.symbols {

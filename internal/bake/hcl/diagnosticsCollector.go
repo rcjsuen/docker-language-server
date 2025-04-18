@@ -1,14 +1,9 @@
 package hcl
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
-	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -210,7 +205,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			dockerfilePath, err := EvaluateDockerfilePath(block, doc)
+			dockerfilePath, err := doc.(document.BakeHCLDocument).DockerfileForTarget(block)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
@@ -235,16 +230,6 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 		}
 	}
 	return diagnostics
-}
-
-// EvaluateDockerfilePath uses the output of `docker buildx bake --print`
-// to identify the location of the Dockerfile that block is using.
-func EvaluateDockerfilePath(block *hclsyntax.Block, doc document.Document) (string, error) {
-	if len(block.Labels) == 0 {
-		// if the target block has no label we cannot ask Bake to try and print it
-		return "", errors.New("target block has no label")
-	}
-	return ParseDockerfileFromBakeOutput(doc, block.Labels[0])
 }
 
 // checkTargetArgs examines the args attribute of a target block.
@@ -360,67 +345,4 @@ func checkStringLiteral(diagnosticSource, attributeValue, message string, expect
 			},
 		},
 	}
-}
-
-func PrintOutput(directory, target string, bakeFileContent []byte) *BakePrintOutput {
-	var buf bytes.Buffer
-	cmd := exec.Command("docker", "buildx", "bake", "-f-", "--print", target)
-	cmd.Stdin = bytes.NewBuffer(bakeFileContent)
-	cmd.Dir = directory
-	cmd.Stdout = &buf
-	err := cmd.Start()
-	if err != nil {
-		return nil
-	}
-	cmdErr := cmd.Wait()
-	if cmdErr != nil {
-		var ee *exec.ExitError
-		if errors.As(cmdErr, &ee) {
-			c := ee.ProcessState.ExitCode()
-			if c != 0 {
-				return nil
-			}
-		}
-	}
-
-	var output *BakePrintOutput
-	err = json.Unmarshal(buf.Bytes(), &output)
-	if err != nil {
-		return nil
-	}
-	return output
-}
-
-func ParseDockerfileFromBakeOutput(doc document.Document, target string) (string, error) {
-	documentURI := doc.URI()
-	output := PrintOutput(filepath.Dir(documentURI.Filename()), target, doc.Input())
-	if output == nil {
-		return "", nil
-	}
-
-	url, err := url.Parse(string(documentURI))
-	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
-	}
-	contextPath, err := types.AbsoluteFolder(url)
-	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
-	}
-	if block, ok := output.Target[target]; ok {
-		if block.DockerfileInline != nil {
-			return "", nil
-		} else if block.Context != nil {
-			contextPath = *block.Context
-			contextPath, err = types.AbsolutePath(url, contextPath)
-			if err != nil {
-				return "", nil
-			}
-		}
-
-		if block.Dockerfile != nil {
-			return filepath.Join(contextPath, *block.Dockerfile), nil
-		}
-		return filepath.Join(contextPath, "Dockerfile"), nil
-	}
-	return "", nil
 }
