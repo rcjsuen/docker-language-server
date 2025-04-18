@@ -2,6 +2,25 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [0.3.6] - 2025-04-18
+
+### Changed
+- get the JSON structure of a Bake target with Go APIs instead of spawning a separate child process ([#63](https://github.com/docker/docker-language-server/issues/63))
+* Update `moby/buildkit` to v0.21.0 and `docker/buildx` to v0.23.0 ([#64](https://github.com/docker/docker-language-server/issues/64))
+
+### Fixed
+
+- Bake
+  - textDocument/publishDiagnostics
+    - consider the context attribute when determining which Dockerfile the Bake target is for ([#57](https://github.com/docker/docker-language-server/issues/57))
+  - textDocument/inlayHints
+    - consider the context attribute when determining which Dockerfile to use for inlaying default values of `ARG` variables ([#60](https://github.com/docker/docker-language-server/pull/60))
+  - textDocument/completion
+    - consider the context attribute when determining which Dockerfile to use for looking up build stages ([#61](https://github.com/docker/docker-language-server/pull/61))
+  - textDocument/definition
+    - consider the context attribute when trying to resolve the Dockerfile to use for `ARG` variable definitions ([#62](https://github.com/docker/docker-language-server/pull/62))
+    - fix a panic that may occur if a for loop did not have a conditional expression ([#65](https://github.com/docker/docker-language-server/pull/65))
+
 ## [0.3.5] - 2025-04-13
 
 ### Fixed
@@ -110,7 +129,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.5...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.6...main
+[0.3.6]: https://github.com/docker/docker-language-server/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/docker/docker-language-server/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/docker/docker-language-server/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/docker/docker-language-server/compare/v0.3.2...v0.3.3
