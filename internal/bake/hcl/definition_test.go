@@ -970,6 +970,38 @@ func TestDefinition(t *testing.T) {
 			},
 		},
 		{
+			name:      "args key references Dockerfile ARG variable in a Dockerfile from the context attribute",
+			content:   "target default {\n  context = \"backend\"\n  args = {\n    NESTED_VAR = \"value\"\n  }\n}",
+			line:      3,
+			character: 6,
+			locations: []protocol.Location{
+				{
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 4},
+						End:   protocol.Position{Line: 3, Character: 14},
+					},
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+				},
+			},
+		},
+		{
 			name:      "args key references Dockerfile ARG variable (unquoted key, default value set)",
 			content:   "target default {\n  args = {\n    defined = \"value\"\n  }\n}",
 			line:      2,
@@ -1162,8 +1194,40 @@ func TestDefinition(t *testing.T) {
 			},
 		},
 		{
+			name:      "reference valid stage (target block, no-cache-filter attribute) in a different context folder",
+			content:   "target \"default\" {\n  context = \"backend\"\n  no-cache-filter = [\"stage\"]\n}",
+			line:      2,
+			character: 25,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 22},
+						End:   protocol.Position{Line: 2, Character: 27},
+					},
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+		},
+		{
 			name:      "reference valid stage with target attribute on the right position",
-			content:   "target \"default\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\" }",
+			content:   "target \"default\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\"\n}",
 			line:      2,
 			character: 13,
 			locations: []protocol.Location{
@@ -1189,6 +1253,38 @@ func TestDefinition(t *testing.T) {
 					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:      "reference valid stage with target attribute on the right position in a different context folder",
+			content:   "target \"default\" {\n  context = \"backend\"\n  dockerfile = \"Dockerfile\"\n  target = \"stage\"\n}",
+			line:      3,
+			character: 13,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
 					},
 				},
 			},

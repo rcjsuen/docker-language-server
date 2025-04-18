@@ -129,8 +129,6 @@ func (m *Manager) Queue(ctx context.Context, u uri.URI, fn func()) {
 }
 
 func (m *Manager) Get(ctx context.Context, u uri.URI) Document {
-	m.mu.Lock()
-	defer m.mu.Unlock()
 	return m.docs[u]
 }
 

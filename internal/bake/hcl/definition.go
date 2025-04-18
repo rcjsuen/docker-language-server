@@ -23,65 +23,17 @@ func LocalDockerfile(u *url.URL) (string, error) {
 	return types.AbsolutePath(u, "Dockerfile")
 }
 
-func ParseReferencedDockerfile(documentURI uri.URI, document document.BakeHCLDocument, hclLine, hclCharacter int) (string, error) {
-	body, ok := document.File().Body.(*hclsyntax.Body)
-	if !ok {
-		return "", errors.New("unrecognized body in HCL document")
-	}
-	url, err := url.Parse(string(documentURI))
-	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
-	}
-
-	input := document.Input()
-	for _, b := range body.Blocks {
-		if isInsideBodyRangeLines(b.Body, hclLine) {
-			attributes := b.Body.Attributes
-			dockerfilePath := ""
-			if _, ok := attributes["dockerfile-inline"]; ok {
-				break
-			}
-
-			if attribute, ok := attributes["dockerfile"]; ok {
-				dockerfilePath = string(input[attribute.Expr.Range().Start.Byte:attribute.Expr.Range().End.Byte])
-				dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
-				dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-				dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
-				if err != nil {
-					break
-				}
-			}
-
-			if dockerfilePath == "" {
-				// no dockerfile attribute found, default to ./Dockerfile relative to the HCL file
-				dockerfilePath, err = LocalDockerfile(url)
-				if err != nil {
-					break
-				}
-			}
-			return dockerfilePath, nil
-		}
-	}
-	return "", nil
-}
-
-func Definition(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, documentURI uri.URI, document document.BakeHCLDocument, position protocol.Position) (any, error) {
-	body, ok := document.File().Body.(*hclsyntax.Body)
+func Definition(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, documentURI uri.URI, doc document.BakeHCLDocument, position protocol.Position) (any, error) {
+	body, ok := doc.File().Body.(*hclsyntax.Body)
 	if !ok {
 		return nil, errors.New("unrecognized body in HCL document")
-	}
-
-	dockerfilePath, err := ParseReferencedDockerfile(documentURI, document, int(position.Line+1), int(position.Character+1))
-	if err != nil {
-		return nil, nil
 	}
 
 	for _, b := range body.Blocks {
 		if isInsideBodyRangeLines(b.Body, int(position.Line+1)) {
 			for _, attribute := range b.Body.Attributes {
 				if isInsideRange(attribute.Expr.Range(), position) {
-					input := document.Input()
-					return ResolveAttributeValue(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, b, attribute), nil
+					return ResolveAttributeValue(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, b, attribute), nil
 				}
 			}
 		}
@@ -116,13 +68,13 @@ func Definition(ctx context.Context, definitionLinkSupport bool, manager *docume
 		}
 
 		if isInsideRange(attribute.SrcRange, position) {
-			return ResolveAttributeValue(ctx, definitionLinkSupport, manager, document.Input(), dockerfilePath, body, documentURI, position, nil, attribute), nil
+			return ResolveAttributeValue(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, nil, attribute), nil
 		}
 	}
 	return nil, nil
 }
 
-func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, input []byte, dockerfilePath string, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attribute *hclsyntax.Attribute) any {
+func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.Document, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attribute *hclsyntax.Attribute) any {
 	if tupleConsExpr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
 		for _, e := range tupleConsExpr.Exprs {
 			if isInsideRange(e.Range(), position) {
@@ -146,30 +98,35 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 									Column: templateExprRange.End.Column - 1,
 								},
 							}
-							return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, sourceRange, "target", target, false)
+							return CalculateBlockLocation(definitionLinkSupport, doc.Input(), body, documentURI, sourceRange, "target", target, false)
 						}
 					}
 				}
 
-				return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attribute.Name, e)
+				return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attribute.Name, e)
 			}
 		}
 	}
 
-	return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attribute.Name, attribute.Expr)
+	return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attribute.Name, attribute.Expr)
 }
 
-func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, input []byte, dockerfilePath string, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attributeName string, expression hclsyntax.Expression) any {
+func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, doc document.Document, body *hclsyntax.Body, documentURI uri.URI, position protocol.Position, sourceBlock *hclsyntax.Block, attributeName string, expression hclsyntax.Expression) any {
 	if templateExpr, ok := expression.(*hclsyntax.TemplateExpr); ok {
 		for _, part := range templateExpr.Parts {
 			if isInsideRange(part.Range(), position) {
-				return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, part)
+				return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, part)
 			}
 		}
 	}
 
 	if literalValueExpr, ok := expression.(*hclsyntax.LiteralValueExpr); ok && sourceBlock != nil && sourceBlock.Type == "target" {
 		if attributeName == "no-cache-filter" || attributeName == "target" {
+			dockerfilePath, err := EvaluateDockerfilePath(sourceBlock, doc)
+			if dockerfilePath == "" || err != nil {
+				return nil
+			}
+
 			value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 			target := value.AsString()
 
@@ -210,11 +167,11 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if forExpr, ok := expression.(*hclsyntax.ForExpr); ok {
 		if isInsideRange(forExpr.CollExpr.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, forExpr.CollExpr)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, forExpr.CollExpr)
 		}
 
 		if isInsideRange(forExpr.CondExpr.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, forExpr.CondExpr)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, forExpr.CondExpr)
 		}
 	}
 
@@ -222,13 +179,18 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 		for _, item := range objectConsExpression.Items {
 			if isInsideRange(item.KeyExpr.Range(), position) {
 				if attributeName == "args" && sourceBlock.Type == "target" {
+					dockerfilePath, err := EvaluateDockerfilePath(sourceBlock, doc)
+					if dockerfilePath == "" || err != nil {
+						return nil
+					}
+
 					start := item.KeyExpr.Range().Start.Byte
 					end := item.KeyExpr.Range().End.Byte
 					if LiteralValue(item.KeyExpr) {
 						start++
 						end--
 					}
-					arg := string(input[start:end])
+					arg := string(doc.Input()[start:end])
 					bytes, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
 					lines := strings.Split(string(bytes), "\n")
 					for _, child := range nodes {
@@ -276,18 +238,18 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			}
 
 			if isInsideRange(item.ValueExpr.Range(), position) {
-				return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, item.ValueExpr)
+				return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, item.ValueExpr)
 			}
 		}
 	}
 
 	if binaryExpression, ok := expression.(*hclsyntax.BinaryOpExpr); ok {
 		if isInsideRange(binaryExpression.LHS.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, binaryExpression.LHS)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, binaryExpression.LHS)
 		}
 
 		if isInsideRange(binaryExpression.RHS.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, binaryExpression.RHS)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, binaryExpression.RHS)
 		}
 
 		return nil
@@ -295,36 +257,37 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if conditional, ok := expression.(*hclsyntax.ConditionalExpr); ok {
 		if isInsideRange(conditional.Condition.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, conditional.Condition)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, conditional.Condition)
 		}
 
 		if isInsideRange(conditional.TrueResult.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, conditional.TrueResult)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, conditional.TrueResult)
 		}
 
 		if isInsideRange(conditional.FalseResult.Range(), position) {
-			return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, conditional.FalseResult)
+			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, conditional.FalseResult)
 		}
 		return nil
 	}
 
 	if _, ok := expression.(*hclsyntax.ScopeTraversalExpr); ok {
+		input := doc.Input()
 		name := string(input[expression.Range().Start.Byte:expression.Range().End.Byte])
 		return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, expression.Range(), "variable", name, true)
 	}
 
 	if templateWrapExpr, ok := expression.(*hclsyntax.TemplateWrapExpr); ok {
-		return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, templateWrapExpr.Wrapped)
+		return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, templateWrapExpr.Wrapped)
 	}
 
 	if functionCallExpr, ok := expression.(*hclsyntax.FunctionCallExpr); ok {
 		if isInsideRange(functionCallExpr.NameRange, position) {
-			return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, functionCallExpr.NameRange, "function", functionCallExpr.Name, true)
+			return CalculateBlockLocation(definitionLinkSupport, doc.Input(), body, documentURI, functionCallExpr.NameRange, "function", functionCallExpr.Name, true)
 		}
 
 		for _, arg := range functionCallExpr.Args {
 			if isInsideRange(arg.Range(), position) {
-				return ResolveExpression(ctx, definitionLinkSupport, manager, input, dockerfilePath, body, documentURI, position, sourceBlock, attributeName, arg)
+				return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, arg)
 			}
 		}
 	}
