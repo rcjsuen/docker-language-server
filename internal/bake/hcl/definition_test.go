@@ -906,7 +906,15 @@ func TestDefinition(t *testing.T) {
 			},
 		},
 		{
-			name:      "variable inside a for loop",
+			name:      "variable inside a for loop resolving to upper(var)",
+			content:   "variable varList { default = [\"tag\"] }\ntarget default {\n  tags = [for var in varList : var]\n}",
+			line:      2,
+			character: 16,
+			locations: nil,
+			links:     nil,
+		},
+		{
+			name:      "variable inside a for loop resolving to upper(var)",
 			content:   "variable varList { default = [\"tag\"] }\ntarget default {\n  tags = [for var in varList : upper(var)]\n}",
 			line:      2,
 			character: 24,
