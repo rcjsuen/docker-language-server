@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestDocumentLink(t *testing.T) {
@@ -81,7 +82,7 @@ func TestDocumentLink(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewBakeHCLDocument("docker-bake.hcl", 1, []byte(tc.content))
+			doc := document.NewBakeHCLDocument(uri.URI(bakeFileStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), bakeFileStringURI, doc)
 			require.NoError(t, err)
 

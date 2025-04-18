@@ -3,10 +3,14 @@ package hcl
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestSemanticTokensFull(t *testing.T) {
@@ -426,10 +430,11 @@ func TestSemanticTokensFull(t *testing.T) {
 		},
 	}
 
+	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewBakeHCLDocument("", 1, []byte(tc.content))
-			tokens, err := SemanticTokensFull(context.Background(), doc, "")
+			doc := document.NewBakeHCLDocument(uri.URI(temporaryBakeFile), 1, []byte(tc.content))
+			tokens, err := SemanticTokensFull(context.Background(), doc, temporaryBakeFile)
 			require.NoError(t, err)
 			testResultOffset := 0
 			for i := 0; i < len(tokens.Data); i += 5 {
