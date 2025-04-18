@@ -170,7 +170,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, forExpr.CollExpr)
 		}
 
-		if isInsideRange(forExpr.CondExpr.Range(), position) {
+		if forExpr.CondExpr != nil && isInsideRange(forExpr.CondExpr.Range(), position) {
 			return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, forExpr.CondExpr)
 		}
 	}
