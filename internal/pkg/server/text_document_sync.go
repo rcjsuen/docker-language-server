@@ -78,10 +78,11 @@ func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.Do
 			return
 		}
 		defer s.docs.UnlockDocument(uri.URI(documentURI))
-		doc, err := s.docs.Read(context.Background(), uri.URI(documentURI))
-		if err != nil {
+		doc := s.docs.Get(context.Background(), uri.URI(documentURI))
+		if doc == nil {
 			return
 		}
+		doc = doc.Copy()
 		defer doc.Close()
 
 		folder = types.StripLeadingSlash(folder)
