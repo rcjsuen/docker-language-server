@@ -273,6 +273,62 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 	if _, ok := expression.(*hclsyntax.ScopeTraversalExpr); ok {
 		input := doc.Input()
 		name := string(input[expression.Range().Start.Byte:expression.Range().End.Byte])
+		if strings.Index(name, "target") == 0 {
+			parts := strings.Split(name, ".")
+			if len(parts) == 3 {
+				offset := expression.Range().Start.Column - 1
+				if int(position.Character) < offset+len(parts[0])+1 {
+					// cursor inside "target" of target.targetName.attribute
+					return nil
+				}
+
+				if offset+len(parts[0])+1 <= int(position.Character) && int(position.Character) <= offset+len(parts[0])+1+len(parts[1]) {
+					// cursor inside "targetName" of target.targetName.attribute
+					return CalculateBlockLocation(
+						definitionLinkSupport,
+						doc.Input(),
+						body,
+						documentURI,
+						hcl.Range{
+							Start: hcl.Pos{
+								Line: expression.Range().Start.Line,
+								// offset + length + dotSeparator + one-based
+								Column: offset + len(parts[0]) + 1 + 1,
+							},
+							End: hcl.Pos{
+								Line: expression.Range().End.Line,
+								// offset + length + dotSeparator + length + one-based
+								Column: offset + len(parts[0]) + 1 + len(parts[1]) + 1,
+							},
+						},
+						"target",
+						parts[1],
+						false,
+					)
+				}
+
+				if offset+len(parts[0])+1+len(parts[1])+1 <= int(position.Character) && int(position.Character) <= offset+len(parts[0])+1+len(parts[1])+1+len(parts[2]) {
+					// cursor inside "attribute" of target.targetName.attribute
+					return targetAttributeLocation(
+						definitionLinkSupport,
+						body,
+						documentURI,
+						hcl.Range{
+							Start: hcl.Pos{
+								Line:   expression.Range().Start.Line,
+								Column: offset + 1 + len(parts[0]) + 1 + len(parts[1]) + 1,
+							},
+							End: hcl.Pos{
+								Line:   expression.Range().End.Line,
+								Column: offset + len(parts[0]) + 1 + len(parts[1]) + 1 + len(parts[2]) + 1,
+							},
+						},
+						parts[1],
+						parts[2],
+					)
+				}
+			}
+		}
 		return CalculateBlockLocation(definitionLinkSupport, input, body, documentURI, expression.Range(), "variable", name, true)
 	}
 
@@ -288,6 +344,40 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 		for _, arg := range functionCallExpr.Args {
 			if isInsideRange(arg.Range(), position) {
 				return ResolveExpression(ctx, definitionLinkSupport, manager, doc, body, documentURI, position, sourceBlock, attributeName, arg)
+			}
+		}
+	}
+	return nil
+}
+
+func targetAttributeLocation(definitionLinkSupport bool, body *hclsyntax.Body, documentURI uri.URI, sourceRange hcl.Range, targetName, attributeName string) any {
+	for _, b := range body.Blocks {
+		if b.Type == "target" && b.Labels[0] == targetName {
+			if attribute, ok := b.Body.Attributes[attributeName]; ok {
+				return createDefinitionResult(
+					definitionLinkSupport,
+					protocol.Range{
+						Start: protocol.Position{
+							Line:      uint32(attribute.NameRange.Start.Line) - 1,
+							Character: protocol.UInteger(attribute.NameRange.Start.Column) - 1,
+						},
+						End: protocol.Position{
+							Line:      uint32(attribute.NameRange.End.Line) - 1,
+							Character: protocol.UInteger(attribute.NameRange.End.Column) - 1,
+						},
+					},
+					&protocol.Range{
+						Start: protocol.Position{
+							Line:      uint32(sourceRange.Start.Line) - 1,
+							Character: uint32(sourceRange.Start.Column) - 1,
+						},
+						End: protocol.Position{
+							Line:      uint32(sourceRange.End.Line) - 1,
+							Character: uint32(sourceRange.End.Column) - 1,
+						},
+					},
+					string(documentURI),
+				)
 			}
 		}
 	}
