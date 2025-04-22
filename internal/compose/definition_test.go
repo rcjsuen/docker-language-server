@@ -106,6 +106,51 @@ services:
 				},
 			},
 		},
+		{
+			name: "long syntax form of depends_on in services",
+			content: `
+services:
+  web:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_started
+  db:
+    image: postgres
+  redis:
+    image: redis`,
+			line:      8,
+			character: 9,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 6},
+						End:   protocol.Position{Line: 8, Character: 11},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 7},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

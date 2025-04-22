@@ -10,7 +10,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support code navigation when a single attribute of a target has been reused ([#78](https://github.com/docker/docker-language-server/issues/78))
 - Compose
   - textDocument/definition
-    - support lookup of services referenced by the short form syntax of `depends_on` ([#67](https://github.com/docker/docker-language-server/issues/67))
+    - support lookup of `services` referenced by the short form syntax of `depends_on` ([#67](https://github.com/docker/docker-language-server/issues/67))
+    - support lookup of `services` referenced by the long form syntax of `depends_on` ([#68](https://github.com/docker/docker-language-server/issues/68))
 
 ### Fixed
 - ensure file validation is skipped if the file has since been closed by the editor ([#79](https://github.com/docker/docker-language-server/issues/79))
