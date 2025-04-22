@@ -21,27 +21,16 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 						if service.Content[j].Value == "depends_on" {
 							if service.Content[j+1].Kind == yaml.SequenceNode {
 								for _, dependency := range service.Content[j+1].Content {
-									if dependency.Line == line && dependency.Column <= character && character <= dependency.Column+len(dependency.Value) {
-										serviceRange := ServiceDefinitionRange(root, dependency.Value)
-										if serviceRange == nil {
-											return nil, nil
-										}
-
-										return createDefinitionResult(
-											definitionLinkSupport,
-											*serviceRange,
-											&protocol.Range{
-												Start: protocol.Position{
-													Line:      params.Position.Line,
-													Character: protocol.UInteger(dependency.Column - 1),
-												},
-												End: protocol.Position{
-													Line:      params.Position.Line,
-													Character: protocol.UInteger(dependency.Column + len(dependency.Value) - 1),
-												},
-											},
-											params.TextDocument.URI,
-										), nil
+									link := serviceDependencyLink(root, definitionLinkSupport, params, dependency, line, character)
+									if link != nil {
+										return link, nil
+									}
+								}
+							} else if service.Content[j+1].Kind == yaml.MappingNode {
+								for k := 0; k < len(service.Content[j+1].Content); k += 2 {
+									link := serviceDependencyLink(root, definitionLinkSupport, params, service.Content[j+1].Content[k], line, character)
+									if link != nil {
+										return link, nil
 									}
 								}
 							}
@@ -54,7 +43,33 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 	return nil, nil
 }
 
-func ServiceDefinitionRange(root yaml.Node, serviceName string) *protocol.Range {
+func serviceDependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, dependency *yaml.Node, line, character int) any {
+	if dependency.Line == line && dependency.Column <= character && character <= dependency.Column+len(dependency.Value) {
+		serviceRange := serviceDefinitionRange(root, dependency.Value)
+		if serviceRange == nil {
+			return nil
+		}
+
+		return createDefinitionResult(
+			definitionLinkSupport,
+			*serviceRange,
+			&protocol.Range{
+				Start: protocol.Position{
+					Line:      params.Position.Line,
+					Character: protocol.UInteger(dependency.Column - 1),
+				},
+				End: protocol.Position{
+					Line:      params.Position.Line,
+					Character: protocol.UInteger(dependency.Column + len(dependency.Value) - 1),
+				},
+			},
+			params.TextDocument.URI,
+		)
+	}
+	return nil
+}
+
+func serviceDefinitionRange(root yaml.Node, serviceName string) *protocol.Range {
 	for i := 0; i < len(root.Content[0].Content); i += 2 {
 		switch root.Content[0].Content[i].Value {
 		case "services":
