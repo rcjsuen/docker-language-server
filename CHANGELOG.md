@@ -2,11 +2,29 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- Bake
+  - textDocument/definition
+    - support code navigation when a single attribute of a target has been reused ([#78](https://github.com/docker/docker-language-server/issues/78))
+- Compose
+  - textDocument/definition
+    - support lookup of services referenced by the short form syntax of `depends_on` ([#67](https://github.com/docker/docker-language-server/issues/67))
+
+### Fixed
+- ensure file validation is skipped if the file has since been closed by the editor ([#79](https://github.com/docker/docker-language-server/issues/79))
+
+## [0.3.7] - 2025-04-21
+
+### Fixed
+- ensure file validation is skipped if the file has since been closed by the editor ([#79](https://github.com/docker/docker-language-server/issues/79))
+
 ## [0.3.6] - 2025-04-18
 
 ### Changed
 - get the JSON structure of a Bake target with Go APIs instead of spawning a separate child process ([#63](https://github.com/docker/docker-language-server/issues/63))
-* Update `moby/buildkit` to v0.21.0 and `docker/buildx` to v0.23.0 ([#64](https://github.com/docker/docker-language-server/issues/64))
+- Update `moby/buildkit` to v0.21.0 and `docker/buildx` to v0.23.0 ([#64](https://github.com/docker/docker-language-server/issues/64))
 
 ### Fixed
 
@@ -129,7 +147,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.6...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.7...main
+[0.3.7]: https://github.com/docker/docker-language-server/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/docker/docker-language-server/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/docker/docker-language-server/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/docker/docker-language-server/compare/v0.3.3...v0.3.4
