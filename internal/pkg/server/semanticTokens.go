@@ -1,8 +1,6 @@
 package server
 
 import (
-	"strings"
-
 	"github.com/docker/docker-language-server/internal/bake/hcl"
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp"
@@ -16,7 +14,7 @@ func (s *Server) TextDocumentSemanticTokensFull(ctx *glsp.Context, params *proto
 		return nil, err
 	}
 	defer doc.Close()
-	if strings.HasSuffix(string(params.TextDocument.URI), "hcl") {
+	if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		result, err := hcl.SemanticTokensFull(ctx.Context, doc.(document.BakeHCLDocument), string(params.TextDocument.URI))
 		if err != nil {
 			return nil, err
