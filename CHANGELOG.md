@@ -8,6 +8,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/definition
     - support code navigation when a single attribute of a target has been reused ([#78](https://github.com/docker/docker-language-server/issues/78))
+  - textDocument/semanticTokens/full
+    - ensure only Bake files will respond to a textDocument/semanticTokens/full request ([#84](https://github.com/docker/docker-language-server/issues/84))
 - Compose
   - textDocument/definition
     - support lookup of `services` referenced by the short form syntax of `depends_on` ([#67](https://github.com/docker/docker-language-server/issues/67))
