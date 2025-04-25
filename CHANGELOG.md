@@ -9,6 +9,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/completion
     - add code completion support based on the JSON schema, extracting out attribute names and enum values ([#86](https://github.com/docker/docker-language-server/issues/86))
+    - completion items are populated with a detail that corresponds to the possible types of the item ([#93](https://github.com/docker/docker-language-server/issues/93))
   - textDocument/definition
     - support lookup of `configs`, `networks`, and `secrets` referenced inside `services` object ([#91](https://github.com/docker/docker-language-server/issues/91))
 

@@ -7,6 +7,8 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 	"gopkg.in/yaml.v3"
 )
 
@@ -65,8 +67,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	}
 
 	items := []protocol.CompletionItem{}
-	for attributeName := range nodeProperties(topLevel, line, character) {
-		items = append(items, protocol.CompletionItem{Label: attributeName})
+	for attributeName, schema := range nodeProperties(topLevel, line, character) {
+		items = append(items, protocol.CompletionItem{
+			Detail: extractDetail(schema),
+			Label:  attributeName,
+		})
 	}
 	if len(items) == 0 {
 		return nil, nil
@@ -131,4 +136,30 @@ func walkNodes(line int, nodes []*yaml.Node) ([]*yaml.Node, *yaml.Node) {
 		candidateContent = subcontent
 	}
 	return candidates, candidateContent
+}
+
+func extractDetail(schema *jsonschema.Schema) *string {
+	if schema != nil {
+		if schema.Types != nil {
+			schemaTypes := schema.Types.ToStrings()
+			return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
+		} else if schema.Ref != nil {
+			if schema.Ref.Types != nil {
+				schemaTypes := schema.Ref.Types.ToStrings()
+				return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
+			}
+			schema = schema.Ref
+		}
+		referencedTypes := []string{}
+		for _, referenced := range schema.OneOf {
+			if referenced.Types != nil {
+				referencedTypes = append(referencedTypes, referenced.Types.ToStrings()[0])
+			} else if referenced.Ref != nil {
+				referencedTypes = append(referencedTypes, referenced.Ref.Types.ToStrings()[0])
+			}
+		}
+		slices.Sort(referencedTypes)
+		return types.CreateStringPointer(strings.Join(referencedTypes, " or "))
+	}
+	return nil
 }
