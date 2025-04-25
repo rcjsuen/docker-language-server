@@ -111,9 +111,10 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 				if prop.Enum == nil {
 					return nil
 				}
+				enumSchema := &jsonschema.Schema{Types: prop.Types}
 				enumValues := make(map[string]*jsonschema.Schema)
 				for _, value := range prop.Enum.Values {
-					enumValues[value.(string)] = nil
+					enumValues[value.(string)] = enumSchema
 				}
 				return enumValues
 			}
