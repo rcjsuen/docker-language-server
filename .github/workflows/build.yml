@@ -8,6 +8,9 @@ on:
       - v*
     paths-ignore:
       - '**/*.md'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   lint:
