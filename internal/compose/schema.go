@@ -72,6 +72,15 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 					}
 				}
 			}
+			if schema, ok := prop.Ref.Items.(*jsonschema.Schema); ok {
+				for _, nested := range schema.OneOf {
+					if nested.Types != nil && slices.Contains(nested.Types.ToStrings(), "object") {
+						if len(nested.Properties) > 0 {
+							return recurseNodeProperties(nodes, line, column, nodeOffset+1, nested.Properties)
+						}
+					}
+				}
+			}
 		}
 
 		for _, schema := range prop.OneOf {
@@ -122,5 +131,5 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 		}
 		return prop.Properties
 	}
-	return nil
+	return properties
 }
