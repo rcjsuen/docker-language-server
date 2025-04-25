@@ -92,3 +92,23 @@ func AbsoluteFolder(documentURL *url.URL) (string, error) {
 	}
 	return filepath.Abs(filepath.Dir(documentPath))
 }
+
+func CreateDefinitionResult(definitionLinkSupport bool, targetRange protocol.Range, originSelectionRange *protocol.Range, linkURI protocol.URI) any {
+	if !definitionLinkSupport {
+		return []protocol.Location{
+			{
+				Range: targetRange,
+				URI:   linkURI,
+			},
+		}
+	}
+
+	return []protocol.LocationLink{
+		{
+			OriginSelectionRange: originSelectionRange,
+			TargetRange:          targetRange,
+			TargetSelectionRange: targetRange,
+			TargetURI:            linkURI,
+		},
+	}
+}
