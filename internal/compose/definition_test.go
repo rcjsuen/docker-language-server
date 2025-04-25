@@ -151,6 +151,128 @@ services:
 				},
 			},
 		},
+		{
+			name: "configs reference",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+    configs:
+    - def
+
+configs:
+  def:
+    file: ./httpd.conf`,
+			line:      5,
+			character: 8,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 6},
+						End:   protocol.Position{Line: 5, Character: 9},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+				},
+			},
+		},
+		{
+			name: "networks reference",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+    networks:
+    - abc
+
+networks:
+  abc:`,
+			line:      5,
+			character: 8,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 6},
+						End:   protocol.Position{Line: 5, Character: 9},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 5},
+					},
+				},
+			},
+		},
+		{
+			name: "secrets reference",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+    secrets:
+    - abcd
+
+secrets:
+  abcd:
+    environment: "PATH"`,
+			line:      5,
+			character: 8,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 6},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 6},
+						End:   protocol.Position{Line: 5, Character: 10},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 6},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 6},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -41,7 +41,7 @@ func Definition(ctx context.Context, definitionLinkSupport bool, manager *docume
 
 	for _, attribute := range body.Attributes {
 		if isInsideRange(attribute.NameRange, position) {
-			return createDefinitionResult(
+			return types.CreateDefinitionResult(
 				definitionLinkSupport,
 				protocol.Range{
 					Start: protocol.Position{
@@ -135,7 +135,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
 					if child.Next != nil && child.Next.Next != nil && strings.EqualFold(child.Next.Next.Value, "AS") && child.Next.Next.Next != nil && child.Next.Next.Next.Value == target {
-						return createDefinitionResult(
+						return types.CreateDefinitionResult(
 							definitionLinkSupport,
 							protocol.Range{
 								Start: protocol.Position{
@@ -219,7 +219,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 										originSelectionRange.Start.Character = originSelectionRange.Start.Character + 1
 										originSelectionRange.End.Character = originSelectionRange.End.Character - 1
 									}
-									return createDefinitionResult(
+									return types.CreateDefinitionResult(
 										definitionLinkSupport,
 										protocol.Range{
 											Start: protocol.Position{Line: uint32(node.StartLine) - 1, Character: 0},
@@ -354,7 +354,7 @@ func targetAttributeLocation(definitionLinkSupport bool, body *hclsyntax.Body, d
 	for _, b := range body.Blocks {
 		if b.Type == "target" && b.Labels[0] == targetName {
 			if attribute, ok := b.Body.Attributes[attributeName]; ok {
-				return createDefinitionResult(
+				return types.CreateDefinitionResult(
 					definitionLinkSupport,
 					protocol.Range{
 						Start: protocol.Position{
@@ -400,7 +400,7 @@ func CalculateBlockLocation(definitionLinkSupport bool, input []byte, body *hcls
 				startCharacter--
 				endCharacter--
 			}
-			return createDefinitionResult(
+			return types.CreateDefinitionResult(
 				definitionLinkSupport,
 				protocol.Range{
 					Start: protocol.Position{
@@ -428,7 +428,7 @@ func CalculateBlockLocation(definitionLinkSupport bool, input []byte, body *hcls
 	}
 
 	if attribute, ok := body.Attributes[name]; ok && variable {
-		return createDefinitionResult(
+		return types.CreateDefinitionResult(
 			definitionLinkSupport,
 			protocol.Range{
 				Start: protocol.Position{
@@ -454,26 +454,6 @@ func CalculateBlockLocation(definitionLinkSupport bool, input []byte, body *hcls
 		)
 	}
 	return nil
-}
-
-func createDefinitionResult(definitionLinkSupport bool, targetRange protocol.Range, originSelectionRange *protocol.Range, linkURI protocol.URI) any {
-	if !definitionLinkSupport {
-		return []protocol.Location{
-			{
-				Range: targetRange,
-				URI:   linkURI,
-			},
-		}
-	}
-
-	return []protocol.LocationLink{
-		{
-			OriginSelectionRange: originSelectionRange,
-			TargetRange:          targetRange,
-			TargetSelectionRange: targetRange,
-			TargetURI:            linkURI,
-		},
-	}
 }
 
 func ParseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {

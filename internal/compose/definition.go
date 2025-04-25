@@ -5,6 +5,7 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,21 +20,37 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 				for _, service := range root.Content[0].Content[i+1].Content {
 					for j := 0; j < len(service.Content); j += 2 {
 						if service.Content[j].Value == "depends_on" {
-							if service.Content[j+1].Kind == yaml.SequenceNode {
-								for _, dependency := range service.Content[j+1].Content {
-									link := serviceDependencyLink(root, definitionLinkSupport, params, dependency, line, character)
-									if link != nil {
-										return link, nil
-									}
-								}
-							} else if service.Content[j+1].Kind == yaml.MappingNode {
+							if service.Content[j+1].Kind == yaml.MappingNode {
 								for k := 0; k < len(service.Content[j+1].Content); k += 2 {
-									link := serviceDependencyLink(root, definitionLinkSupport, params, service.Content[j+1].Content[k], line, character)
+									link := dependencyLink(root, definitionLinkSupport, params, service.Content[j+1].Content[k], line, character, "services")
 									if link != nil {
 										return link, nil
 									}
 								}
 							}
+							if service.Content[j+1].Kind == yaml.SequenceNode {
+								for _, dependency := range service.Content[j+1].Content {
+									link := dependencyLink(root, definitionLinkSupport, params, dependency, line, character, "services")
+									if link != nil {
+										return link, nil
+									}
+								}
+							}
+						}
+
+						link := lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "configs")
+						if link != nil {
+							return link, nil
+						}
+
+						link = lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "networks")
+						if link != nil {
+							return link, nil
+						}
+
+						link = lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "secrets")
+						if link != nil {
+							return link, nil
 						}
 					}
 				}
@@ -43,14 +60,26 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 	return nil, nil
 }
 
-func serviceDependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, dependency *yaml.Node, line, character int) any {
+func lookupDependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, service *yaml.Node, index, line, character int, nodeName string) any {
+	if service.Content[index].Value == nodeName && service.Content[index+1].Kind == yaml.SequenceNode {
+		for _, dependency := range service.Content[index+1].Content {
+			link := dependencyLink(root, definitionLinkSupport, params, dependency, line, character, nodeName)
+			if link != nil {
+				return link
+			}
+		}
+	}
+	return nil
+}
+
+func dependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, dependency *yaml.Node, line, character int, nodeName string) any {
 	if dependency.Line == line && dependency.Column <= character && character <= dependency.Column+len(dependency.Value) {
-		serviceRange := serviceDefinitionRange(root, dependency.Value)
+		serviceRange := serviceDefinitionRange(root, nodeName, dependency.Value)
 		if serviceRange == nil {
 			return nil
 		}
 
-		return createDefinitionResult(
+		return types.CreateDefinitionResult(
 			definitionLinkSupport,
 			*serviceRange,
 			&protocol.Range{
@@ -69,10 +98,9 @@ func serviceDependencyLink(root yaml.Node, definitionLinkSupport bool, params *p
 	return nil
 }
 
-func serviceDefinitionRange(root yaml.Node, serviceName string) *protocol.Range {
+func serviceDefinitionRange(root yaml.Node, nodeName, serviceName string) *protocol.Range {
 	for i := 0; i < len(root.Content[0].Content); i += 2 {
-		switch root.Content[0].Content[i].Value {
-		case "services":
+		if root.Content[0].Content[i].Value == nodeName {
 			for _, service := range root.Content[0].Content[i+1].Content {
 				if service.Value == serviceName {
 					return &protocol.Range{
@@ -90,24 +118,4 @@ func serviceDefinitionRange(root yaml.Node, serviceName string) *protocol.Range 
 		}
 	}
 	return nil
-}
-
-func createDefinitionResult(definitionLinkSupport bool, targetRange protocol.Range, originSelectionRange *protocol.Range, linkURI protocol.URI) any {
-	if !definitionLinkSupport {
-		return []protocol.Location{
-			{
-				Range: targetRange,
-				URI:   linkURI,
-			},
-		}
-	}
-
-	return []protocol.LocationLink{
-		{
-			OriginSelectionRange: originSelectionRange,
-			TargetRange:          targetRange,
-			TargetSelectionRange: targetRange,
-			TargetURI:            linkURI,
-		},
-	}
 }
