@@ -402,6 +402,25 @@ services:
 			},
 		},
 		{
+			name: "inner attributes of the configs array object under service",
+			content: `
+services:
+  test:
+    configs:
+    - `,
+			line:      4,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{Label: "gid", Detail: types.CreateStringPointer("string")},
+					{Label: "mode", Detail: types.CreateStringPointer("number or string")},
+					{Label: "source", Detail: types.CreateStringPointer("string")},
+					{Label: "target", Detail: types.CreateStringPointer("string")},
+					{Label: "uid", Detail: types.CreateStringPointer("string")},
+				},
+			},
+		},
+		{
 			name: "inner attributes of the ulimits object under service",
 			content: `
 services:

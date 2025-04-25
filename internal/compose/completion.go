@@ -45,7 +45,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	line := int(lspLine) + 1
 	character := int(params.Position.Character) + 1
-	topLevel, content, _ := nodeStructure(line, root.Content[0].Content)
+	topLevel, _, _ := nodeStructure(line, root.Content[0].Content)
 	if len(topLevel) == 0 {
 		return nil, nil
 	} else if len(topLevel) == 1 {
@@ -58,12 +58,6 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	if topLevel[0].Line == line {
 		return nil, nil
-	}
-
-	for _, childNode := range content.Content {
-		if childNode.Line == line {
-			return nil, nil
-		}
 	}
 
 	items := []protocol.CompletionItem{}
