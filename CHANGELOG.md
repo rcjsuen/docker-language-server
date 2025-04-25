@@ -2,7 +2,15 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## [0.4.0] - 2025-04-24
+## [Unreleased]
+
+### Added
+
+- Compose
+  - textDocument/completion
+    - add code completion support based on the JSON schema, extracting out attribute names and enum values ([#86](https://github.com/docker/docker-language-server/issues/86))
+
+## [0.3.8] - 2025-04-24
 
 ### Added
 - Bake
@@ -150,8 +158,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.4.0...main
-[0.4.0]: https://github.com/docker/docker-language-server/compare/v0.3.7...v0.4.0
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.8...main
+[0.3.8]: https://github.com/docker/docker-language-server/compare/v0.3.7...v0.3.8
 [0.3.7]: https://github.com/docker/docker-language-server/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/docker/docker-language-server/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/docker/docker-language-server/compare/v0.3.4...v0.3.5

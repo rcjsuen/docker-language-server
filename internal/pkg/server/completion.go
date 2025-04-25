@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/compose"
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -17,6 +18,8 @@ func (s *Server) TextDocumentCompletion(ctx *glsp.Context, params *protocol.Comp
 
 	if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		return hcl.Completion(ctx.Context, params, s.docs, doc.(document.BakeHCLDocument))
+	} else if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+		return compose.Completion(ctx.Context, params, doc.(document.ComposeDocument))
 	}
 	return nil, nil
 }

@@ -9,6 +9,7 @@ require (
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/moby/buildkit v0.21.0
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
