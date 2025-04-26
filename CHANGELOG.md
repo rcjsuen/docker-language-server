@@ -13,6 +13,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - suggests completion items for the attributes of an object inside an array ([#95](https://github.com/docker/docker-language-server/issues/95))
   - textDocument/definition
     - support lookup of `configs`, `networks`, and `secrets` referenced inside `services` object ([#91](https://github.com/docker/docker-language-server/issues/91))
+  - textDocument/documentLink
+    - support opening a referenced image's page as a link ([#91](https://github.com/docker/docker-language-server/issues/91))
 
 ## [0.3.8] - 2025-04-24
 
