@@ -602,6 +602,26 @@ services:
 			},
 		},
 		{
+			name: "enum properties for a string attribute directly as an item is suggested",
+			content: `
+services:
+  test:
+    volumes:
+      - type: `,
+			line:      4,
+			character: 14,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{Label: "bind", Detail: types.CreateStringPointer("string")},
+					{Label: "cluster", Detail: types.CreateStringPointer("string")},
+					{Label: "image", Detail: types.CreateStringPointer("string")},
+					{Label: "npipe", Detail: types.CreateStringPointer("string")},
+					{Label: "tmpfs", Detail: types.CreateStringPointer("string")},
+					{Label: "volume", Detail: types.CreateStringPointer("string")},
+				},
+			},
+		},
+		{
 			name: "enum properties for a string attribute is suggested",
 			content: `
 services:

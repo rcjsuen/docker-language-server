@@ -45,7 +45,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	line := int(lspLine) + 1
 	character := int(params.Position.Character) + 1
-	topLevel, _, _ := nodeStructure(line, root.Content[0].Content)
+	topLevel, _, _ := NodeStructure(line, root.Content[0].Content)
 	if len(topLevel) == 0 {
 		return nil, nil
 	} else if len(topLevel) == 1 {
@@ -76,7 +76,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	return &protocol.CompletionList{Items: items}, nil
 }
 
-func nodeStructure(line int, rootNodes []*yaml.Node) ([]*yaml.Node, *yaml.Node, bool) {
+func NodeStructure(line int, rootNodes []*yaml.Node) ([]*yaml.Node, *yaml.Node, bool) {
+	if len(rootNodes) == 0 {
+		return nil, nil, false
+	}
+
 	var topLevel *yaml.Node
 	var content *yaml.Node
 	for i := 0; i < len(rootNodes); i += 2 {
@@ -112,6 +116,9 @@ func walkNodes(line int, nodes []*yaml.Node) ([]*yaml.Node, *yaml.Node) {
 			}
 			candidateContent = nodes[i+1]
 		} else if nodes[i].Line == line {
+			if nodes[i].Kind == yaml.MappingNode {
+				return walkNodes(line, nodes[i].Content)
+			}
 			if len(nodes) == 1 {
 				return []*yaml.Node{nodes[i]}, nil
 			}
