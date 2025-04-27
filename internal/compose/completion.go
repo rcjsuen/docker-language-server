@@ -62,10 +62,31 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	items := []protocol.CompletionItem{}
 	for attributeName, schema := range nodeProperties(topLevel, line, character) {
-		items = append(items, protocol.CompletionItem{
+		item := protocol.CompletionItem{
 			Detail: extractDetail(schema),
 			Label:  attributeName,
-		})
+		}
+
+		if schema.Enum != nil {
+			options := []string{}
+			for i := range schema.Enum.Values {
+				options = append(options, schema.Enum.Values[i].(string))
+			}
+			slices.Sort(options)
+			sb := strings.Builder{}
+			sb.WriteString(attributeName)
+			sb.WriteString(": ${1|")
+			for i := range options {
+				sb.WriteString(options[i])
+				if i != len(schema.Enum.Values)-1 {
+					sb.WriteString(",")
+				}
+			}
+			sb.WriteString("|}")
+			item.InsertText = types.CreateStringPointer(sb.String())
+			item.InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
+		}
+		items = append(items, item)
 	}
 	if len(items) == 0 {
 		return nil, nil
