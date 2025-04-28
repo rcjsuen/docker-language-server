@@ -13,7 +13,11 @@ The Docker Language Server relies on some features that are dependent on [Buildx
   - suggested image tag updates from Docker Scout
   - Dockerfile linting support from BuildKit and Buildx
 - Compose files
+  - code completion
+  - code navigation
   - document outline support
+  - hover tooltips
+  - open links to images
 - Bake files
   - code completion
   - inferring variable values
@@ -71,14 +75,17 @@ Use "docker-language-server [command] --help" for more information about a comma
 
 ### Initialization Options
 
-On startup, the client can include initizliation options on the initial `initialize` request. If the client is also using [rcjsuen/dockerfile-language-server](https://github.com/rcjsuen/dockerfile-language-server), then some results in `textDocument/publishDiagnostics` will be duplicated across the two language servers. By setting the _experimental_ `dockerfileExperimental.removeOverlappingIssues` to `true`, the Docker Language Server will suppress the duplicated results. Note that this setting may be renamed or removed at any time.
+On startup, the client can include initialization options on the initial `initialize` request.
+1. If the client is also using [rcjsuen/dockerfile-language-server](https://github.com/rcjsuen/dockerfile-language-server), then some results in `textDocument/publishDiagnostics` will be duplicated across the two language servers. By setting the _experimental_ `dockerfileExperimental.removeOverlappingIssues` to `true`, the Docker Language Server will suppress the duplicated results. Note that this setting may be renamed or removed at any time.
+2. Telemetry can be configured on server startup with the `telemetry` field. You can read more about this in [TELEMETRY.md](./TELEMETRY.md).
 
 ```JSONC
 {
   "initializationOptions": {
     "dockerfileExperimental": {
       "removeOverlappingIssues:": true | false
-    }
+    },
+    "telemetry": "all" | "error" | "off"
   }
 }
 ```
