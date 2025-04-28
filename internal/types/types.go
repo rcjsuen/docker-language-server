@@ -31,3 +31,7 @@ func CreateCompletionItemKindPointer(k protocol.CompletionItemKind) *protocol.Co
 func CreateInsertTextFormatPointer(f protocol.InsertTextFormat) *protocol.InsertTextFormat {
 	return &f
 }
+
+func CreateInsertTextModePointer(m protocol.InsertTextMode) *protocol.InsertTextMode {
+	return &m
+}

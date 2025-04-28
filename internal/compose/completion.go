@@ -84,9 +84,10 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		sb.WriteString("  ")
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
-				Detail:     extractDetail(schema),
-				Label:      attributeName,
-				InsertText: insertText(sb.String(), attributeName, schema),
+				Detail:         extractDetail(schema),
+				Label:          attributeName,
+				InsertText:     insertText(sb.String(), attributeName, schema),
+				InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			}
 
 			if schema.Enum != nil {
@@ -217,6 +218,9 @@ func insertText(spacing, attributeName string, schema *jsonschema.Schema) *strin
 		return nil
 	}
 	if slices.Contains(schema.Types.ToStrings(), "object") {
+		if len(schema.Types.ToStrings()) == 1 {
+			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v", attributeName, spacing))
+		}
 		return nil
 	}
 	return types.CreateStringPointer(fmt.Sprintf("%v: ", attributeName))
