@@ -24,8 +24,16 @@ var serviceProperties = []protocol.CompletionItem{
 	},
 	{Label: "blkio_config", Detail: types.CreateStringPointer("object")},
 	{Label: "build", Detail: types.CreateStringPointer("object or string")},
-	{Label: "cap_add", Detail: types.CreateStringPointer("array")},
-	{Label: "cap_drop", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "cap_add",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("cap_add:\n      - "),
+	},
+	{
+		Label:      "cap_drop",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("cap_drop:\n      - "),
+	},
 	{
 		Label:            "cgroup",
 		Detail:           types.CreateStringPointer("string"),
@@ -86,9 +94,17 @@ var serviceProperties = []protocol.CompletionItem{
 	{Label: "deploy", Detail: types.CreateStringPointer("null or object")},
 	{Label: "develop", Detail: types.CreateStringPointer("null or object")},
 	{Label: "device_cgroup_rules", Detail: types.CreateStringPointer("array")},
-	{Label: "devices", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "devices",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("devices:\n      - "),
+	},
 	{Label: "dns", Detail: types.CreateStringPointer("array or string")},
-	{Label: "dns_opt", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "dns_opt",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("dns_opt:\n      - "),
+	},
 	{Label: "dns_search", Detail: types.CreateStringPointer("array or string")},
 	{
 		Label:      "domainname",
@@ -98,12 +114,24 @@ var serviceProperties = []protocol.CompletionItem{
 	{Label: "entrypoint", Detail: types.CreateStringPointer("array or null or string")},
 	{Label: "env_file", Detail: types.CreateStringPointer("array or string")},
 	{Label: "environment", Detail: types.CreateStringPointer("array or object")},
-	{Label: "expose", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "expose",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("expose:\n      - "),
+	},
 	{Label: "extends", Detail: types.CreateStringPointer("object or string")},
-	{Label: "external_links", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "external_links",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("external_links:\n      - "),
+	},
 	{Label: "extra_hosts", Detail: types.CreateStringPointer("array or object")},
 	{Label: "gpus", Detail: types.CreateStringPointer("array or string")},
-	{Label: "group_add", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "group_add",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("group_add:\n      - "),
+	},
 	{Label: "healthcheck", Detail: types.CreateStringPointer("object")},
 	{
 		Label:      "hostname",
@@ -132,7 +160,11 @@ var serviceProperties = []protocol.CompletionItem{
 	},
 	{Label: "label_file", Detail: types.CreateStringPointer("array or string")},
 	{Label: "labels", Detail: types.CreateStringPointer("array or object")},
-	{Label: "links", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "links",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("links:\n      - "),
+	},
 	{Label: "logging", Detail: types.CreateStringPointer("object")},
 	{
 		Label:      "mac_address",
@@ -186,9 +218,21 @@ var serviceProperties = []protocol.CompletionItem{
 		Detail:     types.CreateStringPointer("string"),
 		InsertText: types.CreateStringPointer("platform: "),
 	},
-	{Label: "ports", Detail: types.CreateStringPointer("array")},
-	{Label: "post_start", Detail: types.CreateStringPointer("array")},
-	{Label: "pre_stop", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "ports",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("ports:\n      - "),
+	},
+	{
+		Label:      "post_start",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("post_start:\n      - "),
+	},
+	{
+		Label:      "pre_stop",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("pre_stop:\n      - "),
+	},
 	{
 		Label:      "privileged",
 		Detail:     types.CreateStringPointer("boolean or string"),
@@ -227,7 +271,11 @@ var serviceProperties = []protocol.CompletionItem{
 		InsertText: types.CreateStringPointer("scale: "),
 	},
 	{Label: "secrets", Detail: types.CreateStringPointer("array")},
-	{Label: "security_opt", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "security_opt",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("security_opt:\n      - "),
+	},
 	{
 		Label:      "shm_size",
 		Detail:     types.CreateStringPointer("number or string"),
@@ -272,8 +320,16 @@ var serviceProperties = []protocol.CompletionItem{
 		Detail:     types.CreateStringPointer("string"),
 		InsertText: types.CreateStringPointer("uts: "),
 	},
-	{Label: "volumes", Detail: types.CreateStringPointer("array")},
-	{Label: "volumes_from", Detail: types.CreateStringPointer("array")},
+	{
+		Label:      "volumes",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("volumes:\n      - "),
+	},
+	{
+		Label:      "volumes_from",
+		Detail:     types.CreateStringPointer("array"),
+		InsertText: types.CreateStringPointer("volumes_from:\n      - "),
+	},
 	{
 		Label:      "working_dir",
 		Detail:     types.CreateStringPointer("string"),
@@ -525,16 +581,36 @@ services:
 			character: 6,
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
-					{Label: "device_read_bps", Detail: types.CreateStringPointer("array")},
-					{Label: "device_read_iops", Detail: types.CreateStringPointer("array")},
-					{Label: "device_write_bps", Detail: types.CreateStringPointer("array")},
-					{Label: "device_write_iops", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "device_read_bps",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_read_bps:\n        - "),
+					},
+					{
+						Label:      "device_read_iops",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_read_iops:\n        - "),
+					},
+					{
+						Label:      "device_write_bps",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_write_bps:\n        - "),
+					},
+					{
+						Label:      "device_write_iops",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_write_iops:\n        - "),
+					},
 					{
 						Label:      "weight",
 						Detail:     types.CreateStringPointer("integer or string"),
 						InsertText: types.CreateStringPointer("weight: "),
 					},
-					{Label: "weight_device", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "weight_device",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("weight_device:\n        - "),
+					},
 				},
 			},
 		},
@@ -601,7 +677,11 @@ services:
 			character: 6,
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
-					{Label: "watch", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "watch",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("watch:\n        - "),
+					},
 				},
 			},
 		},
@@ -618,8 +698,16 @@ services:
 				Items: []protocol.CompletionItem{
 					{Label: "additional_contexts", Detail: types.CreateStringPointer("array or object")},
 					{Label: "args", Detail: types.CreateStringPointer("array or object")},
-					{Label: "cache_from", Detail: types.CreateStringPointer("array")},
-					{Label: "cache_to", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "cache_from",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("cache_from:\n        - "),
+					},
+					{
+						Label:      "cache_to",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("cache_to:\n        - "),
+					},
 					{
 						Label:      "context",
 						Detail:     types.CreateStringPointer("string"),
@@ -635,7 +723,11 @@ services:
 						Detail:     types.CreateStringPointer("string"),
 						InsertText: types.CreateStringPointer("dockerfile_inline: "),
 					},
-					{Label: "entitlements", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "entitlements",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("entitlements:\n        - "),
+					},
 					{Label: "extra_hosts", Detail: types.CreateStringPointer("array or object")},
 					{
 						Label:      "isolation",
@@ -653,7 +745,11 @@ services:
 						Detail:     types.CreateStringPointer("boolean or string"),
 						InsertText: types.CreateStringPointer("no_cache: "),
 					},
-					{Label: "platforms", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "platforms",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("platforms:\n        - "),
+					},
 					{
 						Label:      "privileged",
 						Detail:     types.CreateStringPointer("boolean or string"),
@@ -671,7 +767,11 @@ services:
 						InsertText: types.CreateStringPointer("shm_size: "),
 					},
 					{Label: "ssh", Detail: types.CreateStringPointer("array or object")},
-					{Label: "tags", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "tags",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("tags:\n        - "),
+					},
 					{
 						Label:      "target",
 						Detail:     types.CreateStringPointer("string"),
@@ -693,16 +793,36 @@ services:
 			character: 6,
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
-					{Label: "device_read_bps", Detail: types.CreateStringPointer("array")},
-					{Label: "device_read_iops", Detail: types.CreateStringPointer("array")},
-					{Label: "device_write_bps", Detail: types.CreateStringPointer("array")},
-					{Label: "device_write_iops", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "device_read_bps",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_read_bps:\n        - "),
+					},
+					{
+						Label:      "device_read_iops",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_read_iops:\n        - "),
+					},
+					{
+						Label:      "device_write_bps",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_write_bps:\n        - "),
+					},
+					{
+						Label:      "device_write_iops",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("device_write_iops:\n        - "),
+					},
 					{
 						Label:      "weight",
 						Detail:     types.CreateStringPointer("integer or string"),
 						InsertText: types.CreateStringPointer("weight: "),
 					},
-					{Label: "weight_device", Detail: types.CreateStringPointer("array")},
+					{
+						Label:      "weight_device",
+						Detail:     types.CreateStringPointer("array"),
+						InsertText: types.CreateStringPointer("weight_device:\n        - "),
+					},
 				},
 			},
 		},

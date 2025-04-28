@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -74,11 +75,18 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 			}
 		}
 	} else if properties, ok := nodeProps.(map[string]*jsonschema.Schema); ok {
+		sb := strings.Builder{}
+		for i := range lines[lspLine] {
+			if unicode.IsSpace(rune(lines[lspLine][i])) {
+				sb.WriteString(string(lines[lspLine][i]))
+			}
+		}
+		sb.WriteString("  ")
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
 				Detail:     extractDetail(schema),
 				Label:      attributeName,
-				InsertText: insertText(attributeName, schema),
+				InsertText: insertText(sb.String(), attributeName, schema),
 			}
 
 			if schema.Enum != nil {
@@ -198,8 +206,17 @@ func extractDetail(schema *jsonschema.Schema) *string {
 	return types.CreateStringPointer(strings.Join(referencedTypes, " or "))
 }
 
-func insertText(attributeName string, schema *jsonschema.Schema) *string {
-	if schema.Types == nil || slices.Contains(schema.Types.ToStrings(), "object") || slices.Contains(schema.Types.ToStrings(), "array") {
+func insertText(spacing, attributeName string, schema *jsonschema.Schema) *string {
+	if schema.Types == nil {
+		return nil
+	}
+	if slices.Contains(schema.Types.ToStrings(), "array") {
+		if len(schema.Types.ToStrings()) == 1 && schema.OneOf == nil {
+			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v- ", attributeName, spacing))
+		}
+		return nil
+	}
+	if slices.Contains(schema.Types.ToStrings(), "object") {
 		return nil
 	}
 	return types.CreateStringPointer(fmt.Sprintf("%v: ", attributeName))
