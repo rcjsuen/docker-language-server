@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
+	"gopkg.in/yaml.v3"
 )
 
 func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.ComposeDocument) ([]protocol.DocumentLink, error) {
@@ -38,6 +39,10 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 		for i := range root.Content[0].Content {
 			switch root.Content[0].Content[i].Value {
 			case "services":
+				if root.Content[0].Content[i+1].Kind != yaml.MappingNode {
+					continue
+				}
+
 				for j := 0; j < len(root.Content[0].Content[i+1].Content); j += 2 {
 					serviceProperties := root.Content[0].Content[i+1].Content[j+1].Content
 					for k := 0; k < len(serviceProperties); k += 2 {

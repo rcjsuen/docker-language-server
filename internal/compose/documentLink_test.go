@@ -229,6 +229,13 @@ services:
 				},
 			},
 		},
+		{
+			name: "invalid services",
+			content: `
+services:
+  - `,
+			links: []protocol.DocumentLink{},
+		},
 	}
 
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
