@@ -2,6 +2,7 @@ package compose
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -61,32 +62,46 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	}
 
 	items := []protocol.CompletionItem{}
-	for attributeName, schema := range nodeProperties(topLevel, line, character) {
-		item := protocol.CompletionItem{
-			Detail: extractDetail(schema),
-			Label:  attributeName,
-		}
-
+	nodeProps := nodeProperties(topLevel, line, character)
+	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
-			options := []string{}
-			for i := range schema.Enum.Values {
-				options = append(options, schema.Enum.Values[i].(string))
-			}
-			slices.Sort(options)
-			sb := strings.Builder{}
-			sb.WriteString(attributeName)
-			sb.WriteString(": ${1|")
-			for i := range options {
-				sb.WriteString(options[i])
-				if i != len(schema.Enum.Values)-1 {
-					sb.WriteString(",")
+			for _, value := range schema.Enum.Values {
+				item := protocol.CompletionItem{
+					Detail: extractDetail(schema),
+					Label:  value.(string),
 				}
+				items = append(items, item)
 			}
-			sb.WriteString("|}")
-			item.InsertText = types.CreateStringPointer(sb.String())
-			item.InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
 		}
-		items = append(items, item)
+	} else if properties, ok := nodeProps.(map[string]*jsonschema.Schema); ok {
+		for attributeName, schema := range properties {
+			item := protocol.CompletionItem{
+				Detail:     extractDetail(schema),
+				Label:      attributeName,
+				InsertText: insertText(attributeName, schema),
+			}
+
+			if schema.Enum != nil {
+				options := []string{}
+				for i := range schema.Enum.Values {
+					options = append(options, schema.Enum.Values[i].(string))
+				}
+				slices.Sort(options)
+				sb := strings.Builder{}
+				sb.WriteString(attributeName)
+				sb.WriteString(": ${1|")
+				for i := range options {
+					sb.WriteString(options[i])
+					if i != len(schema.Enum.Values)-1 {
+						sb.WriteString(",")
+					}
+				}
+				sb.WriteString("|}")
+				item.InsertText = types.CreateStringPointer(sb.String())
+				item.InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
+			}
+			items = append(items, item)
+		}
 	}
 	if len(items) == 0 {
 		return nil, nil
@@ -161,27 +176,31 @@ func walkNodes(line int, nodes []*yaml.Node) ([]*yaml.Node, *yaml.Node) {
 }
 
 func extractDetail(schema *jsonschema.Schema) *string {
-	if schema != nil {
-		if schema.Types != nil {
-			schemaTypes := schema.Types.ToStrings()
+	if schema.Types != nil {
+		schemaTypes := schema.Types.ToStrings()
+		return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
+	} else if schema.Ref != nil {
+		if schema.Ref.Types != nil {
+			schemaTypes := schema.Ref.Types.ToStrings()
 			return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
-		} else if schema.Ref != nil {
-			if schema.Ref.Types != nil {
-				schemaTypes := schema.Ref.Types.ToStrings()
-				return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
-			}
-			schema = schema.Ref
 		}
-		referencedTypes := []string{}
-		for _, referenced := range schema.OneOf {
-			if referenced.Types != nil {
-				referencedTypes = append(referencedTypes, referenced.Types.ToStrings()[0])
-			} else if referenced.Ref != nil {
-				referencedTypes = append(referencedTypes, referenced.Ref.Types.ToStrings()[0])
-			}
-		}
-		slices.Sort(referencedTypes)
-		return types.CreateStringPointer(strings.Join(referencedTypes, " or "))
+		schema = schema.Ref
 	}
-	return nil
+	referencedTypes := []string{}
+	for _, referenced := range schema.OneOf {
+		if referenced.Types != nil {
+			referencedTypes = append(referencedTypes, referenced.Types.ToStrings()[0])
+		} else if referenced.Ref != nil {
+			referencedTypes = append(referencedTypes, referenced.Ref.Types.ToStrings()[0])
+		}
+	}
+	slices.Sort(referencedTypes)
+	return types.CreateStringPointer(strings.Join(referencedTypes, " or "))
+}
+
+func insertText(attributeName string, schema *jsonschema.Schema) *string {
+	if schema.Types == nil || slices.Contains(schema.Types.ToStrings(), "object") || slices.Contains(schema.Types.ToStrings(), "array") {
+		return nil
+	}
+	return types.CreateStringPointer(fmt.Sprintf("%v: ", attributeName))
 }

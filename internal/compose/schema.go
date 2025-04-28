@@ -35,7 +35,7 @@ func schemaProperties() map[string]*jsonschema.Schema {
 	return composeSchema.Properties
 }
 
-func nodeProperties(nodes []*yaml.Node, line, column int) map[string]*jsonschema.Schema {
+func nodeProperties(nodes []*yaml.Node, line, column int) any {
 	if composeSchema != nil && slices.Contains(composeSchema.Types.ToStrings(), "object") && composeSchema.Properties != nil {
 		if prop, ok := composeSchema.Properties[nodes[0].Value]; ok {
 			for regexp, property := range prop.PatternProperties {
@@ -50,7 +50,7 @@ func nodeProperties(nodes []*yaml.Node, line, column int) map[string]*jsonschema
 	return nil
 }
 
-func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, properties map[string]*jsonschema.Schema) map[string]*jsonschema.Schema {
+func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, properties map[string]*jsonschema.Schema) any {
 	if len(nodes) == nodeOffset || (len(nodes) >= nodeOffset+2 && nodes[nodeOffset].Column <= column && column < nodes[nodeOffset+1].Column) {
 		return properties
 	} else if column == nodes[nodeOffset].Column {
@@ -117,15 +117,7 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 
 		if nodes[nodeOffset].Column < column {
 			if nodes[nodeOffset].Line == line {
-				if prop.Enum == nil {
-					return nil
-				}
-				enumSchema := &jsonschema.Schema{Types: prop.Types}
-				enumValues := make(map[string]*jsonschema.Schema)
-				for _, value := range prop.Enum.Values {
-					enumValues[value.(string)] = enumSchema
-				}
-				return enumValues
+				return prop
 			}
 			return recurseNodeProperties(nodes, line, column, nodeOffset+1, prop.Properties)
 		}
