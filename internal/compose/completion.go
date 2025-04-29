@@ -77,8 +77,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	} else if properties, ok := nodeProps.(map[string]*jsonschema.Schema); ok {
 		sb := strings.Builder{}
 		for i := range lines[lspLine] {
-			if unicode.IsSpace(rune(lines[lspLine][i])) {
-				sb.WriteString(string(lines[lspLine][i]))
+			if unicode.IsSpace(rune(lines[lspLine][i])) || lines[lspLine][i] == '-' {
+				sb.WriteString(" ")
 			}
 		}
 		sb.WriteString("  ")
