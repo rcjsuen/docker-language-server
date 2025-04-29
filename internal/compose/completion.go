@@ -164,10 +164,7 @@ func walkNodes(line int, nodes []*yaml.Node) ([]*yaml.Node, *yaml.Node) {
 			if nodes[i].Kind == yaml.MappingNode {
 				return walkNodes(line, nodes[i].Content)
 			}
-			if len(nodes) == 1 {
-				return []*yaml.Node{nodes[i]}, nil
-			}
-			return []*yaml.Node{nodes[i]}, nodes[i+1]
+			return []*yaml.Node{nodes[i]}, nil
 		} else if line < nodes[i].Line {
 			break
 		}

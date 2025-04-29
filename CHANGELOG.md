@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [0.4.1] - 2025-04-29
+
+### Fixed
+
+- Compose
+  - textDocument/completion
+    - protect the completion calculation code from throwing errors when encountering empty array items ([#112](https://github.com/docker/docker-language-server/issues/112))
+
 ## [0.4.0] - 2025-04-28
 
 ### Added
