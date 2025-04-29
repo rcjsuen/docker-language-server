@@ -289,8 +289,7 @@ services:
 				require.Nil(t, result.Range)
 				markupContent, ok := result.Contents.(protocol.MarkupContent)
 				require.True(t, ok)
-				require.Equal(t, tc.result.Contents.(protocol.MarkupContent).Kind, markupContent.Kind)
-				require.Equal(t, tc.result.Contents.(protocol.MarkupContent).Value, markupContent.Value)
+				require.Equal(t, tc.result.Contents, markupContent)
 			}
 		})
 	}

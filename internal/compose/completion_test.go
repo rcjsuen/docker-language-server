@@ -549,23 +549,38 @@ configs:
 			character: 0,
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
-					{Label: "configs"},
 					{
-						Documentation: "compose sub-projects to be included.",
+						Label:         "configs",
+						Documentation: "Configurations for services in the project",
+					},
+					{
 						Label:         "include",
+						Documentation: "compose sub-projects to be included.",
 					},
 					{
-						Documentation: "define the Compose project name, until user defines one explicitly.",
 						Label:         "name",
+						Documentation: "define the Compose project name, until user defines one explicitly.",
 					},
-					{Label: "networks"},
-					{Label: "secrets"},
-					{Label: "services"},
 					{
-						Documentation: "declared for backward compatibility, ignored.",
-						Label:         "version",
+						Label:         "networks",
+						Documentation: "Networks that are shared among multiple services",
 					},
-					{Label: "volumes"},
+					{
+						Label:         "secrets",
+						Documentation: "Secrets that are shared among multiple services",
+					},
+					{
+						Label:         "services",
+						Documentation: "The services in your project",
+					},
+					{
+						Label:         "version",
+						Documentation: "declared for backward compatibility, ignored.",
+					},
+					{
+						Label:         "volumes",
+						Documentation: "Named volumes that are shared among multiple services",
+					},
 				},
 			},
 		},

@@ -4,6 +4,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- updated Compose schema to the latest version ([#117](https://github.com/docker/docker-language-server/issues/117))
+
 ### Fixed
 
 - Compose
