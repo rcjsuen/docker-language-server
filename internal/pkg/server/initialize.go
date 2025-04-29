@@ -33,6 +33,12 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 			}
 		}
 
+		if settings, ok := clientConfig["dockercomposeExperimental"].(map[string]any); ok {
+			if composeCompletion, ok := settings["composeCompletion"].(bool); ok {
+				s.composeCompletion = composeCompletion
+			}
+		}
+
 		if value, ok := clientConfig["telemetry"].(string); ok {
 			s.updateTelemetrySetting(value)
 		}
