@@ -20,12 +20,12 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 		lines := strings.Split(string(doc.Input()), "\n")
 		character := int(params.Position.Character) + 1
 		topLevel, _, _ := NodeStructure(line, root.Content[0].Content)
-		return hoverLookup(composeSchema, topLevel, character, len(lines[params.Position.Line])+1), nil
+		return hoverLookup(composeSchema, topLevel, line, character, len(lines[params.Position.Line])+1), nil
 	}
 	return nil, nil
 }
 
-func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, column, lineLength int) *protocol.Hover {
+func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, lineLength int) *protocol.Hover {
 	for _, node := range nodes {
 		if schema.Ref != nil {
 			schema = schema.Ref
@@ -70,7 +70,7 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, column, lineLeng
 				}
 			}
 
-			if node.Column+len(node.Value) >= column && property.Description != "" {
+			if node.Line == line && node.Column+len(node.Value) >= column && property.Description != "" {
 				return &protocol.Hover{
 					Contents: protocol.MarkupContent{
 						Kind:  protocol.MarkupKindPlainText,
