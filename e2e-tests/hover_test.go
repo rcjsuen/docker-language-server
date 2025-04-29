@@ -61,7 +61,7 @@ func TestHover(t *testing.T) {
 		name                string
 		content             string
 		position            protocol.Position
-		value               string
+		result              *protocol.Hover
 	}{
 		{
 			languageID:          protocol.DockerBakeLanguage,
@@ -69,7 +69,12 @@ func TestHover(t *testing.T) {
 			name:                "hover over target block type",
 			content:             "target \"api\" {}",
 			position:            protocol.Position{Line: 0, Character: 3},
-			value:               "**target** _Block_\n\nA target reflects a single `docker build` invocation.",
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "**target** _Block_\n\nA target reflects a single `docker build` invocation.",
+				},
+			},
 		},
 		{
 			languageID:          protocol.DockerfileLanguage,
@@ -77,7 +82,25 @@ func TestHover(t *testing.T) {
 			name:                "hover over alpine:3.16.1",
 			content:             "FROM alpine:3.16.1",
 			position:            protocol.Position{Line: 0, Character: 8},
-			value:               "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
+		},
+		{
+			languageID:          protocol.DockerComposeLanguage,
+			fileExtensionSuffix: ".yaml",
+			name:                "version description",
+			content:             "version: 1.2.3",
+			position:            protocol.Position{Line: 0, Character: 4},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindPlainText,
+					Value: "declared for backward compatibility, ignored.",
+				},
+			},
 		},
 	}
 
@@ -95,11 +118,7 @@ func TestHover(t *testing.T) {
 				},
 			}, &hover)
 			require.NoError(t, err)
-			require.Nil(t, hover.Range)
-			markupContent, ok := hover.Contents.(protocol.MarkupContent)
-			require.True(t, ok)
-			require.Equal(t, protocol.MarkupKindMarkdown, markupContent.Kind)
-			require.Equal(t, tc.value, markupContent.Value)
+			require.Equal(t, tc.result, hover)
 		})
 	}
 

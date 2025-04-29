@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Compose
+  - textDocument/hover
+    - return the hover results for Compose files
+
 ## [0.4.1] - 2025-04-29
 
 ### Fixed
@@ -174,7 +182,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.4.0...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.4.1...main
+[0.4.1]: https://github.com/docker/docker-language-server/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/docker/docker-language-server/compare/v0.3.8...v0.4.0
 [0.3.8]: https://github.com/docker/docker-language-server/compare/v0.3.7...v0.3.8
 [0.3.7]: https://github.com/docker/docker-language-server/compare/v0.3.6...v0.3.7
