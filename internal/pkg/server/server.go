@@ -64,6 +64,8 @@ type Server struct {
 	// within that Git folder.
 	analyzedFiles map[string]map[string]bool
 
+	composeCompletion bool
+
 	mutex sync.RWMutex
 }
 
@@ -83,6 +85,7 @@ func NewServer(docManager *document.Manager) *Server {
 		telemetry:                  telemetry.NewClient(),
 		scoutService:               scoutService,
 		sessionTelemetryProperties: sessionTelemetryProperties,
+		composeCompletion:          true,
 		diagnosticsCollectors: []textdocument.DiagnosticsCollector{
 			buildkit.NewBuildKitDiagnosticsCollector(),
 			scoutService,
