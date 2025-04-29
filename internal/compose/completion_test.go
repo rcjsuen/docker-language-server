@@ -1598,6 +1598,17 @@ services:
 			character: 22,
 			list:      nil,
 		},
+		{
+			name: "bug",
+			content: `
+networks:
+- 
+- 
+- `,
+			line:      4,
+			character: 2,
+			list:      nil,
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
