@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/compose"
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -21,7 +22,7 @@ func (s *Server) TextDocumentHover(ctx *glsp.Context, params *protocol.HoverPara
 	if language == protocol.DockerBakeLanguage {
 		return hcl.Hover(ctx.Context, params, doc.(document.BakeHCLDocument))
 	} else if language == protocol.DockerComposeLanguage {
-		return nil, nil
+		return compose.Hover(ctx.Context, params, doc.(document.ComposeDocument))
 	}
 
 	dockerfileDocument, ok := doc.(document.DockerfileDocument)
