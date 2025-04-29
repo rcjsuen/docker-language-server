@@ -2,7 +2,7 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## [Unreleased]
+## [0.4.0] - 2025-04-28
 
 ### Added
 
@@ -166,7 +166,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.3.8...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.4.0...main
+[0.4.0]: https://github.com/docker/docker-language-server/compare/v0.3.8...v0.4.0
 [0.3.8]: https://github.com/docker/docker-language-server/compare/v0.3.7...v0.3.8
 [0.3.7]: https://github.com/docker/docker-language-server/compare/v0.3.6...v0.3.7
 [0.3.6]: https://github.com/docker/docker-language-server/compare/v0.3.5...v0.3.6
