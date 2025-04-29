@@ -7,6 +7,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Fixed
 
 - Compose
+  - textDocument/completion
+    - resolved a spacing offset issue with object or array completions ([#115](https://github.com/docker/docker-language-server/issues/115))
   - textDocument/hover
     - return the hover results for Compose files
 

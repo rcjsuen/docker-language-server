@@ -1400,6 +1400,76 @@ services:
 			},
 		},
 		{
+			name: "properties of a volumes array item with no content",
+			content: `
+services:
+  test:
+    image: alpine
+    volumes:
+      - `,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "bind",
+						Detail:         types.CreateStringPointer("object"),
+						InsertText:     types.CreateStringPointer("bind:\n          "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "consistency",
+						Detail:         types.CreateStringPointer("string"),
+						InsertText:     types.CreateStringPointer("consistency: "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "image",
+						Detail:         types.CreateStringPointer("object"),
+						InsertText:     types.CreateStringPointer("image:\n          "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "read_only",
+						Detail:         types.CreateStringPointer("boolean or string"),
+						InsertText:     types.CreateStringPointer("read_only: "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						InsertText:     types.CreateStringPointer("source: "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						InsertText:     types.CreateStringPointer("target: "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "tmpfs",
+						Detail:         types.CreateStringPointer("object"),
+						InsertText:     types.CreateStringPointer("tmpfs:\n          "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:            "type",
+						Detail:           types.CreateStringPointer("string"),
+						InsertText:       types.CreateStringPointer("type: ${1|bind,cluster,image,npipe,tmpfs,volume|}"),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "volume",
+						Detail:         types.CreateStringPointer("object"),
+						InsertText:     types.CreateStringPointer("volume:\n          "),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
+		{
 			name: "properties of a volume array item's sibling attributes under a service object",
 			content: `
 services:
