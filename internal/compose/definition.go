@@ -6,116 +6,155 @@ import (
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/token"
 )
+
+func findSequenceDependencyToken(attributeNode *ast.MappingValueNode, attributeName string, line, column int) (string, *token.Token) {
+	if dependencies, ok := attributeNode.Value.(*ast.SequenceNode); ok {
+		for _, dependency := range dependencies.Values {
+			dependencyToken := dependency.GetToken()
+			if dependencyToken.Position.Line == line && dependencyToken.Position.Column <= column && column <= dependencyToken.Position.Column+len(dependencyToken.Value) {
+				return attributeName, dependencyToken
+			}
+		}
+	}
+	return "", nil
+}
+
+func findDependencyToken(attributeNode *ast.MappingValueNode, attributeName string, line, column int) (string, *token.Token) {
+	if attributeNode.Key.GetToken().Value == attributeName {
+		return findSequenceDependencyToken(attributeNode, attributeName, line, column)
+	}
+	return "", nil
+}
+
+func lookupReference(serviceNode *ast.MappingValueNode, line, column int) (string, *token.Token) {
+	if serviceAttributes, ok := serviceNode.Value.(*ast.MappingNode); ok {
+		for _, attributeNode := range serviceAttributes.Values {
+			if attributeNode.Key.GetToken().Value == "depends_on" {
+				if _, ok := attributeNode.Value.(*ast.SequenceNode); ok {
+					reference, dependency := findSequenceDependencyToken(attributeNode, "services", line, column)
+					if dependency != nil {
+						return reference, dependency
+					}
+				} else if serviceAttributes, ok := attributeNode.Value.(*ast.MappingNode); ok {
+					for _, dependency := range serviceAttributes.Values {
+						dependencyToken := dependency.Key.GetToken()
+						if dependencyToken.Position.Line == line && dependencyToken.Position.Column <= column && column <= dependencyToken.Position.Column+len(dependencyToken.Value) {
+							return "services", dependencyToken
+						}
+					}
+				}
+			}
+
+			reference, dependency := findDependencyToken(attributeNode, "configs", line, column)
+			if dependency != nil {
+				return reference, dependency
+			}
+			reference, dependency = findDependencyToken(attributeNode, "networks", line, column)
+			if dependency != nil {
+				return reference, dependency
+			}
+			reference, dependency = findDependencyToken(attributeNode, "secrets", line, column)
+			if dependency != nil {
+				return reference, dependency
+			}
+		}
+	}
+	return "", nil
+}
+
+func lookupDependency(node *ast.MappingValueNode, line, column int) (string, *token.Token) {
+	if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "services" {
+		if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
+			for _, serviceNode := range servicesNode.Values {
+				reference, dependency := lookupReference(serviceNode, line, column)
+				if dependency != nil {
+					return reference, dependency
+				}
+			}
+		} else if valueNode, ok := node.Value.(*ast.MappingValueNode); ok {
+			return lookupReference(valueNode, line, column)
+		}
+	}
+	return "", nil
+}
+
+func findDefinition(node *ast.MappingValueNode, referenceType, referenceName string) *token.Token {
+	if s, ok := node.Key.(*ast.StringNode); ok && s.Value == referenceType {
+		if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
+			for _, serviceNode := range servicesNode.Values {
+				if serviceNode.Key.GetToken().Value == referenceName {
+					return serviceNode.Key.GetToken()
+				}
+			}
+		} else if networks, ok := node.Value.(*ast.MappingValueNode); ok {
+			if networks.Key.GetToken().Value == referenceName {
+				return networks.Key.GetToken()
+			}
+		}
+	}
+	return nil
+}
 
 func Definition(ctx context.Context, definitionLinkSupport bool, doc document.ComposeDocument, params *protocol.DefinitionParams) (any, error) {
 	line := int(params.Position.Line) + 1
 	character := int(params.Position.Character) + 1
-	root := doc.RootNode()
-	if len(root.Content) > 0 {
-		for i := 0; i < len(root.Content[0].Content); i += 2 {
-			switch root.Content[0].Content[i].Value {
-			case "services":
-				for _, service := range root.Content[0].Content[i+1].Content {
-					for j := 0; j < len(service.Content); j += 2 {
-						if service.Content[j].Value == "depends_on" {
-							if service.Content[j+1].Kind == yaml.MappingNode {
-								for k := 0; k < len(service.Content[j+1].Content); k += 2 {
-									link := dependencyLink(root, definitionLinkSupport, params, service.Content[j+1].Content[k], line, character, "services")
-									if link != nil {
-										return link, nil
-									}
-								}
-							}
-							if service.Content[j+1].Kind == yaml.SequenceNode {
-								for _, dependency := range service.Content[j+1].Content {
-									link := dependencyLink(root, definitionLinkSupport, params, dependency, line, character, "services")
-									if link != nil {
-										return link, nil
-									}
-								}
-							}
-						}
 
-						link := lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "configs")
-						if link != nil {
-							return link, nil
-						}
+	file := doc.File()
+	if file == nil || len(file.Docs) == 0 {
+		return nil, nil
+	}
 
-						link = lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "networks")
-						if link != nil {
-							return link, nil
-						}
-
-						link = lookupDependencyLink(root, definitionLinkSupport, params, service, j, line, character, "secrets")
-						if link != nil {
-							return link, nil
-						}
+	if mappingNode, ok := file.Docs[0].Body.(*ast.MappingNode); ok {
+		for _, node := range mappingNode.Values {
+			reference, dependency := lookupDependency(node, line, character)
+			if dependency != nil {
+				for _, node := range mappingNode.Values {
+					referenced := findDefinition(node, reference, dependency.Value)
+					if referenced != nil {
+						return dependencyLink(definitionLinkSupport, params, referenced, dependency), nil
 					}
 				}
+				return nil, nil
+			}
+		}
+	} else if mappingNodeValue, ok := file.Docs[0].Body.(*ast.MappingValueNode); ok {
+		reference, dependency := lookupDependency(mappingNodeValue, line, character)
+		if dependency != nil {
+			referenced := findDefinition(mappingNodeValue, reference, dependency.Value)
+			if referenced != nil {
+				return dependencyLink(definitionLinkSupport, params, referenced, dependency), nil
 			}
 		}
 	}
 	return nil, nil
 }
 
-func lookupDependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, service *yaml.Node, index, line, character int, nodeName string) any {
-	if service.Content[index].Value == nodeName && service.Content[index+1].Kind == yaml.SequenceNode {
-		for _, dependency := range service.Content[index+1].Content {
-			link := dependencyLink(root, definitionLinkSupport, params, dependency, line, character, nodeName)
-			if link != nil {
-				return link
-			}
-		}
-	}
-	return nil
-}
-
-func dependencyLink(root yaml.Node, definitionLinkSupport bool, params *protocol.DefinitionParams, dependency *yaml.Node, line, character int, nodeName string) any {
-	if dependency.Line == line && dependency.Column <= character && character <= dependency.Column+len(dependency.Value) {
-		serviceRange := serviceDefinitionRange(root, nodeName, dependency.Value)
-		if serviceRange == nil {
-			return nil
-		}
-
-		return types.CreateDefinitionResult(
-			definitionLinkSupport,
-			*serviceRange,
-			&protocol.Range{
-				Start: protocol.Position{
-					Line:      params.Position.Line,
-					Character: protocol.UInteger(dependency.Column - 1),
-				},
-				End: protocol.Position{
-					Line:      params.Position.Line,
-					Character: protocol.UInteger(dependency.Column + len(dependency.Value) - 1),
-				},
+func dependencyLink(definitionLinkSupport bool, params *protocol.DefinitionParams, referenced, dependency *token.Token) any {
+	return types.CreateDefinitionResult(
+		definitionLinkSupport,
+		protocol.Range{
+			Start: protocol.Position{
+				Line:      protocol.UInteger(referenced.Position.Line - 1),
+				Character: protocol.UInteger(referenced.Position.Column - 1),
 			},
-			params.TextDocument.URI,
-		)
-	}
-	return nil
-}
-
-func serviceDefinitionRange(root yaml.Node, nodeName, serviceName string) *protocol.Range {
-	for i := 0; i < len(root.Content[0].Content); i += 2 {
-		if root.Content[0].Content[i].Value == nodeName {
-			for _, service := range root.Content[0].Content[i+1].Content {
-				if service.Value == serviceName {
-					return &protocol.Range{
-						Start: protocol.Position{
-							Line:      protocol.UInteger(service.Line) - 1,
-							Character: protocol.UInteger(service.Column - 1),
-						},
-						End: protocol.Position{
-							Line:      protocol.UInteger(service.Line) - 1,
-							Character: protocol.UInteger(service.Column + len(serviceName) - 1),
-						},
-					}
-				}
-			}
-		}
-	}
-	return nil
+			End: protocol.Position{
+				Line:      protocol.UInteger(referenced.Position.Line - 1),
+				Character: protocol.UInteger(referenced.Position.Column + len(referenced.Value) - 1),
+			},
+		},
+		&protocol.Range{
+			Start: protocol.Position{
+				Line:      params.Position.Line,
+				Character: protocol.UInteger(dependency.Position.Column - 1),
+			},
+			End: protocol.Position{
+				Line:      params.Position.Line,
+				Character: protocol.UInteger(dependency.Position.Column + len(dependency.Value) - 1),
+			},
+		},
+		params.TextDocument.URI,
+	)
 }

@@ -157,37 +157,41 @@ services:
 services:
   test:
     image: alpine:3.21
+    depends_on:
+      - redis
     configs:
-    - def
+      - def
+  redis:
+    image: redis
 
 configs:
   def:
     file: ./httpd.conf`,
-			line:      5,
-			character: 8,
+			line:      7,
+			character: 10,
 			locations: []protocol.Location{
 				{
 					URI: composeFileURI,
 					Range: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 5},
 					},
 				},
 			},
 			links: []protocol.LocationLink{
 				{
 					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 6},
-						End:   protocol.Position{Line: 5, Character: 9},
+						Start: protocol.Position{Line: 7, Character: 8},
+						End:   protocol.Position{Line: 7, Character: 11},
 					},
 					TargetURI: composeFileURI,
 					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 5},
 					},
 					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
+						Start: protocol.Position{Line: 12, Character: 2},
+						End:   protocol.Position{Line: 12, Character: 5},
 					},
 				},
 			},

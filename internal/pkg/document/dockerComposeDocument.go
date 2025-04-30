@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/parser"
 	"go.lsp.dev/uri"
 	"gopkg.in/yaml.v3"
 )
@@ -11,12 +13,14 @@ import (
 type ComposeDocument interface {
 	Document
 	RootNode() yaml.Node
+	File() *ast.File
 }
 
 type composeDocument struct {
 	document
 	mutex    sync.Mutex
 	rootNode yaml.Node
+	file     *ast.File
 }
 
 func NewComposeDocument(u uri.URI, version int32, input []byte) ComposeDocument {
@@ -39,6 +43,7 @@ func (d *composeDocument) parse(_ bool) bool {
 	defer d.mutex.Unlock()
 
 	_ = yaml.Unmarshal([]byte(d.input), &d.rootNode)
+	d.file, _ = parser.ParseBytes(d.input, 0)
 	return true
 }
 
@@ -48,4 +53,8 @@ func (d *composeDocument) copy() Document {
 
 func (d *composeDocument) RootNode() yaml.Node {
 	return d.rootNode
+}
+
+func (d *composeDocument) File() *ast.File {
+	return d.file
 }
