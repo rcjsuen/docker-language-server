@@ -152,7 +152,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 									for _, diagnostic := range imageDiagnostics {
 										if diagnostic.Kind == "critical_high_vulnerabilities" || diagnostic.Kind == "vulnerabilities" {
 											rng := templateExpr.SrcRange
-											diagnostics = append(diagnostics, scout.ConvertDiagnostic(diagnostic, nil, source, createProtocolRange(rng, true), nil))
+											diagnostics = append(diagnostics, scout.ConvertDiagnostic(diagnostic, source, createProtocolRange(rng, true), nil))
 											break
 										}
 									}

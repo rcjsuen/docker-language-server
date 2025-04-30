@@ -10,6 +10,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 
+- Dockerfile
+  - textDocument/codeAction
+    - preserve instruction flags when fixing a `not_pinned_digest` diagnostic ([#123](https://github.com/docker/docker-language-server/issues/123))
 - Compose
   - textDocument/completion
     - resolved a spacing offset issue with object or array completions ([#115](https://github.com/docker/docker-language-server/issues/115))
