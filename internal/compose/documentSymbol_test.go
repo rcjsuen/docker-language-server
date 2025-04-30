@@ -60,6 +60,41 @@ func TestDocumentSymbol(t *testing.T) {
 			},
 		},
 		{
+			name: "duplicated services block",
+			content: `services:
+  web:
+    build: .
+services:
+  redis:
+    image: "redis:alpine"`,
+			symbols: []*protocol.DocumentSymbol{
+				{
+					Name: "web",
+					Kind: protocol.SymbolKindClass,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 5},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 5},
+					},
+				},
+				{
+					Name: "redis",
+					Kind: protocol.SymbolKindClass,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 2},
+						End:   protocol.Position{Line: 4, Character: 7},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 2},
+						End:   protocol.Position{Line: 4, Character: 7},
+					},
+				},
+			},
+		},
+		{
 			name: "services block with a piped scalar value",
 			content: `services:
   web: |
@@ -177,7 +212,7 @@ func TestDocumentSymbol(t *testing.T) {
 		{
 			name: "include array, path with list of strings",
 			content: `include:
-  - path: 
+  - path:
     - ../commons/compose.yaml
     - ./commons-override.yaml`,
 			symbols: []*protocol.DocumentSymbol{
@@ -208,6 +243,14 @@ func TestDocumentSymbol(t *testing.T) {
 			},
 		},
 		{
+			name: "include array, wrong name with list of strings",
+			content: `include:
+  - path2:
+    - ../commons/compose.yaml
+    - ./commons-override.yaml`,
+			symbols: []*protocol.DocumentSymbol{},
+		},
+		{
 			name: "include array, long syntax",
 			content: `include:
   - path: ../commons/compose.yaml
@@ -224,6 +267,56 @@ func TestDocumentSymbol(t *testing.T) {
 					SelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 10},
 						End:   protocol.Position{Line: 1, Character: 33},
+					},
+				},
+			},
+		},
+		{
+			name: "regular file",
+			content: `
+services:
+  web:
+    build: .
+  redis:
+    image: redis
+
+networks:
+  testNetwork:`,
+			symbols: []*protocol.DocumentSymbol{
+				{
+					Name: "web",
+					Kind: protocol.SymbolKindClass,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 2},
+						End:   protocol.Position{Line: 2, Character: 5},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 2},
+						End:   protocol.Position{Line: 2, Character: 5},
+					},
+				},
+				{
+					Name: "redis",
+					Kind: protocol.SymbolKindClass,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 2},
+						End:   protocol.Position{Line: 4, Character: 7},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 2},
+						End:   protocol.Position{Line: 4, Character: 7},
+					},
+				},
+				{
+					Name: "testNetwork",
+					Kind: protocol.SymbolKindInterface,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 13},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 2},
+						End:   protocol.Position{Line: 8, Character: 13},
 					},
 				},
 			},

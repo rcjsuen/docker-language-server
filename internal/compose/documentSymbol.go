@@ -5,100 +5,79 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/token"
 )
 
-func DocumentSymbol(ctx context.Context, doc document.ComposeDocument) (result []any, err error) {
-	root := doc.RootNode()
-	if len(root.Content) > 0 {
-		for i := range root.Content[0].Content {
-			switch root.Content[0].Content[i].Value {
-			case "services":
-				symbols := createSymbol(root.Content[0].Content, i+1, protocol.SymbolKindClass)
-				result = append(result, symbols...)
-			case "networks":
-				symbols := createSymbol(root.Content[0].Content, i+1, protocol.SymbolKindInterface)
-				result = append(result, symbols...)
-			case "volumes":
-				symbols := createSymbol(root.Content[0].Content, i+1, protocol.SymbolKindFile)
-				result = append(result, symbols...)
-			case "configs":
-				symbols := createSymbol(root.Content[0].Content, i+1, protocol.SymbolKindVariable)
-				result = append(result, symbols...)
-			case "secrets":
-				symbols := createSymbol(root.Content[0].Content, i+1, protocol.SymbolKindKey)
-				result = append(result, symbols...)
-			case "include":
-				for _, included := range root.Content[0].Content[i+1].Content {
-					switch included.Kind {
-					case yaml.MappingNode:
-						// long syntax with an object
-						for j := range included.Content {
-							if included.Content[j].Value == "path" {
-								switch included.Content[j+1].Kind {
-								case yaml.SequenceNode:
-									for _, path := range included.Content[j+1].Content {
-										character := uint32(path.Column - 1)
-										rng := protocol.Range{
-											Start: protocol.Position{
-												Line:      uint32(path.Line - 1),
-												Character: character,
-											},
-											End: protocol.Position{
-												Line:      uint32(path.Line - 1),
-												Character: character + uint32(len(path.Value)),
-											},
-										}
-										result = append(result, &protocol.DocumentSymbol{
-											Name:           path.Value,
-											Kind:           protocol.SymbolKindModule,
-											Range:          rng,
-											SelectionRange: rng,
-										})
-									}
-								case yaml.ScalarNode:
-									character := uint32(included.Content[j+1].Column - 1)
-									rng := protocol.Range{
-										Start: protocol.Position{
-											Line:      uint32(included.Content[j+1].Line - 1),
-											Character: character,
-										},
-										End: protocol.Position{
-											Line:      uint32(included.Content[j+1].Line - 1),
-											Character: character + uint32(len(included.Content[j+1].Value)),
-										},
-									}
-									result = append(result, &protocol.DocumentSymbol{
-										Name:           included.Content[j+1].Value,
-										Kind:           protocol.SymbolKindModule,
-										Range:          rng,
-										SelectionRange: rng,
-									})
-								}
+var symbolKinds = map[string]protocol.SymbolKind{
+	"services": protocol.SymbolKindClass,
+	"networks": protocol.SymbolKindInterface,
+	"volumes":  protocol.SymbolKindFile,
+	"configs":  protocol.SymbolKindVariable,
+	"secrets":  protocol.SymbolKindKey,
+}
+
+func findSymbols(value string, n *ast.MappingValueNode, mapping map[string]protocol.SymbolKind) (result []any) {
+	if kind, ok := mapping[value]; ok {
+		if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
+			for _, service := range mappingNode.Values {
+				result = append(result, createSymbol(service.Key.GetToken(), kind))
+			}
+		} else if n, ok := n.Value.(*ast.MappingValueNode); ok {
+			result = append(result, createSymbol(n.Key.GetToken(), kind))
+		}
+	} else if value == "include" {
+		if sequenceNode, ok := n.Value.(*ast.SequenceNode); ok {
+			for _, include := range sequenceNode.Values {
+				if _, ok := include.(*ast.StringNode); ok {
+					// include:
+					//   - abc.yml
+					//   - def.yml
+					result = append(result, createSymbol(include.GetToken(), protocol.SymbolKindModule))
+				} else if includeNode, ok := include.(*ast.MappingValueNode); ok {
+					if includeNode.Key.GetToken().Value == "path" {
+						// include:
+						//   - path:
+						//     - ../commons/compose.yaml
+						//     - ./commons-override.yaml
+						if included, ok := includeNode.Value.(*ast.SequenceNode); ok {
+							for _, path := range included.Values {
+								result = append(result, createSymbol(path.GetToken(), protocol.SymbolKindModule))
 							}
 						}
-					case yaml.ScalarNode:
-						// include:
-						//   - abc.yml
-						//   - def.yml
-						character := uint32(included.Column - 1)
-						rng := protocol.Range{
-							Start: protocol.Position{
-								Line:      uint32(included.Line - 1),
-								Character: character,
-							},
-							End: protocol.Position{
-								Line:      uint32(included.Line - 1),
-								Character: character + uint32(len(included.Value)),
-							},
-						}
-						result = append(result, &protocol.DocumentSymbol{
-							Name:           included.Value,
-							Kind:           protocol.SymbolKindModule,
-							Range:          rng,
-							SelectionRange: rng,
-						})
 					}
+				} else if includeNode, ok := include.(*ast.MappingNode); ok {
+					// include:
+					// - path: ../commons/compose.yaml
+					//   project_directory: ..
+					//   env_file: ../another/.env
+					for _, attribute := range includeNode.Values {
+						if attribute.Key.GetToken().Value == "path" {
+							result = append(result, createSymbol(attribute.Value.GetToken(), protocol.SymbolKindModule))
+						}
+					}
+				}
+			}
+		}
+	}
+	return result
+}
+
+func DocumentSymbol(ctx context.Context, doc document.ComposeDocument) (result []any, err error) {
+	file := doc.File()
+	if file == nil || len(file.Docs) == 0 {
+		return nil, nil
+	}
+
+	for _, documentNode := range file.Docs {
+		if n, ok := documentNode.Body.(*ast.MappingValueNode); ok {
+			if s, ok := n.Key.(*ast.StringNode); ok {
+				result = append(result, findSymbols(s.Value, n, symbolKinds)...)
+			}
+		} else if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
+			for _, n := range mappingNode.Values {
+				if s, ok := n.Key.(*ast.StringNode); ok {
+					result = append(result, findSymbols(s.Value, n, symbolKinds)...)
 				}
 			}
 		}
@@ -106,28 +85,21 @@ func DocumentSymbol(ctx context.Context, doc document.ComposeDocument) (result [
 	return result, nil
 }
 
-func createSymbol(nodes []*yaml.Node, idx int, kind protocol.SymbolKind) (result []any) {
-	for i := 0; i < len(nodes[idx].Content); i += 2 {
-		service := nodes[idx].Content[i]
-		if service.Value != "" {
-			character := uint32(service.Column - 1)
-			rng := protocol.Range{
-				Start: protocol.Position{
-					Line:      uint32(service.Line - 1),
-					Character: character,
-				},
-				End: protocol.Position{
-					Line:      uint32(service.Line - 1),
-					Character: character + uint32(len(service.Value)),
-				},
-			}
-			result = append(result, &protocol.DocumentSymbol{
-				Name:           service.Value,
-				Kind:           kind,
-				Range:          rng,
-				SelectionRange: rng,
-			})
-		}
+func createSymbol(t *token.Token, kind protocol.SymbolKind) *protocol.DocumentSymbol {
+	rng := protocol.Range{
+		Start: protocol.Position{
+			Line:      uint32(t.Position.Line - 1),
+			Character: uint32(t.Position.Column - 1),
+		},
+		End: protocol.Position{
+			Line:      uint32(t.Position.Line - 1),
+			Character: uint32(t.Position.Column - 1 + len(t.Value)),
+		},
 	}
-	return result
+	return &protocol.DocumentSymbol{
+		Name:           t.Value,
+		Kind:           kind,
+		Range:          rng,
+		SelectionRange: rng,
+	}
 }
