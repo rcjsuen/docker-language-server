@@ -34,6 +34,12 @@ func TestCalculateDiagnostics(t *testing.T) {
 						End:   protocol.Position{Line: 0, Character: 18},
 					},
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint),
+					Data: []types.NamedEdit{
+						{
+							Title: "Pin the base image digest",
+							Edit:  "FROM alpine:3.16.1@sha256:7580ece7963bfa863801466c0a488f11c86f85d9988051a9f9c68cb27f6b7872",
+						},
+					},
 				},
 				{
 					Message: "The image contains 1 critical and 3 high vulnerabilities",
@@ -55,6 +61,76 @@ func TestCalculateDiagnostics(t *testing.T) {
 						End:   protocol.Position{Line: 0, Character: 18},
 					},
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityInformation),
+					Data: []types.NamedEdit{
+						{
+							Title: "Update image to preferred tag (3.21.3)",
+							Edit:  "FROM alpine:3.21.3",
+						},
+						{
+							Title: "Update image OS minor version (3.20.6)",
+							Edit:  "FROM alpine:3.20.6",
+						},
+						{
+							Title: "Update image OS minor version (3.18.12)",
+							Edit:  "FROM alpine:3.18.12",
+						},
+					},
+				},
+			},
+		},
+		{
+			name:    "outdated alpine:3.16.1 with --platform flag",
+			content: "FROM --platform=$BUILDPLATFORM alpine:3.16.1",
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message: "The image can be pinned to a digest",
+					Source:  types.CreateStringPointer("scout-testing-source"),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 44},
+					},
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint),
+					Data: []types.NamedEdit{
+						{
+							Title: "Pin the base image digest",
+							Edit:  "FROM --platform=$BUILDPLATFORM alpine:3.16.1@sha256:7580ece7963bfa863801466c0a488f11c86f85d9988051a9f9c68cb27f6b7872",
+						},
+					},
+				},
+				{
+					Message: "The image contains 1 critical and 3 high vulnerabilities",
+					Source:  types.CreateStringPointer("scout-testing-source"),
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://hub.docker.com/layers/library/alpine/3.16.1/images/sha256-9b2a28eb47540823042a2ba401386845089bb7b62a9637d55816132c4c3c36eb",
+					},
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 44},
+					},
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+				},
+				{
+					Message: "Tag recommendations available",
+					Source:  types.CreateStringPointer("scout-testing-source"),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 44},
+					},
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityInformation),
+					Data: []types.NamedEdit{
+						{
+							Title: "Update image to preferred tag (3.21.3)",
+							Edit:  "FROM --platform=$BUILDPLATFORM alpine:3.21.3",
+						},
+						{
+							Title: "Update image OS minor version (3.20.6)",
+							Edit:  "FROM --platform=$BUILDPLATFORM alpine:3.20.6",
+						},
+						{
+							Title: "Update image OS minor version (3.18.12)",
+							Edit:  "FROM --platform=$BUILDPLATFORM alpine:3.18.12",
+						},
+					},
 				},
 			},
 		},
@@ -116,6 +192,7 @@ func TestCalculateDiagnostics(t *testing.T) {
 							require.Equal(t, expectedDiagnostic.Severity, diagnostic.Severity)
 							require.Equal(t, expectedDiagnostic.Source, diagnostic.Source)
 							require.Equal(t, expectedDiagnostic.CodeDescription, diagnostic.CodeDescription)
+							require.Equal(t, expectedDiagnostic.Data, diagnostic.Data)
 							found = true
 							break
 						}

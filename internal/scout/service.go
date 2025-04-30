@@ -9,6 +9,7 @@ import (
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/pkg/lsp/textdocument"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 )
 
 type Service interface {
@@ -69,14 +70,31 @@ func (s *ServiceImpl) CalculateDiagnostics(ctx context.Context, source string, d
 			resp, err := s.manager.Get(&ScoutImageKey{Image: child.Next.Value})
 			if err == nil {
 				next := child.Next
-				words := []string{child.Value}
+				prefix := []string{child.Value}
+				prefix = append(prefix, child.Flags...)
+				suffix := []string{}
+				next = next.Next
 				for next != nil {
-					words = append(words, next.Value)
+					suffix = append(suffix, next.Value)
 					next = next.Next
 				}
 
 				for _, diagnostic := range resp.Diagnostics {
-					lspDiagnostic := ConvertDiagnostic(diagnostic, words, source, protocol.Range{
+					namedEdits := []types.NamedEdit{}
+					for _, edit := range resp.Edits {
+						if diagnostic.Kind == edit.Diagnostic {
+							content := []string{}
+							content = append(content, prefix...)
+							content = append(content, edit.Edit)
+							content = append(content, suffix...)
+							namedEdits = append(namedEdits, types.NamedEdit{
+								Title: edit.Title,
+								Edit:  strings.Join(content, " "),
+							})
+						}
+					}
+
+					lspDiagnostic := ConvertDiagnostic(diagnostic, source, protocol.Range{
 						Start: protocol.Position{
 							Line:      uint32(child.StartLine - 1),
 							Character: 0,
@@ -85,7 +103,7 @@ func (s *ServiceImpl) CalculateDiagnostics(ctx context.Context, source string, d
 							Line:      uint32(child.EndLine - 1),
 							Character: uint32(len(lines[child.StartLine-1])),
 						},
-					}, resp.Edits)
+					}, namedEdits)
 					lspDiagnostics = append(lspDiagnostics, lspDiagnostic)
 				}
 				continue

@@ -1,8 +1,6 @@
 package scout
 
 import (
-	"strings"
-
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 )
@@ -63,7 +61,7 @@ func (k *ScoutImageKey) CacheKey() string {
 	return k.Image
 }
 
-func ConvertDiagnostic(diagnostic Diagnostic, words []string, source string, rng protocol.Range, edits []Edit) protocol.Diagnostic {
+func ConvertDiagnostic(diagnostic Diagnostic, source string, rng protocol.Range, edits []types.NamedEdit) protocol.Diagnostic {
 	lspDiagnostic := protocol.Diagnostic{}
 	lspDiagnostic.Code = &protocol.IntegerOrString{Value: diagnostic.Kind}
 	lspDiagnostic.Message = diagnostic.Message
@@ -86,20 +84,8 @@ func ConvertDiagnostic(diagnostic Diagnostic, words []string, source string, rng
 		lspDiagnostic.Severity = types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint)
 	}
 
-	includedEdits := []types.NamedEdit{}
-	for _, edit := range edits {
-		if lspDiagnostic.Code.Value == edit.Diagnostic {
-			words[1] = edit.Edit
-			edit.Edit = strings.Join(words, " ")
-			includedEdits = append(includedEdits, types.NamedEdit{
-				Title: edit.Title,
-				Edit:  edit.Edit,
-			})
-		}
-	}
-
-	if len(includedEdits) > 0 {
-		lspDiagnostic.Data = includedEdits
+	if len(edits) > 0 {
+		lspDiagnostic.Data = edits
 	}
 	return lspDiagnostic
 }
