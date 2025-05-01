@@ -71,6 +71,9 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 			if sequence, ok := n.Value.(*ast.SequenceNode); ok {
 				for _, entry := range sequence.Values {
 					if mappingNode, ok := entry.(*ast.MappingValueNode); ok {
+						if mappingNode.Key.GetToken().Value != "path" {
+							continue
+						}
 						entry = mappingNode.Value
 					}
 					if sequenceNode, ok := entry.(*ast.SequenceNode); ok {

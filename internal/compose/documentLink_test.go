@@ -89,6 +89,12 @@ func TestDocumentLink_IncludedFiles(t *testing.T) {
 			},
 		},
 		{
+			name: "included files, attribute misspelt",
+			content: `include:
+  - path2: file.yml`,
+			links: []protocol.DocumentLink{},
+		},
+		{
 			name: "included files, mixed paths",
 			content: `
 include:
