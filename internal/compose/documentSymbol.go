@@ -28,35 +28,8 @@ func findSymbols(value string, n *ast.MappingValueNode, mapping map[string]proto
 		}
 	} else if value == "include" {
 		if sequenceNode, ok := n.Value.(*ast.SequenceNode); ok {
-			for _, include := range sequenceNode.Values {
-				if _, ok := include.(*ast.StringNode); ok {
-					// include:
-					//   - abc.yml
-					//   - def.yml
-					result = append(result, createSymbol(include.GetToken(), protocol.SymbolKindModule))
-				} else if includeNode, ok := include.(*ast.MappingValueNode); ok {
-					if includeNode.Key.GetToken().Value == "path" {
-						// include:
-						//   - path:
-						//     - ../commons/compose.yaml
-						//     - ./commons-override.yaml
-						if included, ok := includeNode.Value.(*ast.SequenceNode); ok {
-							for _, path := range included.Values {
-								result = append(result, createSymbol(path.GetToken(), protocol.SymbolKindModule))
-							}
-						}
-					}
-				} else if includeNode, ok := include.(*ast.MappingNode); ok {
-					// include:
-					// - path: ../commons/compose.yaml
-					//   project_directory: ..
-					//   env_file: ../another/.env
-					for _, attribute := range includeNode.Values {
-						if attribute.Key.GetToken().Value == "path" {
-							result = append(result, createSymbol(attribute.Value.GetToken(), protocol.SymbolKindModule))
-						}
-					}
-				}
+			for _, token := range includedFiles(sequenceNode.Values) {
+				result = append(result, createSymbol(token, protocol.SymbolKindModule))
 			}
 		}
 	}

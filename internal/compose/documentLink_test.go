@@ -38,7 +38,7 @@ func TestDocumentLink_IncludedFiles(t *testing.T) {
 		{
 			name:    "empty file",
 			content: "",
-			links:   nil,
+			links:   []protocol.DocumentLink{},
 		},
 		{
 			name: "included files, string array",
@@ -382,10 +382,10 @@ services:
 			content: `
 services:
   - `,
-			links: nil,
+			links: []protocol.DocumentLink{},
 		},
 		{
-			name: "image: alpine",
+			name: "two documents",
 			content: `
 ---
 services:

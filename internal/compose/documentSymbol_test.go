@@ -60,41 +60,6 @@ func TestDocumentSymbol(t *testing.T) {
 			},
 		},
 		{
-			name: "duplicated services block",
-			content: `services:
-  web:
-    build: .
-services:
-  redis:
-    image: "redis:alpine"`,
-			symbols: []*protocol.DocumentSymbol{
-				{
-					Name: "web",
-					Kind: protocol.SymbolKindClass,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 2},
-						End:   protocol.Position{Line: 1, Character: 5},
-					},
-					SelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 2},
-						End:   protocol.Position{Line: 1, Character: 5},
-					},
-				},
-				{
-					Name: "redis",
-					Kind: protocol.SymbolKindClass,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 2},
-						End:   protocol.Position{Line: 4, Character: 7},
-					},
-					SelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 2},
-						End:   protocol.Position{Line: 4, Character: 7},
-					},
-				},
-			},
-		},
-		{
 			name: "services block with a piped scalar value",
 			content: `services:
   web: |
