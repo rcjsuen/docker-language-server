@@ -40,27 +40,58 @@ func createIncludeLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
 }
 
 func createImageLinks(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
-	if service, ok := serviceNode.Value.(*ast.MappingValueNode); ok {
-		if service.Key.GetToken().Value == "image" {
-			value := service.Value.GetToken().Value
-			linkedText, link := extractImageLink(value)
-			return &protocol.DocumentLink{
-				Range: protocol.Range{
-					Start: protocol.Position{
-						Line:      protocol.UInteger(service.Value.GetToken().Position.Line) - 1,
-						Character: protocol.UInteger(service.Value.GetToken().Position.Column) - 1,
-					},
-					End: protocol.Position{
-						Line:      protocol.UInteger(service.Value.GetToken().Position.Line) - 1,
-						Character: protocol.UInteger(service.Value.GetToken().Position.Column - 1 + len(linkedText)),
-					},
+	if serviceNode.Key.GetToken().Value == "image" {
+		value := serviceNode.Value.GetToken().Value
+		linkedText, link := extractImageLink(value)
+		return &protocol.DocumentLink{
+			Range: protocol.Range{
+				Start: protocol.Position{
+					Line:      protocol.UInteger(serviceNode.Value.GetToken().Position.Line) - 1,
+					Character: protocol.UInteger(serviceNode.Value.GetToken().Position.Column) - 1,
 				},
-				Target:  types.CreateStringPointer(link),
-				Tooltip: types.CreateStringPointer(link),
-			}
+				End: protocol.Position{
+					Line:      protocol.UInteger(serviceNode.Value.GetToken().Position.Line) - 1,
+					Character: protocol.UInteger(serviceNode.Value.GetToken().Position.Column - 1 + len(linkedText)),
+				},
+			},
+			Target:  types.CreateStringPointer(link),
+			Tooltip: types.CreateStringPointer(link),
 		}
 	}
 	return nil
+}
+
+func includedFiles(nodes []ast.Node) []*token.Token {
+	tokens := []*token.Token{}
+	for _, entry := range nodes {
+		if mappingNode, ok := entry.(*ast.MappingNode); ok {
+			for _, value := range mappingNode.Values {
+				if value.Key.GetToken().Value == "path" {
+					if paths, ok := value.Value.(*ast.SequenceNode); ok {
+						// include:
+						//   - path:
+						//     - ../commons/compose.yaml
+						//     - ./commons-override.yaml
+						for _, path := range paths.Values {
+							tokens = append(tokens, path.GetToken())
+						}
+					} else {
+						// include:
+						// - path: ../commons/compose.yaml
+						//   project_directory: ..
+						//   env_file: ../another/.env
+						tokens = append(tokens, value.Value.GetToken())
+					}
+				}
+			}
+		} else if stringNode, ok := entry.(*ast.StringNode); ok {
+			// include:
+			//   - abc.yml
+			//   - def.yml
+			tokens = append(tokens, stringNode.GetToken())
+		}
+	}
+	return tokens
 }
 
 func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
@@ -69,40 +100,24 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 		switch s.Value {
 		case "include":
 			if sequence, ok := n.Value.(*ast.SequenceNode); ok {
-				for _, entry := range sequence.Values {
-					if mappingNode, ok := entry.(*ast.MappingValueNode); ok {
-						if mappingNode.Key.GetToken().Value != "path" {
-							continue
-						}
-						entry = mappingNode.Value
-					}
-					if sequenceNode, ok := entry.(*ast.SequenceNode); ok {
-						for _, entry := range sequenceNode.Values {
-							link := createIncludeLink(u, entry.GetToken())
-							if link != nil {
-								links = append(links, *link)
-							}
-						}
-					} else {
-						link := createIncludeLink(u, entry.GetToken())
-						if link != nil {
-							links = append(links, *link)
-						}
+				for _, token := range includedFiles(sequence.Values) {
+					link := createIncludeLink(u, token)
+					if link != nil {
+						links = append(links, *link)
 					}
 				}
 			}
 		case "services":
 			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
 				for _, node := range mappingNode.Values {
-					link := createImageLinks(node)
-					if link != nil {
-						links = append(links, *link)
+					if serviceAttributes, ok := node.Value.(*ast.MappingNode); ok {
+						for _, serviceAttribute := range serviceAttributes.Values {
+							link := createImageLinks(serviceAttribute)
+							if link != nil {
+								links = append(links, *link)
+							}
+						}
 					}
-				}
-			} else if serviceNode, ok := n.Value.(*ast.MappingValueNode); ok {
-				link := createImageLinks(serviceNode)
-				if link != nil {
-					links = append(links, *link)
 				}
 			}
 		}
