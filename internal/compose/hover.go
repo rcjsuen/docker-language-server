@@ -9,24 +9,34 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/goccy/go-yaml/ast"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"gopkg.in/yaml.v3"
 )
 
 func Hover(ctx context.Context, params *protocol.HoverParams, doc document.ComposeDocument) (*protocol.Hover, error) {
+	file := doc.File()
+	if file == nil || len(file.Docs) == 0 {
+		return nil, nil
+	}
+
 	line := int(params.Position.Line) + 1
-	root := doc.RootNode()
-	if len(root.Content) > 0 {
-		lines := strings.Split(string(doc.Input()), "\n")
-		character := int(params.Position.Character) + 1
-		topLevel, _, _ := NodeStructure(line, root.Content[0].Content)
-		return hoverLookup(composeSchema, topLevel, line, character, len(lines[params.Position.Line])+1), nil
+	character := int(params.Position.Character) + 1
+	lines := strings.Split(string(doc.Input()), "\n")
+
+	for _, documentNode := range file.Docs {
+		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
+			m := constructNodePath([]ast.Node{}, mappingNode, int(params.Position.Line+1), int(params.Position.Character+1))
+			hover := hover(composeSchema, m, line, character, len(lines[params.Position.Line])+1)
+			if hover != nil {
+				return hover, nil
+			}
+		}
 	}
 	return nil, nil
 }
 
-func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, lineLength int) *protocol.Hover {
-	for _, node := range nodes {
+func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength int) *protocol.Hover {
+	for _, match := range nodes {
 		if schema.Ref != nil {
 			schema = schema.Ref
 		}
@@ -35,7 +45,7 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, li
 			for _, n := range nested.OneOf {
 				if n.Types != nil && slices.Contains(n.Types.ToStrings(), "object") {
 					if len(n.Properties) > 0 {
-						if _, ok := n.Properties[node.Value]; ok {
+						if _, ok := n.Properties[match.GetToken().Value]; ok {
 							schema = n
 							break
 						}
@@ -43,14 +53,21 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, li
 				}
 			}
 
-			if _, ok := nested.Properties[node.Value]; ok {
+			if _, ok := nested.Properties[match.GetToken().Value]; ok {
 				schema = nested
 			}
 		}
 
-		if property, ok := schema.Properties[node.Value]; ok {
+		for _, nested := range schema.OneOf {
+			if nested.Types != nil && slices.Contains(nested.Types.ToStrings(), "object") {
+				schema = nested
+				break
+			}
+		}
+
+		if property, ok := schema.Properties[match.GetToken().Value]; ok {
 			if property.Enum != nil {
-				if node.Column <= column && column <= lineLength {
+				if match.GetToken().Position.Column <= column && column <= lineLength {
 					var builder bytes.Buffer
 					builder.WriteString("Allowed values:\n")
 					enumValues := []string{}
@@ -70,7 +87,7 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, li
 				}
 			}
 
-			if node.Line == line && node.Column+len(node.Value) >= column && property.Description != "" {
+			if match.GetToken().Position.Line == line && match.GetToken().Position.Column+len(match.GetToken().Value) >= column && property.Description != "" {
 				return &protocol.Hover{
 					Contents: protocol.MarkupContent{
 						Kind:  protocol.MarkupKindPlainText,
@@ -79,10 +96,11 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, li
 				}
 			}
 			schema = property
+			continue
 		}
 
 		for regexp, property := range schema.PatternProperties {
-			if regexp.MatchString(node.Value) {
+			if regexp.MatchString(match.GetToken().Value) {
 				if property.Ref == nil {
 					schema = property
 				} else {
@@ -91,13 +109,43 @@ func hoverLookup(schema *jsonschema.Schema, nodes []*yaml.Node, line, column, li
 				break
 			}
 		}
+	}
+	return nil
+}
 
-		for _, nested := range schema.OneOf {
-			if nested.Types != nil && slices.Contains(nested.Types.ToStrings(), "object") {
-				schema = nested
-				break
+func constructNodePath(matches []ast.Node, node ast.Node, line, col int) []ast.Node {
+	switch n := node.(type) {
+	case *ast.MappingValueNode:
+		if keyNode, ok := n.Key.(*ast.StringNode); ok {
+			if m := constructNodePath(matches, n.Key, line, col); m != nil {
+				matches = append(matches, m...)
+				return matches
+			}
+			if m := constructNodePath(matches, n.Value, line, col); m != nil {
+				matches = append(matches, keyNode)
+				matches = append(matches, m...)
+				return matches
 			}
 		}
+	case *ast.MappingNode:
+		for _, kv := range n.Values {
+			if m := constructNodePath(matches, kv, line, col); m != nil {
+				matches = append(matches, m...)
+				return matches
+			}
+		}
+	case *ast.SequenceNode:
+		for _, item := range n.Values {
+			if m := constructNodePath(matches, item, line, col); m != nil {
+				matches = append(matches, m...)
+				return matches
+			}
+		}
+	}
+
+	token := node.GetToken()
+	if token.Position.Line == line && token.Position.Column <= col && col <= token.Position.Column+len(token.Value) {
+		return []ast.Node{node}
 	}
 	return nil
 }

@@ -74,7 +74,7 @@ func TestHover(t *testing.T) {
 		},
 		{
 			name:      "incomplete node",
-			content:   "hello",
+			content:   "version",
 			line:      0,
 			character: 2,
 			result:    nil,

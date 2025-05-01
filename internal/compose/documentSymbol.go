@@ -43,11 +43,7 @@ func DocumentSymbol(ctx context.Context, doc document.ComposeDocument) (result [
 	}
 
 	for _, documentNode := range file.Docs {
-		if n, ok := documentNode.Body.(*ast.MappingValueNode); ok {
-			if s, ok := n.Key.(*ast.StringNode); ok {
-				result = append(result, findSymbols(s.Value, n, symbolKinds)...)
-			}
-		} else if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
+		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			for _, n := range mappingNode.Values {
 				if s, ok := n.Key.(*ast.StringNode); ok {
 					result = append(result, findSymbols(s.Value, n, symbolKinds)...)

@@ -143,8 +143,6 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 			for _, node := range mappingNode.Values {
 				links = append(links, scanForLinks(url, node)...)
 			}
-		} else if mappingNodeValue, ok := documentNode.Body.(*ast.MappingValueNode); ok {
-			links = append(links, scanForLinks(url, mappingNodeValue)...)
 		}
 	}
 	return links, nil
