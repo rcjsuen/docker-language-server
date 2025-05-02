@@ -10,8 +10,8 @@ import (
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
+	"github.com/goccy/go-yaml/ast"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"gopkg.in/yaml.v3"
 )
 
 func Completion(ctx context.Context, params *protocol.CompletionParams, doc document.ComposeDocument) (*protocol.CompletionList, error) {
@@ -32,38 +32,26 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	lines := strings.Split(string(doc.Input()), "\n")
 	lspLine := int(params.Position.Line)
-	if lspLine >= len(lines) {
-		return nil, nil
-	}
-
 	if strings.HasPrefix(strings.TrimSpace(lines[lspLine]), "#") {
 		return nil, nil
 	}
 
-	root := doc.RootNode()
-	if len(root.Content) == 0 {
+	file := doc.File()
+	if file == nil || len(file.Docs) == 0 {
 		return nil, nil
 	}
 
 	line := int(lspLine) + 1
 	character := int(params.Position.Character) + 1
-	topLevel, _, _ := NodeStructure(line, root.Content[0].Content)
-	if len(topLevel) == 0 {
+	path := constructCompletionNodePath(file, line)
+	if len(path) == 1 {
 		return nil, nil
-	} else if len(topLevel) == 1 {
-		return nil, nil
-	} else if topLevel[1].Column >= character {
-		return nil, nil
-	} else if len(topLevel) > 2 && topLevel[1].Column < character && character < topLevel[2].Column {
-		topLevel = []*yaml.Node{topLevel[0], topLevel[1]}
-	}
-
-	if topLevel[0].Line == line {
+	} else if path[1].Key.GetToken().Position.Column >= character {
 		return nil, nil
 	}
 
 	items := []protocol.CompletionItem{}
-	nodeProps := nodeProperties(topLevel, line, character)
+	nodeProps := nodeProperties(path, line, character)
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
 			for _, value := range schema.Enum.Values {
@@ -121,64 +109,87 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	return &protocol.CompletionList{Items: items}, nil
 }
 
-func NodeStructure(line int, rootNodes []*yaml.Node) ([]*yaml.Node, *yaml.Node, bool) {
-	if len(rootNodes) == 0 {
-		return nil, nil, false
-	}
-
-	var topLevel *yaml.Node
-	var content *yaml.Node
-	for i := 0; i < len(rootNodes); i += 2 {
-		if rootNodes[i].Line < line {
-			topLevel = rootNodes[i]
-			content = rootNodes[i+1]
-		} else if rootNodes[i].Line == line {
-			return []*yaml.Node{rootNodes[i]}, rootNodes[i+1], true
-		} else if line < rootNodes[i].Line {
-			break
+func constructCompletionNodePath(file *ast.File, line int) []*ast.MappingValueNode {
+	for _, documentNode := range file.Docs {
+		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
+			return NodeStructure(line, mappingNode.Values)
 		}
 	}
-	nodes := []*yaml.Node{topLevel}
-	candidates, subcontent := walkNodes(line, content.Content)
-	nodes = append(nodes, candidates...)
-	if subcontent != nil {
-		content = subcontent
-	}
-	return nodes, content, false
+	return nil
 }
 
-func walkNodes(line int, nodes []*yaml.Node) ([]*yaml.Node, *yaml.Node) {
-	var candidate *yaml.Node
-	var candidateContent *yaml.Node
-	for i := 0; i < len(nodes); i += 2 {
-		if nodes[i].Line < line {
-			candidate = nodes[i]
-			if candidate.Kind == yaml.MappingNode {
-				return walkNodes(line, candidate.Content)
-			}
-			if len(nodes) == i+1 {
-				return []*yaml.Node{candidate}, nil
-			}
-			candidateContent = nodes[i+1]
-		} else if nodes[i].Line == line {
-			if nodes[i].Kind == yaml.MappingNode {
-				return walkNodes(line, nodes[i].Content)
-			}
-			return []*yaml.Node{nodes[i]}, nil
-		} else if line < nodes[i].Line {
+func NodeStructure(line int, rootNodes []*ast.MappingValueNode) []*ast.MappingValueNode {
+	if len(rootNodes) == 0 {
+		return nil
+	}
+
+	var candidate *ast.MappingValueNode
+	for _, node := range rootNodes {
+		if node.GetToken().Position.Line < line {
+			candidate = node
+		} else if node.GetToken().Position.Line == line {
+			return []*ast.MappingValueNode{node}
+		} else {
 			break
 		}
 	}
-	if candidateContent == nil {
-		return []*yaml.Node{}, nil
+	nodes := []*ast.MappingValueNode{candidate}
+	candidates := walkNodes(line, candidate)
+	nodes = append(nodes, candidates...)
+	return nodes
+}
+
+func walkNodes(line int, node *ast.MappingValueNode) []*ast.MappingValueNode {
+	var candidate ast.Node
+	value := node.Value
+	if mappingNode, ok := value.(*ast.MappingNode); ok {
+		for _, child := range mappingNode.Values {
+			if child.GetToken().Position.Line < line {
+				candidate = child
+			} else if child.GetToken().Position.Line == line {
+				candidate = child
+				break
+			}
+		}
+	} else if sequenceNode, ok := value.(*ast.SequenceNode); ok {
+		for _, child := range sequenceNode.Values {
+			if child.GetToken().Position.Line < line {
+				if _, ok := child.(*ast.NullNode); ok {
+					continue
+				}
+				candidate = child
+			} else if child.GetToken().Position.Line == line {
+				if _, ok := child.(*ast.NullNode); ok {
+					break
+				}
+				candidate = child
+				break
+			}
+		}
 	}
-	walked, subcontent := walkNodes(line, candidateContent.Content)
-	candidates := []*yaml.Node{candidate}
-	candidates = append(candidates, walked...)
-	if subcontent != nil {
-		candidateContent = subcontent
+
+	if mappingNode, ok := candidate.(*ast.MappingNode); ok {
+		for _, child := range mappingNode.Values {
+			if child.GetToken().Position.Line < line {
+				candidate = child
+			} else if child.GetToken().Position.Line == line {
+				candidate = child
+				break
+			}
+		}
 	}
-	return candidates, candidateContent
+
+	if candidate == nil {
+		return []*ast.MappingValueNode{}
+	}
+
+	if next, ok := candidate.(*ast.MappingValueNode); ok {
+		nodes := []*ast.MappingValueNode{next}
+		candidates := walkNodes(line, next)
+		nodes = append(nodes, candidates...)
+		return nodes
+	}
+	return []*ast.MappingValueNode{}
 }
 
 func extractDetail(schema *jsonschema.Schema) *string {
