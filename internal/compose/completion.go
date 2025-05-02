@@ -26,6 +26,21 @@ func prefix(line string, character int) string {
 	return sb.String()
 }
 
+func array(line string, character int) bool {
+	isArray := false
+	for i := range character {
+		if unicode.IsSpace(rune(line[i])) {
+			continue
+		} else if line[i] == '-' {
+			isArray = true
+		} else {
+			isArray = false
+			break
+		}
+	}
+	return isArray
+}
+
 func Completion(ctx context.Context, params *protocol.CompletionParams, doc document.ComposeDocument) (*protocol.CompletionList, error) {
 	if params.Position.Character == 0 {
 		items := []protocol.CompletionItem{}
@@ -69,7 +84,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	}
 
 	items := []protocol.CompletionItem{}
-	nodeProps := nodeProperties(path, line, character)
+	isArray := array(lines[lspLine], character-1)
+	nodeProps, arrayAttributes := nodeProperties(path, line, character)
+	if isArray != arrayAttributes {
+		return nil, nil
+	}
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
 			for _, value := range schema.Enum.Values {
