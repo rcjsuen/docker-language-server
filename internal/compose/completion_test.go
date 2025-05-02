@@ -1928,7 +1928,7 @@ services:
 			},
 		},
 		{
-			name: "depends_on array items",
+			name: "depends_on array items with a prefix",
 			content: `
 services:
   test:
@@ -2015,7 +2015,7 @@ networks:
 			},
 		},
 		{
-			name: "networks array items",
+			name: "networks array items with a prefix",
 			content: `
 services:
   test:
@@ -2023,8 +2023,7 @@ services:
     networks:
       - t
 networks:
-  test2:
-    image: alpine`,
+  test2:`,
 			line:      5,
 			character: 9,
 			list: &protocol.CompletionList{
@@ -2045,8 +2044,7 @@ services:
     networks:
       
 networks:
-  test2:
-    image: alpine`,
+  test2:`,
 			line:      5,
 			character: 6,
 			list: &protocol.CompletionList{
@@ -2067,8 +2065,7 @@ services:
     volumes:
       - 
 volumes:
-  test2:
-    image: alpine`,
+  test2:`,
 			line:      5,
 			character: 8,
 			list: &protocol.CompletionList{
@@ -2104,7 +2101,7 @@ volumes:
 			},
 		},
 		{
-			name: "volumes array items",
+			name: "volumes array items with a prefix",
 			content: `
 services:
   test:
@@ -2112,8 +2109,7 @@ services:
     volumes:
       - t
 volumes:
-  test2:
-    image: alpine`,
+  test2:`,
 			line:      5,
 			character: 9,
 			list: &protocol.CompletionList{
@@ -2134,8 +2130,7 @@ services:
     volumes:
       
 volumes:
-  test2:
-    image: alpine`,
+  test2:`,
 			line:      5,
 			character: 6,
 			list: &protocol.CompletionList{
@@ -2143,6 +2138,164 @@ volumes:
 					{
 						Label:    "test2",
 						TextEdit: textEdit("test2", 5, 6, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "configs array items",
+			content: `
+services:
+  test:
+    image: alpine
+    configs:
+      - 
+configs:
+  test2:
+    file: ./httpd.conf`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 8, 0),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
+		{
+			name: "configs array items across two files",
+			content: `
+---
+services:
+  test:
+    image: alpine
+    configs:
+      - 
+---
+configs:
+  test2:
+    file: ./httpd.conf`,
+			line:      6,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 6, 8, 0),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
+		{
+			name: "configs array items with a prefix",
+			content: `
+services:
+  test:
+    image: alpine
+    configs:
+      - t
+configs:
+  test2:
+    file: ./httpd.conf`,
+			line:      5,
+			character: 9,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 9, 1),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 				},
 			},

@@ -33,9 +33,8 @@ func array(line string, character int) bool {
 			continue
 		} else if line[i] == '-' {
 			isArray = true
-		} else {
-			isArray = false
-			break
+		} else if isArray && line[i] == ':' {
+			return false
 		}
 	}
 	return isArray
@@ -83,7 +82,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
 
-	items := []protocol.CompletionItem{}
+	items := namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
 	isArray := array(lines[lspLine], character-1)
 	nodeProps, arrayAttributes := nodeProperties(path, line, character)
 	if isArray != arrayAttributes {
@@ -201,29 +200,37 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 		"networks":   "networks",
 		"volumes":    "volumes",
 	}
-	for key, value := range dependency {
-		if len(path) == 3 && path[2].Key.GetToken().Value == key {
-			items := []protocol.CompletionItem{}
-			for _, service := range findDependencies(file, value) {
-				if service != path[1].Key.GetToken().Value {
-					item := protocol.CompletionItem{
-						Label: service,
-						TextEdit: protocol.TextEdit{
-							NewText: service,
-							Range: protocol.Range{
-								Start: protocol.Position{
-									Line:      params.Position.Line,
-									Character: params.Position.Character - prefixLength,
-								},
-								End: params.Position,
-							},
-						},
-					}
-					items = append(items, item)
-				}
-			}
+	for serviceAttribute, dependencyType := range dependency {
+		items := namedDependencyCompletionItems(file, path, serviceAttribute, dependencyType, params, prefixLength)
+		if len(items) > 0 {
 			return items
 		}
+	}
+	return nil
+}
+
+func namedDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, serviceAttribute, dependencyType string, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	if len(path) == 3 && path[2].Key.GetToken().Value == serviceAttribute {
+		items := []protocol.CompletionItem{}
+		for _, service := range findDependencies(file, dependencyType) {
+			if service != path[1].Key.GetToken().Value {
+				item := protocol.CompletionItem{
+					Label: service,
+					TextEdit: protocol.TextEdit{
+						NewText: service,
+						Range: protocol.Range{
+							Start: protocol.Position{
+								Line:      params.Position.Line,
+								Character: params.Position.Character - prefixLength,
+							},
+							End: params.Position,
+						},
+					},
+				}
+				items = append(items, item)
+			}
+		}
+		return items
 	}
 	return nil
 }
