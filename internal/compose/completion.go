@@ -156,13 +156,13 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	return &protocol.CompletionList{Items: items}, nil
 }
 
-func findServices(file *ast.File) []string {
+func findDependencies(file *ast.File, dependencyType string) []string {
 	services := []string{}
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			for _, n := range mappingNode.Values {
 				if s, ok := n.Key.(*ast.StringNode); ok {
-					if s.Value == "services" {
+					if s.Value == dependencyType {
 						if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
 							for _, service := range mappingNode.Values {
 								services = append(services, service.Key.GetToken().Value)
@@ -177,27 +177,33 @@ func findServices(file *ast.File) []string {
 }
 
 func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
-	if len(path) == 3 && path[2].Key.GetToken().Value == "depends_on" {
-		items := []protocol.CompletionItem{}
-		for _, service := range findServices(file) {
-			if service != path[1].Key.GetToken().Value {
-				item := protocol.CompletionItem{
-					Label: service,
-					TextEdit: protocol.TextEdit{
-						NewText: service,
-						Range: protocol.Range{
-							Start: protocol.Position{
-								Line:      params.Position.Line,
-								Character: params.Position.Character - prefixLength,
+	dependency := map[string]string{
+		"depends_on": "services",
+		"networks":   "networks",
+	}
+	for key, value := range dependency {
+		if len(path) == 3 && path[2].Key.GetToken().Value == key {
+			items := []protocol.CompletionItem{}
+			for _, service := range findDependencies(file, value) {
+				if service != path[1].Key.GetToken().Value {
+					item := protocol.CompletionItem{
+						Label: service,
+						TextEdit: protocol.TextEdit{
+							NewText: service,
+							Range: protocol.Range{
+								Start: protocol.Position{
+									Line:      params.Position.Line,
+									Character: params.Position.Character - prefixLength,
+								},
+								End: params.Position,
 							},
-							End: params.Position,
 						},
-					},
+					}
+					items = append(items, item)
 				}
-				items = append(items, item)
 			}
+			return items
 		}
-		return items
 	}
 	return nil
 }

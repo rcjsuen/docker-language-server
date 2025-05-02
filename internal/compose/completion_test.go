@@ -561,7 +561,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 	}
 }
 
-func TestCompletion(t *testing.T) {
+func TestCompletion_Schema(t *testing.T) {
 	testCases := []struct {
 		name      string
 		content   string
@@ -1832,6 +1832,37 @@ networks:
 			character: 2,
 			list:      nil,
 		},
+	}
+
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, doc)
+			require.NoError(t, err)
+			if tc.list == nil {
+				require.Nil(t, list)
+			} else {
+				require.Equal(t, tc.list, list)
+			}
+		})
+	}
+}
+
+func TestCompletion_Custom(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		list      *protocol.CompletionList
+	}{
 		{
 			name: "depends_on array items",
 			content: `
@@ -1906,6 +1937,95 @@ services:
     image: alpine
     depends_on:
       
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 6, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "networks array items",
+			content: `
+services:
+  test:
+    image: alpine
+    networks:
+      - 
+networks:
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "networks array items across two files",
+			content: `
+---
+services:
+  test:
+    image: alpine
+    networks:
+      - 
+---
+networks:
+  test2:`,
+			line:      6,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 6, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "networks array items",
+			content: `
+services:
+  test:
+    image: alpine
+    networks:
+      - t
+networks:
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 9,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 9, 1),
+					},
+				},
+			},
+		},
+		{
+			name: "networks service object",
+			content: `
+services:
+  test:
+    image: alpine
+    networks:
+      
+networks:
   test2:
     image: alpine`,
 			line:      5,
