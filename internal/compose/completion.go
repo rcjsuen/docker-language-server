@@ -14,6 +14,18 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
+func prefix(line string, character int) string {
+	sb := strings.Builder{}
+	for i := 0; i < character; i++ {
+		if unicode.IsSpace(rune(line[i])) {
+			sb.Reset()
+		} else {
+			sb.WriteByte(line[i])
+		}
+	}
+	return sb.String()
+}
+
 func Completion(ctx context.Context, params *protocol.CompletionParams, doc document.ComposeDocument) (*protocol.CompletionList, error) {
 	if params.Position.Character == 0 {
 		items := []protocol.CompletionItem{}
@@ -52,12 +64,24 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 
 	items := []protocol.CompletionItem{}
 	nodeProps := nodeProperties(path, line, character)
+	wordPrefix := prefix(lines[lspLine], character-1)
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
 			for _, value := range schema.Enum.Values {
+				enumValue := value.(string)
 				item := protocol.CompletionItem{
 					Detail: extractDetail(schema),
-					Label:  value.(string),
+					Label:  enumValue,
+					TextEdit: protocol.TextEdit{
+						NewText: enumValue,
+						Range: protocol.Range{
+							Start: protocol.Position{
+								Line:      params.Position.Line,
+								Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
+							},
+							End: params.Position,
+						},
+					},
 				}
 				items = append(items, item)
 			}
@@ -72,9 +96,18 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		sb.WriteString("  ")
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
-				Detail:         extractDetail(schema),
-				Label:          attributeName,
-				InsertText:     insertText(sb.String(), attributeName, schema),
+				Detail: extractDetail(schema),
+				Label:  attributeName,
+				TextEdit: protocol.TextEdit{
+					NewText: insertText(sb.String(), attributeName, schema),
+					Range: protocol.Range{
+						Start: protocol.Position{
+							Line:      params.Position.Line,
+							Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
+						},
+						End: params.Position,
+					},
+				},
 				InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			}
 
@@ -94,7 +127,16 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 					}
 				}
 				sb.WriteString("|}")
-				item.InsertText = types.CreateStringPointer(sb.String())
+				item.TextEdit = protocol.TextEdit{
+					NewText: sb.String(),
+					Range: protocol.Range{
+						Start: protocol.Position{
+							Line:      params.Position.Line,
+							Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
+						},
+						End: params.Position,
+					},
+				}
 				item.InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
 			}
 			items = append(items, item)
@@ -218,21 +260,21 @@ func extractDetail(schema *jsonschema.Schema) *string {
 	return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
 }
 
-func insertText(spacing, attributeName string, schema *jsonschema.Schema) *string {
+func insertText(spacing, attributeName string, schema *jsonschema.Schema) string {
 	schemaTypes := referencedTypes(schema)
 	if slices.Contains(schemaTypes, "array") {
 		if len(schemaTypes) == 1 {
-			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v- ", attributeName, spacing))
+			return fmt.Sprintf("%v:\n%v- ", attributeName, spacing)
 		} else if len(schemaTypes) == 2 && slices.Contains(schemaTypes, "object") {
-			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v", attributeName, spacing))
+			return fmt.Sprintf("%v:\n%v", attributeName, spacing)
 		}
-		return nil
+		return fmt.Sprintf("%v:", attributeName)
 	}
 	if slices.Contains(schemaTypes, "object") {
 		if len(schemaTypes) == 1 {
-			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v", attributeName, spacing))
+			return fmt.Sprintf("%v:\n%v", attributeName, spacing)
 		}
-		return types.CreateStringPointer(fmt.Sprintf("%v:", attributeName))
+		return fmt.Sprintf("%v:", attributeName)
 	}
-	return types.CreateStringPointer(fmt.Sprintf("%v: ", attributeName))
+	return fmt.Sprintf("%v: ", attributeName)
 }
