@@ -2039,6 +2039,95 @@ networks:
 				},
 			},
 		},
+		{
+			name: "volumes array items",
+			content: `
+services:
+  test:
+    image: alpine
+    volumes:
+      - 
+volumes:
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "volumes array items across two files",
+			content: `
+---
+services:
+  test:
+    image: alpine
+    volumes:
+      - 
+---
+volumes:
+  test2:`,
+			line:      6,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 6, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "volumes array items",
+			content: `
+services:
+  test:
+    image: alpine
+    volumes:
+      - t
+volumes:
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 9,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 9, 1),
+					},
+				},
+			},
+		},
+		{
+			name: "volumes service object",
+			content: `
+services:
+  test:
+    image: alpine
+    volumes:
+      
+volumes:
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 6, 0),
+					},
+				},
+			},
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

@@ -180,6 +180,7 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 	dependency := map[string]string{
 		"depends_on": "services",
 		"networks":   "networks",
+		"volumes":    "volumes",
 	}
 	for key, value := range dependency {
 		if len(path) == 3 && path[2].Key.GetToken().Value == key {
