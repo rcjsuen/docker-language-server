@@ -10,7 +10,10 @@ All notable changes to the Docker Language Server will be documented in this fil
   - updated Compose schema to the latest version ([#117](https://github.com/docker/docker-language-server/issues/117))
   - textDocument/completion
     - suggest dependent service names for the `depends_on` attribute ([#131](https://github.com/docker/docker-language-server/issues/131))
-    - suggest dependent networks names for the `networks` attribute ([#132](https://github.com/docker/docker-language-server/issues/132))
+    - suggest dependent network names for the `networks` attribute ([#132](https://github.com/docker/docker-language-server/issues/132))
+    - suggest dependent volume names for the `volumes` attribute ([#133](https://github.com/docker/docker-language-server/issues/133))
+    - suggest dependent config names for the `configs` attribute ([#134](https://github.com/docker/docker-language-server/issues/134))
+    - suggest dependent secret names for the `secrets` attribute ([#135](https://github.com/docker/docker-language-server/issues/135))
 
 ### Fixed
 

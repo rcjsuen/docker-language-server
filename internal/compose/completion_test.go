@@ -2300,6 +2300,164 @@ configs:
 				},
 			},
 		},
+		{
+			name: "secrets array items",
+			content: `
+services:
+  test:
+    image: alpine
+    secrets:
+      - 
+secrets:
+  test2:
+    file: ./httpd.conf`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 8, 0),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 5, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
+		{
+			name: "secrets array items across two files",
+			content: `
+---
+services:
+  test:
+    image: alpine
+    secrets:
+      - 
+---
+secrets:
+  test2:
+    file: ./httpd.conf`,
+			line:      6,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 6, 8, 0),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 6, 8, 0),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
+		{
+			name: "secrets array items with a prefix",
+			content: `
+services:
+  test:
+    image: alpine
+    secrets:
+      - t
+secrets:
+  test2:
+    file: ./httpd.conf`,
+			line:      5,
+			character: 9,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:          "gid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("gid: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "mode",
+						Detail:         types.CreateStringPointer("number or string"),
+						TextEdit:       textEdit("mode: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "source",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("source: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:          "target",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("target: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 9, 1),
+					},
+					{
+						Label:          "uid",
+						Detail:         types.CreateStringPointer("string"),
+						TextEdit:       textEdit("uid: ", 5, 9, 1),
+						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+					},
+				},
+			},
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

@@ -83,6 +83,9 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	}
 
 	items := namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
+	if len(items) == 0 {
+		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
+	}
 	isArray := array(lines[lspLine], character-1)
 	nodeProps, arrayAttributes := nodeProperties(path, line, character)
 	if isArray != arrayAttributes {
