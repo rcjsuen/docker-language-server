@@ -19,6 +19,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "annotations",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("annotations:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -36,6 +37,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "build",
 		Detail:         types.CreateStringPointer("object or string"),
+		InsertText:     types.CreateStringPointer("build:"),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -71,6 +73,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "configs",
 		Detail:         types.CreateStringPointer("array"),
+		InsertText:     types.CreateStringPointer("configs:\n      - "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -82,11 +85,13 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "cpu_count",
 		Detail:         types.CreateStringPointer("integer or string"),
+		InsertText:     types.CreateStringPointer("cpu_count: "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
 		Label:          "cpu_percent",
 		Detail:         types.CreateStringPointer("integer or string"),
+		InsertText:     types.CreateStringPointer("cpu_percent: "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -140,21 +145,25 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "depends_on",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("depends_on:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
 		Label:          "deploy",
 		Detail:         types.CreateStringPointer("null or object"),
+		InsertText:     types.CreateStringPointer("deploy:"),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
 		Label:          "develop",
 		Detail:         types.CreateStringPointer("null or object"),
+		InsertText:     types.CreateStringPointer("develop:"),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
 		Label:          "device_cgroup_rules",
 		Detail:         types.CreateStringPointer("array"),
+		InsertText:     types.CreateStringPointer("device_cgroup_rules:\n      - "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -198,6 +207,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "environment",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("environment:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -209,6 +219,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "extends",
 		Detail:         types.CreateStringPointer("object or string"),
+		InsertText:     types.CreateStringPointer("extends:"),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -220,6 +231,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "extra_hosts",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("extra_hosts:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -236,6 +248,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "healthcheck",
 		Detail:         types.CreateStringPointer("object"),
+		InsertText:     types.CreateStringPointer("healthcheck:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -276,6 +289,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "labels",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("labels:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -329,6 +343,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "networks",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("networks:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -340,6 +355,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "oom_score_adj",
 		Detail:         types.CreateStringPointer("integer or string"),
+		InsertText:     types.CreateStringPointer("oom_score_adj: "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -387,6 +403,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "profiles",
 		Detail:         types.CreateStringPointer("array"),
+		InsertText:     types.CreateStringPointer("profiles:\n      - "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -434,6 +451,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "secrets",
 		Detail:         types.CreateStringPointer("array"),
+		InsertText:     types.CreateStringPointer("secrets:\n      - "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -475,6 +493,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "sysctls",
 		Detail:         types.CreateStringPointer("array or object"),
+		InsertText:     types.CreateStringPointer("sysctls:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -491,6 +510,7 @@ var serviceProperties = []protocol.CompletionItem{
 	{
 		Label:          "ulimits",
 		Detail:         types.CreateStringPointer("object"),
+		InsertText:     types.CreateStringPointer("ulimits:\n      "),
 		InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 	},
 	{
@@ -618,7 +638,8 @@ configs:
 					},
 					{
 						Label:          "external",
-						Detail:         types.CreateStringPointer("boolean or string or object"),
+						Detail:         types.CreateStringPointer("boolean or object or string"),
+						InsertText:     types.CreateStringPointer("external:"),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -630,6 +651,7 @@ configs:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n      "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -689,7 +711,8 @@ networks:
 					},
 					{
 						Label:          "external",
-						Detail:         types.CreateStringPointer("boolean or string or object"),
+						Detail:         types.CreateStringPointer("boolean or object or string"),
+						InsertText:     types.CreateStringPointer("external:"),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -707,6 +730,7 @@ networks:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n      "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -748,7 +772,8 @@ secrets:
 					},
 					{
 						Label:          "external",
-						Detail:         types.CreateStringPointer("boolean or string or object"),
+						Detail:         types.CreateStringPointer("boolean or object or string"),
+						InsertText:     types.CreateStringPointer("external:"),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -760,6 +785,7 @@ secrets:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n      "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -813,12 +839,14 @@ volumes:
 					},
 					{
 						Label:          "external",
-						Detail:         types.CreateStringPointer("boolean or string or object"),
+						Detail:         types.CreateStringPointer("boolean or object or string"),
+						InsertText:     types.CreateStringPointer("external:"),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n      "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -919,6 +947,7 @@ services:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1027,11 +1056,13 @@ services:
 					{
 						Label:          "additional_contexts",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("additional_contexts:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
 						Label:          "args",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("args:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1073,6 +1104,7 @@ services:
 					{
 						Label:          "extra_hosts",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("extra_hosts:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1084,6 +1116,7 @@ services:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1119,6 +1152,7 @@ services:
 					{
 						Label:          "secrets",
 						Detail:         types.CreateStringPointer("array"),
+						InsertText:     types.CreateStringPointer("secrets:\n        - "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1130,6 +1164,7 @@ services:
 					{
 						Label:          "ssh",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("ssh:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1145,7 +1180,9 @@ services:
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
-						Label: "ulimits", Detail: types.CreateStringPointer("object"),
+						Label:          "ulimits",
+						Detail:         types.CreateStringPointer("object"),
+						InsertText:     types.CreateStringPointer("ulimits:\n        "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 				},
@@ -1337,6 +1374,7 @@ services:
 					{
 						Label:          "aliases",
 						Detail:         types.CreateStringPointer("array"),
+						InsertText:     types.CreateStringPointer("aliases:\n          - "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1372,6 +1410,7 @@ services:
 					{
 						Label:          "link_local_ips",
 						Detail:         types.CreateStringPointer("array"),
+						InsertText:     types.CreateStringPointer("link_local_ips:\n          - "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{
@@ -1615,6 +1654,7 @@ services:
 					{
 						Label:          "labels",
 						Detail:         types.CreateStringPointer("array or object"),
+						InsertText:     types.CreateStringPointer("labels:\n            "),
 						InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 					},
 					{

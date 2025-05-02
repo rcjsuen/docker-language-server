@@ -192,44 +192,47 @@ func walkNodes(line int, node *ast.MappingValueNode) []*ast.MappingValueNode {
 	return []*ast.MappingValueNode{}
 }
 
-func extractDetail(schema *jsonschema.Schema) *string {
+func referencedTypes(schema *jsonschema.Schema) []string {
 	if schema.Types != nil {
-		schemaTypes := schema.Types.ToStrings()
-		return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
+		return schema.Types.ToStrings()
 	} else if schema.Ref != nil {
 		if schema.Ref.Types != nil {
-			schemaTypes := schema.Ref.Types.ToStrings()
-			return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
+			return schema.Ref.Types.ToStrings()
 		}
 		schema = schema.Ref
 	}
-	referencedTypes := []string{}
+	schemaTypes := []string{}
 	for _, referenced := range schema.OneOf {
 		if referenced.Types != nil {
-			referencedTypes = append(referencedTypes, referenced.Types.ToStrings()[0])
+			schemaTypes = append(schemaTypes, referenced.Types.ToStrings()[0])
 		} else if referenced.Ref != nil {
-			referencedTypes = append(referencedTypes, referenced.Ref.Types.ToStrings()[0])
+			schemaTypes = append(schemaTypes, referenced.Ref.Types.ToStrings()[0])
 		}
 	}
-	slices.Sort(referencedTypes)
-	return types.CreateStringPointer(strings.Join(referencedTypes, " or "))
+	return schemaTypes
+}
+
+func extractDetail(schema *jsonschema.Schema) *string {
+	schemaTypes := referencedTypes(schema)
+	slices.Sort(schemaTypes)
+	return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
 }
 
 func insertText(spacing, attributeName string, schema *jsonschema.Schema) *string {
-	if schema.Types == nil {
-		return nil
-	}
-	if slices.Contains(schema.Types.ToStrings(), "array") {
-		if len(schema.Types.ToStrings()) == 1 && schema.OneOf == nil {
+	schemaTypes := referencedTypes(schema)
+	if slices.Contains(schemaTypes, "array") {
+		if len(schemaTypes) == 1 {
 			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v- ", attributeName, spacing))
-		}
-		return nil
-	}
-	if slices.Contains(schema.Types.ToStrings(), "object") {
-		if len(schema.Types.ToStrings()) == 1 {
+		} else if len(schemaTypes) == 2 && slices.Contains(schemaTypes, "object") {
 			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v", attributeName, spacing))
 		}
 		return nil
+	}
+	if slices.Contains(schemaTypes, "object") {
+		if len(schemaTypes) == 1 {
+			return types.CreateStringPointer(fmt.Sprintf("%v:\n%v", attributeName, spacing))
+		}
+		return types.CreateStringPointer(fmt.Sprintf("%v:", attributeName))
 	}
 	return types.CreateStringPointer(fmt.Sprintf("%v: ", attributeName))
 }
