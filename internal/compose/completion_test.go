@@ -1832,6 +1832,93 @@ networks:
 			character: 2,
 			list:      nil,
 		},
+		{
+			name: "depends_on array items",
+			content: `
+services:
+  test:
+    image: alpine
+    depends_on:
+      - 
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "depends_on array items across two files",
+			content: `
+---
+services:
+  test:
+    image: alpine
+    depends_on:
+      - 
+---
+services:
+  test2:
+    image: alpine`,
+			line:      6,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 6, 8, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "depends_on array items",
+			content: `
+services:
+  test:
+    image: alpine
+    depends_on:
+      - t
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 9,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 9, 1),
+					},
+				},
+			},
+		},
+		{
+			name: "depends_on service object",
+			content: `
+services:
+  test:
+    image: alpine
+    depends_on:
+      
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 6, 0),
+					},
+				},
+			},
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

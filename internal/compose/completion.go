@@ -16,7 +16,7 @@ import (
 
 func prefix(line string, character int) string {
 	sb := strings.Builder{}
-	for i := 0; i < character; i++ {
+	for i := range character {
 		if unicode.IsSpace(rune(line[i])) {
 			sb.Reset()
 		} else {
@@ -62,9 +62,14 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		return nil, nil
 	}
 
+	wordPrefix := prefix(lines[lspLine], character-1)
+	dependencies := dependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+	if len(dependencies) > 0 {
+		return &protocol.CompletionList{Items: dependencies}, nil
+	}
+
 	items := []protocol.CompletionItem{}
 	nodeProps := nodeProperties(path, line, character)
-	wordPrefix := prefix(lines[lspLine], character-1)
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
 			for _, value := range schema.Enum.Values {
@@ -149,6 +154,52 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		return strings.Compare(a.Label, b.Label)
 	})
 	return &protocol.CompletionList{Items: items}, nil
+}
+
+func findServices(file *ast.File) []string {
+	services := []string{}
+	for _, documentNode := range file.Docs {
+		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
+			for _, n := range mappingNode.Values {
+				if s, ok := n.Key.(*ast.StringNode); ok {
+					if s.Value == "services" {
+						if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
+							for _, service := range mappingNode.Values {
+								services = append(services, service.Key.GetToken().Value)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return services
+}
+
+func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	if len(path) == 3 && path[2].Key.GetToken().Value == "depends_on" {
+		items := []protocol.CompletionItem{}
+		for _, service := range findServices(file) {
+			if service != path[1].Key.GetToken().Value {
+				item := protocol.CompletionItem{
+					Label: service,
+					TextEdit: protocol.TextEdit{
+						NewText: service,
+						Range: protocol.Range{
+							Start: protocol.Position{
+								Line:      params.Position.Line,
+								Character: params.Position.Character - prefixLength,
+							},
+							End: params.Position,
+						},
+					},
+				}
+				items = append(items, item)
+			}
+		}
+		return items
+	}
+	return nil
 }
 
 func constructCompletionNodePath(file *ast.File, line int) []*ast.MappingValueNode {
