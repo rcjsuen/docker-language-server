@@ -1832,6 +1832,29 @@ networks:
 			character: 2,
 			list:      nil,
 		},
+		{
+			name: "configs should not suggest attributes as-is",
+			content: `
+services:
+  test:
+    configs:
+      `,
+			line:      4,
+			character: 6,
+			list:      nil,
+		},
+		{
+			name: "array items should still consider indentation when calculating completion items",
+			content: `
+services:
+  test:
+    configs:
+      - mode: 0
+      `,
+			line:      5,
+			character: 6,
+			list:      nil,
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
@@ -1846,11 +1869,7 @@ networks:
 				},
 			}, doc)
 			require.NoError(t, err)
-			if tc.list == nil {
-				require.Nil(t, list)
-			} else {
-				require.Equal(t, tc.list, list)
-			}
+			require.Equal(t, tc.list, list)
 		})
 	}
 }
