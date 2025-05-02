@@ -82,7 +82,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
 
-	items := namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
+	items := volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+	if len(items) > 0 {
+		return &protocol.CompletionList{Items: items}, nil
+	}
+	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
 	if len(items) == 0 {
 		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
 	}
@@ -201,7 +205,6 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 	dependency := map[string]string{
 		"depends_on": "services",
 		"networks":   "networks",
-		"volumes":    "volumes",
 	}
 	for serviceAttribute, dependencyType := range dependency {
 		items := namedDependencyCompletionItems(file, path, serviceAttribute, dependencyType, params, prefixLength)
@@ -210,6 +213,19 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 		}
 	}
 	return nil
+}
+
+func volumeDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	items := namedDependencyCompletionItems(file, path, "volumes", "volumes", params, prefixLength)
+	for i, _ := range items {
+		edit := items[i].TextEdit.(protocol.TextEdit)
+		items[i].TextEdit = protocol.TextEdit{
+			NewText: fmt.Sprintf("%v:${1:/container/path}", edit.NewText),
+			Range:   edit.Range,
+		}
+		items[i].InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
+	}
+	return items
 }
 
 func namedDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, serviceAttribute, dependencyType string, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {

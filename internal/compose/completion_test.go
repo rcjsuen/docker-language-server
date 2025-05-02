@@ -2071,8 +2071,9 @@ volumes:
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
 					{
-						Label:    "test2",
-						TextEdit: textEdit("test2", 5, 8, 0),
+						Label:            "test2",
+						TextEdit:         textEdit("test2:${1:/container/path}", 5, 8, 0),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
 			},
@@ -2094,8 +2095,9 @@ volumes:
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
 					{
-						Label:    "test2",
-						TextEdit: textEdit("test2", 6, 8, 0),
+						Label:            "test2",
+						TextEdit:         textEdit("test2:${1:/container/path}", 6, 8, 0),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
 			},
@@ -2115,8 +2117,9 @@ volumes:
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
 					{
-						Label:    "test2",
-						TextEdit: textEdit("test2", 5, 9, 1),
+						Label:            "test2",
+						TextEdit:         textEdit("test2:${1:/container/path}", 5, 9, 1),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
 			},
@@ -2136,8 +2139,9 @@ volumes:
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
 					{
-						Label:    "test2",
-						TextEdit: textEdit("test2", 5, 6, 0),
+						Label:            "test2",
+						TextEdit:         textEdit("test2:${1:/container/path}", 5, 6, 0),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
 			},
