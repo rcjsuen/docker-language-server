@@ -6,7 +6,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Added
 
-- updated Compose schema to the latest version ([#117](https://github.com/docker/docker-language-server/issues/117))
+- Compose
+  - updated Compose schema to the latest version ([#117](https://github.com/docker/docker-language-server/issues/117))
+  - textDocument/completion
+    - suggest dependent service names for the `depends_on` attribute ([#131](https://github.com/docker/docker-language-server/issues/131))
 
 ### Fixed
 
