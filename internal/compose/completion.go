@@ -217,7 +217,7 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 
 func volumeDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	items := namedDependencyCompletionItems(file, path, "volumes", "volumes", params, prefixLength)
-	for i, _ := range items {
+	for i := range items {
 		edit := items[i].TextEdit.(protocol.TextEdit)
 		items[i].TextEdit = protocol.TextEdit{
 			NewText: fmt.Sprintf("%v:${1:/container/path}", edit.NewText),
