@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"slices"
 
+	"github.com/goccy/go-yaml/ast"
 	"github.com/santhosh-tekuri/jsonschema/v6"
-	"gopkg.in/yaml.v3"
 )
 
 //go:embed compose-spec.json
@@ -35,11 +35,11 @@ func schemaProperties() map[string]*jsonschema.Schema {
 	return composeSchema.Properties
 }
 
-func nodeProperties(nodes []*yaml.Node, line, column int) any {
+func nodeProperties(nodes []*ast.MappingValueNode, line, column int) any {
 	if composeSchema != nil && slices.Contains(composeSchema.Types.ToStrings(), "object") && composeSchema.Properties != nil {
-		if prop, ok := composeSchema.Properties[nodes[0].Value]; ok {
+		if prop, ok := composeSchema.Properties[nodes[0].Key.GetToken().Value]; ok {
 			for regexp, property := range prop.PatternProperties {
-				if regexp.MatchString(nodes[1].Value) {
+				if regexp.MatchString(nodes[1].Key.GetToken().Value) {
 					if property.Ref != nil {
 						return recurseNodeProperties(nodes, line, column, 2, property.Ref.Properties)
 					}
@@ -50,21 +50,26 @@ func nodeProperties(nodes []*yaml.Node, line, column int) any {
 	return nil
 }
 
-func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, properties map[string]*jsonschema.Schema) any {
-	if len(nodes) == nodeOffset || (len(nodes) >= nodeOffset+2 && nodes[nodeOffset].Column <= column && column < nodes[nodeOffset+1].Column) {
+func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffset int, properties map[string]*jsonschema.Schema) any {
+	if len(nodes) == nodeOffset {
 		return properties
-	} else if column == nodes[nodeOffset].Column {
+	}
+	if len(nodes) >= nodeOffset+2 && nodes[nodeOffset].Key.GetToken().Position.Column <= column && column < nodes[nodeOffset+1].Key.GetToken().Position.Column {
+		return properties
+	}
+	if column == nodes[nodeOffset].Key.GetToken().Position.Column {
 		return properties
 	}
 
-	value := nodes[nodeOffset].Value
+	value := nodes[nodeOffset].Key.GetToken().Value
 	if prop, ok := properties[value]; ok {
 		if prop.Ref != nil {
 			if len(prop.Ref.Properties) > 0 {
 				return recurseNodeProperties(nodes, line, column, nodeOffset+1, prop.Ref.Properties)
 			}
 			for regexp, property := range prop.Ref.PatternProperties {
-				if regexp.MatchString(nodes[nodeOffset+1].Value) {
+				nextValue := nodes[nodeOffset+1].Key.GetToken().Value
+				if regexp.MatchString(nextValue) {
 					for _, nested := range property.OneOf {
 						if slices.Contains(nested.Types.ToStrings(), "object") {
 							return recurseNodeProperties(nodes, line, column, nodeOffset+2, nested.Properties)
@@ -94,7 +99,8 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 						return nil
 					}
 
-					if regexp.MatchString(nodes[nodeOffset+1].Value) {
+					nextValue := nodes[nodeOffset+1].Key.GetToken().Value
+					if regexp.MatchString(nextValue) {
 						for _, nested := range property.OneOf {
 							if slices.Contains(nested.Types.ToStrings(), "object") {
 								return recurseNodeProperties(nodes, line, column, nodeOffset+2, nested.Properties)
@@ -115,8 +121,8 @@ func recurseNodeProperties(nodes []*yaml.Node, line, column, nodeOffset int, pro
 			}
 		}
 
-		if nodes[nodeOffset].Column < column {
-			if nodes[nodeOffset].Line == line {
+		if nodes[nodeOffset].Key.GetToken().Position.Column < column {
+			if nodes[nodeOffset].Key.GetToken().Position.Line == line {
 				return prop
 			}
 			return recurseNodeProperties(nodes, line, column, nodeOffset+1, prop.Properties)

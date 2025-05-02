@@ -1684,7 +1684,7 @@ services:
 			list:      nil,
 		},
 		{
-			name: "bug",
+			name: "unexpected array for networks",
 			content: `
 networks:
 - 

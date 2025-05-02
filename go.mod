@@ -17,7 +17,6 @@ require (
 	github.com/tliron/commonlog v0.2.18
 	github.com/zclconf/go-cty v1.16.2
 	go.lsp.dev/uri v0.3.0
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -170,4 +169,5 @@ require (
 	google.golang.org/grpc v1.69.4 // indirect
 	google.golang.org/protobuf v1.35.2 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
