@@ -18,6 +18,12 @@ func serviceReferences(node *ast.MappingValueNode, dependencyAttributeName strin
 							for _, service := range sequenceNode.Values {
 								tokens = append(tokens, service.GetToken())
 							}
+						} else if dependentService, ok := attributeNode.Value.(*ast.StringNode); ok {
+							tokens = append(tokens, dependentService.GetToken())
+						} else if mappingNode, ok := attributeNode.Value.(*ast.MappingNode); ok {
+							for _, dependentService := range mappingNode.Values {
+								tokens = append(tokens, dependentService.Key.GetToken())
+							}
 						}
 					}
 				}

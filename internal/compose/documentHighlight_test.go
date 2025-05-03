@@ -46,6 +46,33 @@ services:
 			},
 		},
 		{
+			name: "read highlight on an undefined service object with no properties",
+			content: `
+services:
+  test:
+    depends_on:
+      test2:`,
+			line:      4,
+			character: 9,
+			ranges: []protocol.DocumentHighlight{
+				documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+			},
+		},
+		{
+			name: "read highlight on an undefined service object with properties",
+			content: `
+services:
+  test:
+    depends_on:
+      test2:
+        condition: service_started`,
+			line:      4,
+			character: 9,
+			ranges: []protocol.DocumentHighlight{
+				documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+			},
+		},
+		{
 			name: "cursor not on anything meaningful",
 			content: `
 services:
