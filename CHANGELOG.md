@@ -16,6 +16,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - suggest dependent secret names for the `secrets` attribute ([#135](https://github.com/docker/docker-language-server/issues/135))
   - textDocument/documentHighlight
     - support highlighting the short form `depends_on` syntax for services ([#70](https://github.com/docker/docker-language-server/issues/70))
+    - support highlighting the long form `depends_on` syntax for services ([#71](https://github.com/docker/docker-language-server/issues/71))
 
 ### Fixed
 
