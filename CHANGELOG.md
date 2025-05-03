@@ -14,6 +14,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - suggest dependent volume names for the `volumes` attribute ([#133](https://github.com/docker/docker-language-server/issues/133))
     - suggest dependent config names for the `configs` attribute ([#134](https://github.com/docker/docker-language-server/issues/134))
     - suggest dependent secret names for the `secrets` attribute ([#135](https://github.com/docker/docker-language-server/issues/135))
+  - textDocument/documentHighlight
+    - support highlighting the short form `depends_on` syntax for services ([#70](https://github.com/docker/docker-language-server/issues/70))
 
 ### Fixed
 
