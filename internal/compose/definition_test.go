@@ -277,6 +277,134 @@ secrets:
 				},
 			},
 		},
+		{
+			name: "volumes array item reference without a mount path",
+			content: `
+services:
+  test:
+    volumes:
+      - test2
+volumes:
+  test2:`,
+			line:      4,
+			character: 10,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 8},
+						End:   protocol.Position{Line: 4, Character: 13},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+		},
+		{
+			name: "volumes array item reference with a mount path",
+			content: `
+services:
+  test:
+    volumes:
+      - test2:/mount/path
+volumes:
+  test2:`,
+			line:      4,
+			character: 10,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 8},
+						End:   protocol.Position{Line: 4, Character: 13},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+		},
+		{
+			name: "volumes array item reference on the mount path itself",
+			content: `
+services:
+  test:
+    volumes:
+      - test2:/mount/path
+volumes:
+  test2:`,
+			line:      4,
+			character: 18,
+			locations: nil,
+			links:     nil,
+		},
+		{
+			name: "volume array item object's with the source attribute",
+			content: `
+services:
+  test:
+    volumes:
+      - source: test2
+volumes:
+  test2:`,
+			line:      4,
+			character: 18,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 16},
+						End:   protocol.Position{Line: 4, Character: 21},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
