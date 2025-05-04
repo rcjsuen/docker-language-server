@@ -16,6 +16,7 @@ import (
 	"github.com/docker/docker-language-server/internal/scout"
 	"github.com/docker/docker-language-server/internal/telemetry"
 	"github.com/docker/docker-language-server/internal/tliron/glsp"
+	"github.com/docker/docker-language-server/internal/types"
 	"github.com/moby/buildkit/identity"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -109,6 +110,7 @@ func NewServer(docManager *document.Manager) *Server {
 	handler.TextDocumentHover = s.TextDocumentHover
 	handler.TextDocumentInlayHint = s.TextDocumentInlayHint
 	handler.TextDocumentInlineCompletion = s.TextDocumentInlineCompletion
+	handler.TextDocumentPrepareRename = s.TextDocumentPrepareRename
 	handler.TextDocumentRename = s.TextDocumentRename
 	handler.TextDocumentSemanticTokensFull = s.TextDocumentSemanticTokensFull
 
@@ -258,38 +260,49 @@ func (s *Server) updateTelemetrySetting(value string) {
 // confusing so it is better to explicitly register formatting support
 // rather than doing it globally.
 func (s *Server) registerFormattingCapability() {
+	dockerbakeLanguage := string(protocol.DockerBakeLanguage)
+	dockerbakeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}}
 	s.registerCapability(
-		protocol.DockerBakeLanguage,
-		"docker.lsp.dockerbake.textDocument.formatting",
-		"textDocument/formatting",
+		[]protocol.Registration{
+			{
+				ID:     "docker.lsp.dockerbake.textDocument.formatting",
+				Method: "textDocument/formatting",
+				RegisterOptions: protocol.TextDocumentRegistrationOptions{
+					DocumentSelector: &dockerbakeDocumentSelctor,
+				},
+			},
+		},
 	)
 }
 
 func (s *Server) registerRenameCapability() {
+	dockercomposeLanguage := string(protocol.DockerComposeLanguage)
+	dockercomposeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockercomposeLanguage}}
 	s.registerCapability(
-		protocol.DockerComposeLanguage,
-		"docker.lsp.dockercompose.textDocument.rename",
-		"textDocument/rename",
-	)
-}
-
-func (s *Server) registerCapability(language protocol.LanguageIdentifier, id, method string) {
-	go func() {
-		defer s.handlePanic("registerFormattingCapability")
-
-		time.Sleep(registerCapabilityDelay)
-		dockerbakeLanguage := string(language)
-		dockerbakeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}}
-		s.client.RegisterCapability(context.Background(), protocol.RegistrationParams{
-			Registrations: []protocol.Registration{
-				{
-					ID:     id,
-					Method: method,
-					RegisterOptions: protocol.TextDocumentRegistrationOptions{
-						DocumentSelector: &dockerbakeDocumentSelctor,
+		[]protocol.Registration{
+			{
+				ID:     "docker.lsp.dockercompose.textDocument.rename",
+				Method: "textDocument/rename",
+				RegisterOptions: protocol.RenameRegistrationOptions{
+					TextDocumentRegistrationOptions: protocol.TextDocumentRegistrationOptions{
+						DocumentSelector: &dockercomposeDocumentSelctor,
+					},
+					RenameOptions: protocol.RenameOptions{
+						PrepareProvider: types.CreateBoolPointer(true),
 					},
 				},
 			},
+		},
+	)
+}
+
+func (s *Server) registerCapability(registrations []protocol.Registration) {
+	go func() {
+		defer s.handlePanic("registerCapability")
+
+		time.Sleep(registerCapabilityDelay)
+		s.client.RegisterCapability(context.Background(), protocol.RegistrationParams{
+			Registrations: registrations,
 		})
 	}()
 }

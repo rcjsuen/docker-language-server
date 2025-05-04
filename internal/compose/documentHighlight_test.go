@@ -14,12 +14,13 @@ import (
 )
 
 var serviceReferenceTestCases = []struct {
-	name        string
-	content     string
-	line        protocol.UInteger
-	character   protocol.UInteger
-	ranges      []protocol.DocumentHighlight
-	renameEdits func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
 }{
 	{
 		name: "write highlight on a service",
@@ -45,6 +46,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
 		},
 	},
 	{
@@ -74,6 +79,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an undefined service object with no properties",
@@ -101,6 +110,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
 		},
 	},
 	{
@@ -131,6 +144,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
+		},
 	},
 	{
 		name: "cursor not on anything meaningful",
@@ -146,6 +163,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an undefined service array item, duplicated",
@@ -182,6 +200,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
 		},
 	},
 	{
@@ -220,6 +242,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 5, Character: 2},
+			End:   protocol.Position{Line: 5, Character: 7},
+		},
 	},
 }
 
@@ -237,12 +263,13 @@ func TestDocumentHighlight_Services(t *testing.T) {
 }
 
 var networkReferenceTestCases = []struct {
-	name        string
-	content     string
-	line        protocol.UInteger
-	character   protocol.UInteger
-	ranges      []protocol.DocumentHighlight
-	renameEdits func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
 }{
 	{
 		name: "write highlight on a network",
@@ -268,6 +295,10 @@ networks:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
 		},
 	},
 	{
@@ -297,6 +328,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an undefined network object with no properties",
@@ -324,6 +359,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
 		},
 	},
 	{
@@ -353,6 +392,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
 		},
 	},
 	{
@@ -390,6 +433,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
 		},
 	},
 	{
@@ -429,6 +476,10 @@ networks:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read/write highlight on a network array item (cursor on write)",
@@ -466,6 +517,10 @@ networks:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
 		},
 	},
 	{
@@ -506,6 +561,10 @@ networks:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
+		},
 	},
 	{
 		name: "read/write highlight on a network object (write)",
@@ -545,6 +604,10 @@ networks:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 2},
+			End:   protocol.Position{Line: 7, Character: 7},
+		},
 	},
 }
 
@@ -562,12 +625,13 @@ func TestDocumentHighlight_Networks(t *testing.T) {
 }
 
 var volumeReferenceTestCases = []struct {
-	name        string
-	content     string
-	line        protocol.UInteger
-	character   protocol.UInteger
-	ranges      []protocol.DocumentHighlight
-	renameEdits func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
 }{
 	{
 		name: "write highlight on a volumes",
@@ -593,6 +657,10 @@ volumes:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
 		},
 	},
 	{
@@ -622,6 +690,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an undefined volume array item with a mount path",
@@ -650,6 +722,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an undefined volume array item's mount path",
@@ -664,6 +740,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an invalid volume array item object",
@@ -678,6 +755,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an volume array item object's source",
@@ -706,6 +784,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 16},
+			End:   protocol.Position{Line: 4, Character: 21},
+		},
 	},
 	{
 		name: "read highlight on an volume array item object's target which is invalid",
@@ -720,6 +802,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an invalid volume object",
@@ -747,6 +830,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
 		},
 	},
 	{
@@ -784,6 +871,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
 		},
 	},
 	{
@@ -823,6 +914,10 @@ volumes:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read/write highlight on a volume array item (cursor on write)",
@@ -861,6 +956,10 @@ volumes:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
+		},
 	},
 }
 
@@ -878,12 +977,13 @@ func TestDocumentHighlight_Volumes(t *testing.T) {
 }
 
 var configReferenceTestCases = []struct {
-	name        string
-	content     string
-	line        protocol.UInteger
-	character   protocol.UInteger
-	ranges      []protocol.DocumentHighlight
-	renameEdits func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
 }{
 	{
 		name: "write highlight on a configs",
@@ -909,6 +1009,10 @@ configs:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
 		},
 	},
 	{
@@ -938,6 +1042,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an invalid config object",
@@ -952,6 +1060,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an undefined configs array item, duplicated",
@@ -988,6 +1097,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
 		},
 	},
 	{
@@ -1027,6 +1140,10 @@ configs:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read/write highlight on a config array item (cursor on write)",
@@ -1065,6 +1182,10 @@ configs:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
+		},
 	},
 }
 
@@ -1082,12 +1203,13 @@ func TestDocumentHighlight_Configs(t *testing.T) {
 }
 
 var secretReferenceTestCases = []struct {
-	name        string
-	content     string
-	line        protocol.UInteger
-	character   protocol.UInteger
-	ranges      []protocol.DocumentHighlight
-	renameEdits func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
 }{
 	{
 		name: "write highlight on a secrets",
@@ -1113,6 +1235,10 @@ secrets:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
 		},
 	},
 	{
@@ -1142,6 +1268,10 @@ services:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read highlight on an invalid secret object",
@@ -1156,6 +1286,7 @@ services:
 		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
 			return nil
 		},
+		prepareRename: nil,
 	},
 	{
 		name: "read highlight on an undefined secrets array item, duplicated",
@@ -1192,6 +1323,10 @@ services:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
 		},
 	},
 	{
@@ -1231,6 +1366,10 @@ secrets:
 				},
 			}
 		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
 	},
 	{
 		name: "read/write highlight on a secret array item (cursor on write)",
@@ -1268,6 +1407,10 @@ secrets:
 					},
 				},
 			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
 		},
 	},
 }

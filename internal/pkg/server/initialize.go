@@ -144,7 +144,7 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	} else {
 		result.Capabilities.DocumentFormattingProvider = protocol.DocumentFormattingOptions{}
 		result.Capabilities.RenameProvider = protocol.RenameOptions{
-			PrepareProvider: types.CreateBoolPointer(false),
+			PrepareProvider: types.CreateBoolPointer(true),
 		}
 	}
 	return result, nil

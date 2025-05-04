@@ -19,6 +19,7 @@ The Docker Language Server relies on some features that are dependent on [Buildx
   - highlight named references of services, networks, volumes, configs, and secrets
   - hover tooltips
   - open links to images
+  - rename preparation
   - rename named references
 - Bake files
   - code completion

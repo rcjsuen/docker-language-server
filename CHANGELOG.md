@@ -20,6 +20,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support highlighting the short form `depends_on` syntax for services ([#70](https://github.com/docker/docker-language-server/issues/70))
     - support highlighting the long form `depends_on` syntax for services ([#71](https://github.com/docker/docker-language-server/issues/71))
     - support highlighting referenced networks, volumes, configs, and secrets ([#145](https://github.com/docker/docker-language-server/issues/145))
+  - textDocument/prepareRename
+    - support rename preparation requests ([#149](https://github.com/docker/docker-language-server/issues/149))
   - textDocument/rename
     - support renaming named references of services, networks, volumes, configs, and secrets ([#149](https://github.com/docker/docker-language-server/issues/149))
 
