@@ -109,7 +109,9 @@ func NewServer(docManager *document.Manager) *Server {
 	handler.TextDocumentHover = s.TextDocumentHover
 	handler.TextDocumentInlayHint = s.TextDocumentInlayHint
 	handler.TextDocumentInlineCompletion = s.TextDocumentInlineCompletion
+	handler.TextDocumentRename = s.TextDocumentRename
 	handler.TextDocumentSemanticTokensFull = s.TextDocumentSemanticTokensFull
+
 	handler.TextDocumentDidOpen = s.TextDocumentDidOpen
 	handler.TextDocumentDidChange = s.TextDocumentDidChange
 	handler.TextDocumentDidClose = s.TextDocumentDidClose
@@ -256,17 +258,33 @@ func (s *Server) updateTelemetrySetting(value string) {
 // confusing so it is better to explicitly register formatting support
 // rather than doing it globally.
 func (s *Server) registerFormattingCapability() {
+	s.registerCapability(
+		protocol.DockerBakeLanguage,
+		"docker.lsp.dockerbake.textDocument.formatting",
+		"textDocument/formatting",
+	)
+}
+
+func (s *Server) registerRenameCapability() {
+	s.registerCapability(
+		protocol.DockerComposeLanguage,
+		"docker.lsp.dockercompose.textDocument.rename",
+		"textDocument/rename",
+	)
+}
+
+func (s *Server) registerCapability(language protocol.LanguageIdentifier, id, method string) {
 	go func() {
 		defer s.handlePanic("registerFormattingCapability")
 
 		time.Sleep(registerCapabilityDelay)
-		dockerbakeLanguage := string(protocol.DockerBakeLanguage)
+		dockerbakeLanguage := string(language)
 		dockerbakeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}}
 		s.client.RegisterCapability(context.Background(), protocol.RegistrationParams{
 			Registrations: []protocol.Registration{
 				{
-					ID:     "docker.lsp.dockerbake.textDocument.formatting",
-					Method: "textDocument/formatting",
+					ID:     id,
+					Method: method,
 					RegisterOptions: protocol.TextDocumentRegistrationOptions{
 						DocumentSelector: &dockerbakeDocumentSelctor,
 					},

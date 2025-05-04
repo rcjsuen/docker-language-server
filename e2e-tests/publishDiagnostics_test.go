@@ -84,6 +84,9 @@ func initialize(t *testing.T, conn *jsonrpc2.Conn, initializeParams protocol.Ini
 			HoverProvider:            protocol.HoverOptions{},
 			InlayHintProvider:        protocol.InlayHintOptions{},
 			InlineCompletionProvider: protocol.InlineCompletionOptions{},
+			RenameProvider: protocol.RenameOptions{
+				PrepareProvider: types.CreateBoolPointer(false),
+			},
 			SemanticTokensProvider: protocol.SemanticTokensOptions{
 				Legend: protocol.SemanticTokensLegend{
 					TokenModifiers: []string{},
