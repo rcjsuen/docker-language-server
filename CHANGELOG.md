@@ -2,6 +2,18 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Compose
+  - improve code completion by automatically including required attributes in completion items ([#155](https://github.com/docker/docker-language-server/issues/155))
+
+### Fixed
+
+- Compose
+  - suggest completion items for array items that use an object schema directly ([#161](https://github.com/docker/docker-language-server/issues/161))
+
 ## [0.5.0] - 2025-05-05
 
 ### Added

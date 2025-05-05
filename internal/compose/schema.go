@@ -119,6 +119,7 @@ func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffs
 					}
 				}
 			}
+			return recurseNodeProperties(nodes, line, column, nodeOffset+1, schema.Properties, true)
 		}
 
 		if nodes[nodeOffset].Key.GetToken().Position.Column < column {

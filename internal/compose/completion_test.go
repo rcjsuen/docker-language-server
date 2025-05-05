@@ -1152,6 +1152,63 @@ services:
 			},
 		},
 		{
+			name: "attributes of the develop's watch array items",
+			content: `
+services:
+  postgres:
+    develop:
+      watch:
+        - `,
+			line:      5,
+			character: 10,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "action",
+						Detail:           types.CreateStringPointer("string"),
+						TextEdit:         textEdit("action: ${1|rebuild,restart,sync,sync+exec,sync+restart|}", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "exec",
+						Detail:           types.CreateStringPointer("object"),
+						TextEdit:         textEdit("exec:\n            ", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "ignore",
+						Detail:           types.CreateStringPointer("array or string"),
+						TextEdit:         textEdit("ignore:", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "include",
+						Detail:           types.CreateStringPointer("array or string"),
+						TextEdit:         textEdit("include:", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "path",
+						Detail:           types.CreateStringPointer("string"),
+						TextEdit:         textEdit("path: ", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "target",
+						Detail:           types.CreateStringPointer("string"),
+						TextEdit:         textEdit("target: ", 5, 10, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
 			name: "inner attributes of the deploy/resources object under service",
 			content: `
 services:
