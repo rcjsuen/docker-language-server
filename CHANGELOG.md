@@ -2,7 +2,7 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## [Unreleased]
+## [0.5.0] - 2025-05-05
 
 ### Added
 
