@@ -138,7 +138,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 						End: params.Position,
 					},
 				},
-				InsertTextMode: types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+				InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+				InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 			}
 
 			if schema.Enum != nil {
@@ -167,7 +168,6 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 						End: params.Position,
 					},
 				}
-				item.InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
 			}
 			items = append(items, item)
 		}
@@ -363,10 +363,56 @@ func extractDetail(schema *jsonschema.Schema) *string {
 	return types.CreateStringPointer(strings.Join(schemaTypes, " or "))
 }
 
+func requiredFieldsText(spacing string, schema *jsonschema.Schema, schemaTypes []string) []string {
+	if len(schemaTypes) == 1 {
+		if slices.Contains(schemaTypes, "array") {
+			if schema.Ref != nil {
+				schema = schema.Ref
+			}
+			if itemSchema, ok := schema.Items.(*jsonschema.Schema); ok {
+				if itemSchema.Ref != nil {
+					itemSchema = itemSchema.Ref
+				}
+				if itemSchema.Types != nil {
+					if slices.Contains(itemSchema.Types.ToStrings(), "object") {
+						requiredTexts := []string{}
+						for _, r := range itemSchema.Required {
+							requiredTexts = append(requiredTexts, insertText(fmt.Sprintf("%v  ", spacing), r, itemSchema.Properties[r]))
+						}
+						return requiredTexts
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func insertText(spacing, attributeName string, schema *jsonschema.Schema) string {
 	schemaTypes := referencedTypes(schema)
 	if slices.Contains(schemaTypes, "array") {
 		if len(schemaTypes) == 1 {
+			required := requiredFieldsText(spacing, schema, schemaTypes)
+			if len(required) > 0 {
+				slices.Sort(required)
+				sb := strings.Builder{}
+				sb.WriteString(attributeName)
+				sb.WriteString(":")
+				for i, requiredAttribute := range required {
+					sb.WriteString("\n")
+					sb.WriteString(spacing)
+					if i == 0 {
+						sb.WriteString("- ")
+					} else {
+						sb.WriteString("  ")
+					}
+					sb.WriteString(requiredAttribute)
+					if len(required) != 1 {
+						sb.WriteString(fmt.Sprintf("${%v}", i+1))
+					}
+				}
+				return sb.String()
+			}
 			return fmt.Sprintf("%v:\n%v- ", attributeName, spacing)
 		} else if len(schemaTypes) == 2 && slices.Contains(schemaTypes, "object") {
 			return fmt.Sprintf("%v:\n%v", attributeName, spacing)
