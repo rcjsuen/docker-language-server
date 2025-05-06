@@ -14,6 +14,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - show the parent service's value if it is being overridden and they are not object attributes ([#156](https://github.com/docker/docker-language-server/issues/156))
   - textDocument/formatting
     - add support to format YAML files that do not have clear syntactical errors ([#165](https://github.com/docker/docker-language-server/issues/165))
+  - textDocument/publishDiagnostics
+    - report YAML syntax errors ([#167](https://github.com/docker/docker-language-server/issues/167))
 
 ### Fixed
 

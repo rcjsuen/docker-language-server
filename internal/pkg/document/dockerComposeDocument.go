@@ -12,12 +12,14 @@ import (
 type ComposeDocument interface {
 	Document
 	File() *ast.File
+	ParsingError() error
 }
 
 type composeDocument struct {
 	document
-	mutex sync.Mutex
-	file  *ast.File
+	mutex        sync.Mutex
+	file         *ast.File
+	parsingError error
 }
 
 func NewComposeDocument(u uri.URI, version int32, input []byte) ComposeDocument {
@@ -39,7 +41,7 @@ func (d *composeDocument) parse(_ bool) bool {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	d.file, _ = parser.ParseBytes(d.input, 0)
+	d.file, d.parsingError = parser.ParseBytes(d.input, 0)
 	return true
 }
 
@@ -49,4 +51,8 @@ func (d *composeDocument) copy() Document {
 
 func (d *composeDocument) File() *ast.File {
 	return d.file
+}
+
+func (d *composeDocument) ParsingError() error {
+	return d.parsingError
 }
