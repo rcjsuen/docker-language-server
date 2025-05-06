@@ -7,7 +7,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Added
 
 - Compose
-  - improve code completion by automatically including required attributes in completion items ([#155](https://github.com/docker/docker-language-server/issues/155))
+  - textDocument/completion
+    - improve code completion by automatically including required attributes in completion items ([#155](https://github.com/docker/docker-language-server/issues/155))
+  - textDocument/inlayHint
+    - show the parent service's value if it is being overridden and they are not object attributes ([#156](https://github.com/docker/docker-language-server/issues/156))
 
 ### Fixed
 
@@ -104,7 +107,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/publishDiagnostics
     - consider the context attribute when determining which Dockerfile the Bake target is for ([#57](https://github.com/docker/docker-language-server/issues/57))
-  - textDocument/inlayHints
+  - textDocument/inlayHint
     - consider the context attribute when determining which Dockerfile to use for inlaying default values of `ARG` variables ([#60](https://github.com/docker/docker-language-server/pull/60))
   - textDocument/completion
     - consider the context attribute when determining which Dockerfile to use for looking up build stages ([#61](https://github.com/docker/docker-language-server/pull/61))
