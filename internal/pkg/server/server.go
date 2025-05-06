@@ -261,14 +261,21 @@ func (s *Server) updateTelemetrySetting(value string) {
 // rather than doing it globally.
 func (s *Server) registerFormattingCapability() {
 	dockerbakeLanguage := string(protocol.DockerBakeLanguage)
-	dockerbakeDocumentSelctor := protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}}
+	dockercomposeLanguage := string(protocol.DockerComposeLanguage)
 	s.registerCapability(
 		[]protocol.Registration{
 			{
 				ID:     "docker.lsp.dockerbake.textDocument.formatting",
 				Method: "textDocument/formatting",
 				RegisterOptions: protocol.TextDocumentRegistrationOptions{
-					DocumentSelector: &dockerbakeDocumentSelctor,
+					DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}},
+				},
+			},
+			{
+				ID:     "docker.lsp.dockercompose.textDocument.formatting",
+				Method: "textDocument/formatting",
+				RegisterOptions: protocol.TextDocumentRegistrationOptions{
+					DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockercomposeLanguage}},
 				},
 			},
 		},

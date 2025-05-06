@@ -12,6 +12,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - improve code completion by automatically including required attributes in completion items ([#155](https://github.com/docker/docker-language-server/issues/155))
   - textDocument/inlayHint
     - show the parent service's value if it is being overridden and they are not object attributes ([#156](https://github.com/docker/docker-language-server/issues/156))
+  - textDocument/formatting
+    - add support to format YAML files that do not have clear syntactical errors ([#165](https://github.com/docker/docker-language-server/issues/165))
 
 ### Fixed
 
