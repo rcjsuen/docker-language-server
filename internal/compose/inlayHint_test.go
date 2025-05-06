@@ -52,7 +52,7 @@ services:
 			},
 		},
 		{
-			name: "attribute recurses upwards",
+			name: "attribute recurses upwards for a match",
 			content: `
 services:
   web:
@@ -60,13 +60,67 @@ services:
   web2:
     extends: web
   web3:
-    extends: web
+    extends: web2
     attach: false`,
 			inlayHints: []protocol.InlayHint{
 				{
 					Label:       "(parent value: true)",
 					PaddingLeft: types.CreateBoolPointer(true),
 					Position:    protocol.Position{Line: 8, Character: 17},
+				},
+			},
+		},
+		{
+			name: "extension at different levels have the right value",
+			content: `
+services:
+  web:
+    hostname: hostname1
+  web2:
+    extends: web
+    hostname: hostname2
+  web3:
+    extends: web2
+    hostname: hostname3`,
+			inlayHints: []protocol.InlayHint{
+				{
+					Label:       "(parent value: hostname1)",
+					PaddingLeft: types.CreateBoolPointer(true),
+					Position:    protocol.Position{Line: 6, Character: 23},
+				},
+				{
+					Label:       "(parent value: hostname2)",
+					PaddingLeft: types.CreateBoolPointer(true),
+					Position:    protocol.Position{Line: 9, Character: 23},
+				},
+			},
+		},
+		{
+			name: "self recursion returns nothing",
+			content: `
+services:
+  web:
+    hostname: hostname1
+    extends: web2`,
+			inlayHints: []protocol.InlayHint{},
+		},
+		{
+			name: "self recursion does not affect other hints",
+			content: `
+services:
+  web:
+    hostname: hostname1
+  web2:
+    extends: web
+    hostname: hostname2
+  web3:
+    extends: web3
+    hostname: hostname3`,
+			inlayHints: []protocol.InlayHint{
+				{
+					Label:       "(parent value: hostname1)",
+					PaddingLeft: types.CreateBoolPointer(true),
+					Position:    protocol.Position{Line: 6, Character: 23},
 				},
 			},
 		},
@@ -117,6 +171,19 @@ services:
 					Position:    protocol.Position{Line: 5, Character: 25},
 				},
 			},
+		},
+		{
+			name: "unmatched tree structure should not render any hints",
+			content: `
+services:
+  web:
+    build: .
+    context: abc
+  web2:
+    extends: web
+    build:
+      context: def`,
+			inlayHints: []protocol.InlayHint{},
 		},
 		{
 			name: "sub-attributes unsupported",
