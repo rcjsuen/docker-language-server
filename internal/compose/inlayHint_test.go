@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -205,6 +206,9 @@ services:
 		t.Run(tc.name, func(t *testing.T) {
 			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
 			inlayHints, err := InlayHint(doc, protocol.Range{})
+			slices.SortFunc(inlayHints, func(a protocol.InlayHint, b protocol.InlayHint) int {
+				return int(a.Position.Line) - int(b.Position.Line)
+			})
 			require.NoError(t, err)
 			require.Equal(t, tc.inlayHints, inlayHints)
 		})
