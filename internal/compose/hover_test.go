@@ -30,7 +30,7 @@ func TestHover(t *testing.T) {
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindPlainText,
-					Value: "declared for backward compatibility, ignored.",
+					Value: "declared for backward compatibility, ignored. Please remove it.",
 				},
 			},
 		},

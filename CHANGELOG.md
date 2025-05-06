@@ -7,6 +7,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Added
 
 - Compose
+  - updated Compose schema to the latest version
   - textDocument/completion
     - improve code completion by automatically including required attributes in completion items ([#155](https://github.com/docker/docker-language-server/issues/155))
   - textDocument/inlayHint
