@@ -670,7 +670,7 @@ configs:
 				Items: []protocol.CompletionItem{
 					{
 						Label:         "configs",
-						Documentation: "Configurations for services in the project",
+						Documentation: "Configurations that are shared among multiple services.",
 					},
 					{
 						Label:         "include",
@@ -682,23 +682,23 @@ configs:
 					},
 					{
 						Label:         "networks",
-						Documentation: "Networks that are shared among multiple services",
+						Documentation: "Networks that are shared among multiple services.",
 					},
 					{
 						Label:         "secrets",
-						Documentation: "Secrets that are shared among multiple services",
+						Documentation: "Secrets that are shared among multiple services.",
 					},
 					{
 						Label:         "services",
-						Documentation: "The services in your project",
+						Documentation: "The services that will be used by your application.",
 					},
 					{
 						Label:         "version",
-						Documentation: "declared for backward compatibility, ignored.",
+						Documentation: "declared for backward compatibility, ignored. Please remove it.",
 					},
 					{
 						Label:         "volumes",
-						Documentation: "Named volumes that are shared among multiple services",
+						Documentation: "Named volumes that are shared among multiple services.",
 					},
 				},
 			},
