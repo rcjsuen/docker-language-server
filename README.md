@@ -16,6 +16,7 @@ The Docker Language Server relies on some features that are dependent on [Buildx
   - code completion
   - code navigation
   - document outline support
+  - error reporting
   - formatting
   - highlight named references of services, networks, volumes, configs, and secrets
   - hover tooltips
@@ -27,6 +28,7 @@ The Docker Language Server relies on some features that are dependent on [Buildx
   - code completion
   - code navigation
   - document outline support
+  - error reporting
   - formatting
   - hover tooltips
   - inferring variable values

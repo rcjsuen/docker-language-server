@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/compose"
 	"github.com/docker/docker-language-server/internal/configuration"
 	"github.com/docker/docker-language-server/internal/pkg/buildkit"
 	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
@@ -90,6 +91,7 @@ func NewServer(docManager *document.Manager) *Server {
 		diagnosticsCollectors: []textdocument.DiagnosticsCollector{
 			buildkit.NewBuildKitDiagnosticsCollector(),
 			scoutService,
+			compose.NewComposeDiagnosticsCollector(),
 			hcl.NewBakeHCLDiagnosticsCollector(docManager, scoutService),
 		},
 	}
