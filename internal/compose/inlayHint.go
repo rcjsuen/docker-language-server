@@ -31,7 +31,10 @@ func allServiceProperties(node ast.Node) map[string]map[string]ast.Node {
 func hierarchyProperties(service string, serviceProps map[string]map[string]ast.Node, chain []map[string]ast.Node) []map[string]ast.Node {
 	if extends, ok := serviceProps[service]["extends"]; ok {
 		if s, ok := extends.(*ast.StringNode); ok {
-			chain = append(chain, hierarchyProperties(s.Value, serviceProps, chain)...)
+			// block self-referencing recursions
+			if s.Value != service {
+				chain = append(chain, hierarchyProperties(s.Value, serviceProps, chain)...)
+			}
 		} else if mappingNode, ok := extends.(*ast.MappingNode); ok {
 			external := false
 			for _, value := range mappingNode.Values {
@@ -75,6 +78,10 @@ func InlayHint(doc document.ComposeDocument, rng protocol.Range) ([]protocol.Inl
 						chain = chain[1:]
 						for name, value := range props {
 							if name == "extends" {
+								continue
+							}
+							// skip object attributes for now
+							if _, ok := value.(*ast.MappingNode); ok {
 								continue
 							}
 
