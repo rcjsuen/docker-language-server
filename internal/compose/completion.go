@@ -151,6 +151,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 				InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 				InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 			}
+			if schema.Description != "" {
+				item.Documentation = schema.Description
+			} else if schema.Ref != nil && schema.Ref.Description != "" {
+				item.Documentation = schema.Ref.Description
+			}
 
 			if schema.Enum != nil {
 				options := []string{}
