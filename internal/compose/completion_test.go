@@ -20,6 +20,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "annotations",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 			TextEdit:         textEdit("annotations:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -34,6 +35,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "blkio_config",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Block IO configuration for the service.",
 			TextEdit:         textEdit("blkio_config:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -41,6 +43,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "build",
 			Detail:           types.CreateStringPointer("object or string"),
+			Documentation:    "Configuration options for building the service's image.",
 			TextEdit:         textEdit("build:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -48,6 +51,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cap_add",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Add Linux capabilities. For example, 'CAP_SYS_ADMIN', 'SYS_ADMIN', or 'NET_ADMIN'.",
 			TextEdit:         textEdit("cap_add:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -55,6 +59,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cap_drop",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Drop Linux capabilities. For example, 'CAP_SYS_ADMIN', 'SYS_ADMIN', or 'NET_ADMIN'.",
 			TextEdit:         textEdit("cap_drop:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -62,6 +67,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cgroup",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Specify the cgroup namespace to join. Use 'host' to use the host's cgroup namespace, or 'private' to use a private cgroup namespace.",
 			TextEdit:         textEdit("cgroup: ${1|host,private|}", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -69,6 +75,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cgroup_parent",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Specify an optional parent cgroup for the container.",
 			TextEdit:         textEdit("cgroup_parent: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -76,6 +83,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "command",
 			Detail:           types.CreateStringPointer("array or null or string"),
+			Documentation:    "Command to run in the container, which can be specified as a string (shell form) or array (exec form).",
 			TextEdit:         textEdit("command:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -83,6 +91,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "configs",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
 			TextEdit:         textEdit("configs:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -90,6 +99,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "container_name",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Specify a custom container name, rather than a generated default name.",
 			TextEdit:         textEdit("container_name: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -97,6 +107,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_count",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Number of usable CPUs.",
 			TextEdit:         textEdit("cpu_count: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -104,6 +115,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_percent",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Percentage of CPU resources to use.",
 			TextEdit:         textEdit("cpu_percent: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -111,6 +123,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_period",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Limit the CPU CFS (Completely Fair Scheduler) period.",
 			TextEdit:         textEdit("cpu_period: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -118,6 +131,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_quota",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Limit the CPU CFS (Completely Fair Scheduler) quota.",
 			TextEdit:         textEdit("cpu_quota: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -125,6 +139,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_rt_period",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Limit the CPU real-time period in microseconds or a duration.",
 			TextEdit:         textEdit("cpu_rt_period: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -132,6 +147,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_rt_runtime",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Limit the CPU real-time runtime in microseconds or a duration.",
 			TextEdit:         textEdit("cpu_rt_runtime: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -139,6 +155,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpu_shares",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "CPU shares (relative weight) for the container.",
 			TextEdit:         textEdit("cpu_shares: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -146,6 +163,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpus",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Number of CPUs to use. A floating-point value is supported to request partial CPUs.",
 			TextEdit:         textEdit("cpus: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -153,6 +171,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "cpuset",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "CPUs in which to allow execution (0-3, 0,1).",
 			TextEdit:         textEdit("cpuset: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -160,6 +179,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "credential_spec",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Configure the credential spec for managed service account.",
 			TextEdit:         textEdit("credential_spec:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -167,6 +187,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "depends_on",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Express dependency between services. Service dependencies cause services to be started in dependency order. The dependent service will wait for the dependency to be ready before starting.",
 			TextEdit:         textEdit("depends_on:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -174,6 +195,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "deploy",
 			Detail:           types.CreateStringPointer("null or object"),
+			Documentation:    "Deployment configuration for the service.",
 			TextEdit:         textEdit("deploy:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -181,6 +203,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "develop",
 			Detail:           types.CreateStringPointer("null or object"),
+			Documentation:    "Development configuration for the service, used for development workflows.",
 			TextEdit:         textEdit("develop:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -188,6 +211,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "device_cgroup_rules",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "A list of unique string values.",
 			TextEdit:         textEdit("device_cgroup_rules:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -195,6 +219,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "devices",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "List of device mappings for the container.",
 			TextEdit:         textEdit("devices:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -202,6 +227,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "dns",
 			Detail:           types.CreateStringPointer("array or string"),
+			Documentation:    "Either a single string or a list of strings.",
 			TextEdit:         textEdit("dns:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -209,6 +235,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "dns_opt",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Custom DNS options to be passed to the container's DNS resolver.",
 			TextEdit:         textEdit("dns_opt:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -216,6 +243,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "dns_search",
 			Detail:           types.CreateStringPointer("array or string"),
+			Documentation:    "Either a single string or a list of strings.",
 			TextEdit:         textEdit("dns_search:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -223,6 +251,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "domainname",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Custom domain name to use for the service container.",
 			TextEdit:         textEdit("domainname: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -230,6 +259,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "entrypoint",
 			Detail:           types.CreateStringPointer("array or null or string"),
+			Documentation:    "Command to run in the container, which can be specified as a string (shell form) or array (exec form).",
 			TextEdit:         textEdit("entrypoint:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -244,6 +274,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "environment",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 			TextEdit:         textEdit("environment:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -251,6 +282,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "expose",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Expose ports without publishing them to the host machine - they'll only be accessible to linked services.",
 			TextEdit:         textEdit("expose:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -258,6 +290,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "extends",
 			Detail:           types.CreateStringPointer("object or string"),
+			Documentation:    "Extend another service, in the current file or another file.",
 			TextEdit:         textEdit("extends:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -265,6 +298,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "external_links",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Link to services started outside this Compose application. Specify services as <service_name>:<alias>.",
 			TextEdit:         textEdit("external_links:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -272,6 +306,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "extra_hosts",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Additional hostnames to be defined in the container's /etc/hosts file.",
 			TextEdit:         textEdit("extra_hosts:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -286,6 +321,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "group_add",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Add additional groups which user inside the container should be member of.",
 			TextEdit:         textEdit("group_add:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -293,6 +329,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "healthcheck",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Configuration options to determine whether the container is healthy.",
 			TextEdit:         textEdit("healthcheck:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -300,6 +337,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "hostname",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Define a custom hostname for the service container.",
 			TextEdit:         textEdit("hostname: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -307,6 +345,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "image",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Specify the image to start the container from. Can be a repository/tag, a digest, or a local image ID.",
 			TextEdit:         textEdit("image: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -314,6 +353,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "init",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Run as an init process inside the container that forwards signals and reaps processes.",
 			TextEdit:         textEdit("init: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -321,6 +361,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "ipc",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "IPC sharing mode for the service container. Use 'host' to share the host's IPC namespace, 'service:[service_name]' to share with another service, or 'shareable' to allow other services to share this service's IPC namespace.",
 			TextEdit:         textEdit("ipc: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -328,6 +369,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "isolation",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Container isolation technology to use. Supported values are platform-specific.",
 			TextEdit:         textEdit("isolation: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -342,6 +384,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "labels",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 			TextEdit:         textEdit("labels:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -349,6 +392,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "links",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.",
 			TextEdit:         textEdit("links:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -356,6 +400,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "logging",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Logging configuration for the service.",
 			TextEdit:         textEdit("logging:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -363,6 +408,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "mac_address",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Container MAC address to set.",
 			TextEdit:         textEdit("mac_address: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -370,6 +416,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "mem_limit",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Memory limit for the container. A string value can use suffix like '2g' for 2 gigabytes.",
 			TextEdit:         textEdit("mem_limit: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -377,6 +424,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "mem_reservation",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Memory reservation for the container.",
 			TextEdit:         textEdit("mem_reservation: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -384,6 +432,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "mem_swappiness",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Container memory swappiness as percentage (0 to 100).",
 			TextEdit:         textEdit("mem_swappiness: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -391,6 +440,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "memswap_limit",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Amount of memory the container is allowed to swap to disk. Set to -1 to enable unlimited swap.",
 			TextEdit:         textEdit("memswap_limit: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -398,6 +448,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "network_mode",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Network mode. Values can be 'bridge', 'host', 'none', 'service:[service name]', or 'container:[container name]'.",
 			TextEdit:         textEdit("network_mode: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -405,6 +456,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "networks",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Networks to join, referencing entries under the top-level networks key. Can be a list of network names or a mapping of network name to network configuration.",
 			TextEdit:         textEdit("networks:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -412,6 +464,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "oom_kill_disable",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Disable OOM Killer for the container.",
 			TextEdit:         textEdit("oom_kill_disable: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -419,6 +472,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "oom_score_adj",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Tune host's OOM preferences for the container (accepts -1000 to 1000).",
 			TextEdit:         textEdit("oom_score_adj: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -426,6 +480,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "pid",
 			Detail:           types.CreateStringPointer("null or string"),
+			Documentation:    "PID mode for container.",
 			TextEdit:         textEdit("pid: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -433,6 +488,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "pids_limit",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Tune a container's PIDs limit. Set to -1 for unlimited PIDs.",
 			TextEdit:         textEdit("pids_limit: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -440,6 +496,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "platform",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Target platform to run on, e.g., 'linux/amd64', 'linux/arm64', or 'windows/amd64'.",
 			TextEdit:         textEdit("platform: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -447,6 +504,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "ports",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Expose container ports. Short format ([HOST:]CONTAINER[/PROTOCOL]).",
 			TextEdit:         textEdit("ports:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -454,6 +512,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "post_start",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Commands to run after the container starts. If any command fails, the container stops.",
 			TextEdit:         textEdit("post_start:\n      - command:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -461,6 +520,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "pre_stop",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Commands to run before the container stops. If any command fails, the container stop is aborted.",
 			TextEdit:         textEdit("pre_stop:\n      - command:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -468,6 +528,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "privileged",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Give extended privileges to the service container.",
 			TextEdit:         textEdit("privileged: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -475,6 +536,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "profiles",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "A list of unique string values.",
 			TextEdit:         textEdit("profiles:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -482,6 +544,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "provider",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Specify a service which will not be manage by Compose directly, and delegate its management to an external provider.",
 			TextEdit:         textEdit("provider:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -489,6 +552,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "pull_policy",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Policy for pulling images. Options include: 'always', 'never', 'if_not_present', 'missing', 'build', or time-based refresh policies.",
 			TextEdit:         textEdit("pull_policy: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -496,6 +560,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "pull_refresh_after",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Time after which to refresh the image. Used with pull_policy=refresh.",
 			TextEdit:         textEdit("pull_refresh_after: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -503,6 +568,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "read_only",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Mount the container's filesystem as read only.",
 			TextEdit:         textEdit("read_only: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -510,6 +576,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "restart",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Restart policy for the service container. Options include: 'no', 'always', 'on-failure', and 'unless-stopped'.",
 			TextEdit:         textEdit("restart: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -517,6 +584,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "runtime",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Runtime to use for this container, e.g., 'runc'.",
 			TextEdit:         textEdit("runtime: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -524,6 +592,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "scale",
 			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Number of containers to deploy for this service.",
 			TextEdit:         textEdit("scale: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -531,6 +600,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "secrets",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
 			TextEdit:         textEdit("secrets:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -538,6 +608,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "security_opt",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Override the default labeling scheme for each container.",
 			TextEdit:         textEdit("security_opt:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -545,6 +616,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "shm_size",
 			Detail:           types.CreateStringPointer("number or string"),
+			Documentation:    "Size of /dev/shm. A string value can use suffix like '2g' for 2 gigabytes.",
 			TextEdit:         textEdit("shm_size: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -552,6 +624,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "stdin_open",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Keep STDIN open even if not attached.",
 			TextEdit:         textEdit("stdin_open: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -559,6 +632,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "stop_grace_period",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Time to wait for the container to stop gracefully before sending SIGKILL (e.g., '1s', '1m30s').",
 			TextEdit:         textEdit("stop_grace_period: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -566,6 +640,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "stop_signal",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Signal to stop the container (e.g., 'SIGTERM', 'SIGINT').",
 			TextEdit:         textEdit("stop_signal: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -573,6 +648,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "storage_opt",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Storage driver options for the container.",
 			TextEdit:         textEdit("storage_opt:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -580,6 +656,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "sysctls",
 			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 			TextEdit:         textEdit("sysctls:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -587,6 +664,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "tmpfs",
 			Detail:           types.CreateStringPointer("array or string"),
+			Documentation:    "Either a single string or a list of strings.",
 			TextEdit:         textEdit("tmpfs:", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -594,6 +672,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "tty",
 			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Allocate a pseudo-TTY to service container.",
 			TextEdit:         textEdit("tty: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -601,6 +680,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "ulimits",
 			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
 			TextEdit:         textEdit("ulimits:\n      ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -608,6 +688,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "user",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Username or UID to run the container process as.",
 			TextEdit:         textEdit("user: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -615,6 +696,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "userns_mode",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "User namespace to use. 'host' shares the host's user namespace.",
 			TextEdit:         textEdit("userns_mode: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -622,6 +704,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "uts",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "UTS namespace to use. 'host' shares the host's UTS namespace.",
 			TextEdit:         textEdit("uts: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -629,6 +712,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "volumes",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Mount host paths or named volumes accessible to the container. Short syntax (VOLUME:CONTAINER_PATH[:MODE])",
 			TextEdit:         textEdit("volumes:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -636,6 +720,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "volumes_from",
 			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Mount volumes from another service or container. Optionally specify read-only access (ro) or read-write (rw).",
 			TextEdit:         textEdit("volumes_from:\n      - ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -643,6 +728,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 		{
 			Label:            "working_dir",
 			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "The working directory in which the entrypoint or command will be run",
 			TextEdit:         textEdit("working_dir: ", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -726,6 +812,7 @@ configs:
 					{
 						Label:            "content",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Inline content of the config.",
 						TextEdit:         textEdit("content: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -733,6 +820,7 @@ configs:
 					{
 						Label:            "environment",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of an environment variable from which to get the config value.",
 						TextEdit:         textEdit("environment: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -740,6 +828,7 @@ configs:
 					{
 						Label:            "external",
 						Detail:           types.CreateStringPointer("boolean or object or string"),
+						Documentation:    "Specifies that this config already exists and was created outside of Compose.",
 						TextEdit:         textEdit("external:", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -747,6 +836,7 @@ configs:
 					{
 						Label:            "file",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to a file containing the config value.",
 						TextEdit:         textEdit("file: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -754,6 +844,7 @@ configs:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -761,6 +852,7 @@ configs:
 					{
 						Label:            "name",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Custom name for this config.",
 						TextEdit:         textEdit("name: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -768,6 +860,7 @@ configs:
 					{
 						Label:            "template_driver",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Driver to use for templating the config's value.",
 						TextEdit:         textEdit("template_driver: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -788,6 +881,7 @@ networks:
 					{
 						Label:            "attachable",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "If true, standalone containers can attach to this network.",
 						TextEdit:         textEdit("attachable: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -795,6 +889,7 @@ networks:
 					{
 						Label:            "driver",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify which driver should be used for this network. Default is 'bridge'.",
 						TextEdit:         textEdit("driver: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -802,6 +897,7 @@ networks:
 					{
 						Label:            "driver_opts",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Specify driver-specific options defined as key/value pairs.",
 						TextEdit:         textEdit("driver_opts:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -809,6 +905,7 @@ networks:
 					{
 						Label:            "enable_ipv4",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Enable IPv4 networking.",
 						TextEdit:         textEdit("enable_ipv4: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -816,6 +913,7 @@ networks:
 					{
 						Label:            "enable_ipv6",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Enable IPv6 networking.",
 						TextEdit:         textEdit("enable_ipv6: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -823,6 +921,7 @@ networks:
 					{
 						Label:            "external",
 						Detail:           types.CreateStringPointer("boolean or object or string"),
+						Documentation:    "Specifies that this network already exists and was created outside of Compose.",
 						TextEdit:         textEdit("external:", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -830,6 +929,7 @@ networks:
 					{
 						Label:            "internal",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Create an externally isolated network.",
 						TextEdit:         textEdit("internal: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -837,6 +937,7 @@ networks:
 					{
 						Label:            "ipam",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Custom IP Address Management configuration for this network.",
 						TextEdit:         textEdit("ipam:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -844,6 +945,7 @@ networks:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -851,6 +953,7 @@ networks:
 					{
 						Label:            "name",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Custom name for this network.",
 						TextEdit:         textEdit("name: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -871,6 +974,7 @@ secrets:
 					{
 						Label:            "driver",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify which secret driver should be used for this secret.",
 						TextEdit:         textEdit("driver: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -878,6 +982,7 @@ secrets:
 					{
 						Label:            "driver_opts",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Specify driver-specific options.",
 						TextEdit:         textEdit("driver_opts:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -885,6 +990,7 @@ secrets:
 					{
 						Label:            "environment",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of an environment variable from which to get the secret value.",
 						TextEdit:         textEdit("environment: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -892,6 +998,7 @@ secrets:
 					{
 						Label:            "external",
 						Detail:           types.CreateStringPointer("boolean or object or string"),
+						Documentation:    "Specifies that this secret already exists and was created outside of Compose.",
 						TextEdit:         textEdit("external:", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -899,6 +1006,7 @@ secrets:
 					{
 						Label:            "file",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to a file containing the secret value.",
 						TextEdit:         textEdit("file: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -906,6 +1014,7 @@ secrets:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -913,6 +1022,7 @@ secrets:
 					{
 						Label:            "name",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Custom name for this secret.",
 						TextEdit:         textEdit("name: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -920,6 +1030,7 @@ secrets:
 					{
 						Label:            "template_driver",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Driver to use for templating the secret's value.",
 						TextEdit:         textEdit("template_driver: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -964,6 +1075,7 @@ volumes:
 					{
 						Label:            "driver",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify which volume driver should be used for this volume.",
 						TextEdit:         textEdit("driver: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -971,6 +1083,7 @@ volumes:
 					{
 						Label:            "driver_opts",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Specify driver-specific options.",
 						TextEdit:         textEdit("driver_opts:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -978,6 +1091,7 @@ volumes:
 					{
 						Label:            "external",
 						Detail:           types.CreateStringPointer("boolean or object or string"),
+						Documentation:    "Specifies that this volume already exists and was created outside of Compose.",
 						TextEdit:         textEdit("external:", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -985,6 +1099,7 @@ volumes:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n      ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -992,6 +1107,7 @@ volumes:
 					{
 						Label:            "name",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Custom name for this volume.",
 						TextEdit:         textEdit("name: ", 3, 4, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1032,6 +1148,7 @@ services:
 					{
 						Label:            "device_read_bps",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit read rate (bytes per second) from a device.",
 						TextEdit:         textEdit("device_read_bps:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1039,6 +1156,7 @@ services:
 					{
 						Label:            "device_read_iops",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit read rate (IO per second) from a device.",
 						TextEdit:         textEdit("device_read_iops:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1046,6 +1164,7 @@ services:
 					{
 						Label:            "device_write_bps",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit write rate (bytes per second) to a device.",
 						TextEdit:         textEdit("device_write_bps:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1053,6 +1172,7 @@ services:
 					{
 						Label:            "device_write_iops",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit write rate (IO per second) to a device.",
 						TextEdit:         textEdit("device_write_iops:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1060,6 +1180,7 @@ services:
 					{
 						Label:            "weight",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Block IO weight (relative weight) for the service, between 10 and 1000.",
 						TextEdit:         textEdit("weight: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1067,6 +1188,7 @@ services:
 					{
 						Label:            "weight_device",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Block IO weight (relative weight) for specific devices.",
 						TextEdit:         textEdit("weight_device:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1088,6 +1210,7 @@ services:
 					{
 						Label:            "endpoint_mode",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Endpoint mode for the service: 'vip' (default) or 'dnsrr'.",
 						TextEdit:         textEdit("endpoint_mode: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1095,6 +1218,7 @@ services:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1102,6 +1226,7 @@ services:
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Deployment mode for the service: 'replicated' (default) or 'global'.",
 						TextEdit:         textEdit("mode: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1109,6 +1234,7 @@ services:
 					{
 						Label:            "placement",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Constraints and preferences for the platform to select a physical node to run service containers",
 						TextEdit:         textEdit("placement:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1116,6 +1242,7 @@ services:
 					{
 						Label:            "replicas",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Number of replicas of the service container to run.",
 						TextEdit:         textEdit("replicas: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1123,6 +1250,7 @@ services:
 					{
 						Label:            "resources",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Resource constraints and reservations for the service.",
 						TextEdit:         textEdit("resources:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1130,6 +1258,7 @@ services:
 					{
 						Label:            "restart_policy",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Restart policy for the service containers.",
 						TextEdit:         textEdit("restart_policy:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1137,6 +1266,7 @@ services:
 					{
 						Label:            "rollback_config",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration for rolling back a service update.",
 						TextEdit:         textEdit("rollback_config:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1144,6 +1274,7 @@ services:
 					{
 						Label:            "update_config",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration for updating a service.",
 						TextEdit:         textEdit("update_config:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1166,6 +1297,7 @@ services:
 					{
 						Label:            "action",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Action to take when a change is detected: rebuild the container, sync files, restart the container, sync and restart, or sync and execute a command.",
 						TextEdit:         textEdit("action: ${1|rebuild,restart,sync,sync+exec,sync+restart|}", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1173,6 +1305,7 @@ services:
 					{
 						Label:            "exec",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration for service lifecycle hooks, which are commands executed at specific points in a container's lifecycle.",
 						TextEdit:         textEdit("exec:\n            ", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1180,6 +1313,7 @@ services:
 					{
 						Label:            "ignore",
 						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
 						TextEdit:         textEdit("ignore:", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1187,6 +1321,7 @@ services:
 					{
 						Label:            "include",
 						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
 						TextEdit:         textEdit("include:", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1194,6 +1329,7 @@ services:
 					{
 						Label:            "path",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to watch for changes.",
 						TextEdit:         textEdit("path: ", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1201,6 +1337,7 @@ services:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Target path in the container for sync operations.",
 						TextEdit:         textEdit("target: ", 5, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1223,6 +1360,7 @@ services:
 					{
 						Label:            "limits",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Resource limits for the service containers.",
 						TextEdit:         textEdit("limits:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1230,6 +1368,7 @@ services:
 					{
 						Label:            "reservations",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Resource reservations for the service containers.",
 						TextEdit:         textEdit("reservations:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1251,6 +1390,7 @@ services:
 					{
 						Label:            "watch",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Configure watch mode for the service, which monitors file changes and performs actions in response.",
 						TextEdit:         textEdit("watch:\n        - action: ${1}\n          path: ${2}", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1272,6 +1412,7 @@ services:
 					{
 						Label:            "additional_contexts",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("additional_contexts:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1279,6 +1420,7 @@ services:
 					{
 						Label:            "args",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("args:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1286,6 +1428,7 @@ services:
 					{
 						Label:            "cache_from",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "List of sources the image builder should use for cache resolution",
 						TextEdit:         textEdit("cache_from:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1293,6 +1436,7 @@ services:
 					{
 						Label:            "cache_to",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Cache destinations for the build cache.",
 						TextEdit:         textEdit("cache_to:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1300,6 +1444,7 @@ services:
 					{
 						Label:            "context",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to the build context. Can be a relative path or a URL.",
 						TextEdit:         textEdit("context: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1307,6 +1452,7 @@ services:
 					{
 						Label:            "dockerfile",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the Dockerfile to use for building the image.",
 						TextEdit:         textEdit("dockerfile: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1314,6 +1460,7 @@ services:
 					{
 						Label:            "dockerfile_inline",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Inline Dockerfile content to use instead of a Dockerfile from the build context.",
 						TextEdit:         textEdit("dockerfile_inline: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1321,6 +1468,7 @@ services:
 					{
 						Label:            "entitlements",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "List of extra privileged entitlements to grant to the build process.",
 						TextEdit:         textEdit("entitlements:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1328,6 +1476,7 @@ services:
 					{
 						Label:            "extra_hosts",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Additional hostnames to be defined in the container's /etc/hosts file.",
 						TextEdit:         textEdit("extra_hosts:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1335,6 +1484,7 @@ services:
 					{
 						Label:            "isolation",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Container isolation technology to use for the build process.",
 						TextEdit:         textEdit("isolation: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1342,6 +1492,7 @@ services:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1349,6 +1500,7 @@ services:
 					{
 						Label:            "network",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Network mode to use for the build. Options include 'default', 'none', 'host', or a network name.",
 						TextEdit:         textEdit("network: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1356,6 +1508,7 @@ services:
 					{
 						Label:            "no_cache",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Do not use cache when building the image.",
 						TextEdit:         textEdit("no_cache: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1363,6 +1516,7 @@ services:
 					{
 						Label:            "platforms",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Platforms to build for, e.g., 'linux/amd64', 'linux/arm64', or 'windows/amd64'.",
 						TextEdit:         textEdit("platforms:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1370,6 +1524,7 @@ services:
 					{
 						Label:            "privileged",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Give extended privileges to the build container.",
 						TextEdit:         textEdit("privileged: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1377,6 +1532,7 @@ services:
 					{
 						Label:            "pull",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Always attempt to pull a newer version of the image.",
 						TextEdit:         textEdit("pull: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1384,6 +1540,7 @@ services:
 					{
 						Label:            "secrets",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
 						TextEdit:         textEdit("secrets:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1391,6 +1548,7 @@ services:
 					{
 						Label:            "shm_size",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Size of /dev/shm for the build container. A string value can use suffix like '2g' for 2 gigabytes.",
 						TextEdit:         textEdit("shm_size: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1398,6 +1556,7 @@ services:
 					{
 						Label:            "ssh",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("ssh:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1405,6 +1564,7 @@ services:
 					{
 						Label:            "tags",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Additional tags to apply to the built image.",
 						TextEdit:         textEdit("tags:\n        - ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1412,6 +1572,7 @@ services:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Build stage to target in a multi-stage Dockerfile.",
 						TextEdit:         textEdit("target: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1419,6 +1580,7 @@ services:
 					{
 						Label:            "ulimits",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
 						TextEdit:         textEdit("ulimits:\n        ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1441,6 +1603,7 @@ services:
 					{
 						Label:            "device_read_bps",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit read rate (bytes per second) from a device.",
 						TextEdit:         textEdit("device_read_bps:\n        - ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1448,6 +1611,7 @@ services:
 					{
 						Label:            "device_read_iops",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit read rate (IO per second) from a device.",
 						TextEdit:         textEdit("device_read_iops:\n        - ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1455,6 +1619,7 @@ services:
 					{
 						Label:            "device_write_bps",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit write rate (bytes per second) to a device.",
 						TextEdit:         textEdit("device_write_bps:\n        - ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1462,6 +1627,7 @@ services:
 					{
 						Label:            "device_write_iops",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Limit write rate (IO per second) to a device.",
 						TextEdit:         textEdit("device_write_iops:\n        - ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1469,6 +1635,7 @@ services:
 					{
 						Label:            "weight",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Block IO weight (relative weight) for the service, between 10 and 1000.",
 						TextEdit:         textEdit("weight: ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1476,6 +1643,7 @@ services:
 					{
 						Label:            "weight_device",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Block IO weight (relative weight) for specific devices.",
 						TextEdit:         textEdit("weight_device:\n        - ", 5, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1498,12 +1666,14 @@ services:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 4, 6, 0),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1511,6 +1681,7 @@ services:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1519,12 +1690,14 @@ services:
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("target: ", 4, 6, 0),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 4, 6, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1548,6 +1721,7 @@ services:
 					{
 						Label:            "hard",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Hard limit for the ulimit type. This is the maximum allowed value.",
 						TextEdit:         textEdit("hard: ", 6, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1555,6 +1729,7 @@ services:
 					{
 						Label:            "soft",
 						Detail:           types.CreateStringPointer("integer or string"),
+						Documentation:    "Soft limit for the ulimit type. This is the value that's actually enforced.",
 						TextEdit:         textEdit("soft: ", 6, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1625,6 +1800,7 @@ services:
 					{
 						Label:            "aliases",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "A list of unique string values.",
 						TextEdit:         textEdit("aliases:\n          - ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1632,6 +1808,7 @@ services:
 					{
 						Label:            "driver_opts",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Driver options for this network.",
 						TextEdit:         textEdit("driver_opts:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1639,6 +1816,7 @@ services:
 					{
 						Label:            "gw_priority",
 						Detail:           types.CreateStringPointer("number"),
+						Documentation:    "Specify the gateway priority for the network connection.",
 						TextEdit:         textEdit("gw_priority: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1646,6 +1824,7 @@ services:
 					{
 						Label:            "interface_name",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Interface network name used to connect to network",
 						TextEdit:         textEdit("interface_name: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1653,6 +1832,7 @@ services:
 					{
 						Label:            "ipv4_address",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a static IPv4 address for this service on this network.",
 						TextEdit:         textEdit("ipv4_address: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1660,6 +1840,7 @@ services:
 					{
 						Label:            "ipv6_address",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a static IPv6 address for this service on this network.",
 						TextEdit:         textEdit("ipv6_address: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1667,6 +1848,7 @@ services:
 					{
 						Label:            "link_local_ips",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "A list of unique string values.",
 						TextEdit:         textEdit("link_local_ips:\n          - ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1674,6 +1856,7 @@ services:
 					{
 						Label:            "mac_address",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a MAC address for this service on this network.",
 						TextEdit:         textEdit("mac_address: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1681,6 +1864,7 @@ services:
 					{
 						Label:            "priority",
 						Detail:           types.CreateStringPointer("number"),
+						Documentation:    "Specify the priority for the network connection.",
 						TextEdit:         textEdit("priority: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1728,6 +1912,7 @@ services:
 					{
 						Label:            "bind",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to bind mounts.",
 						TextEdit:         textEdit("bind:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1735,6 +1920,7 @@ services:
 					{
 						Label:            "consistency",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The consistency requirements for the mount. Available values are platform specific.",
 						TextEdit:         textEdit("consistency: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1742,6 +1928,7 @@ services:
 					{
 						Label:            "image",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to image mounts.",
 						TextEdit:         textEdit("image:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1749,6 +1936,7 @@ services:
 					{
 						Label:            "read_only",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Flag to set the volume as read-only.",
 						TextEdit:         textEdit("read_only: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1756,6 +1944,7 @@ services:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The source of the mount, a path on the host for a bind mount, a docker image reference for an image mount, or the name of a volume defined in the top-level volumes key. Not applicable for a tmpfs mount.",
 						TextEdit:         textEdit("source: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1763,6 +1952,7 @@ services:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The path in the container where the volume is mounted.",
 						TextEdit:         textEdit("target: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1770,6 +1960,7 @@ services:
 					{
 						Label:            "tmpfs",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to tmpfs mounts.",
 						TextEdit:         textEdit("tmpfs:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1777,6 +1968,7 @@ services:
 					{
 						Label:            "type",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The mount type: bind for mounting host directories, volume for named volumes, tmpfs for temporary filesystems, cluster for cluster volumes, npipe for named pipes, or image for mounting from an image.",
 						TextEdit:         textEdit("type: ${1|bind,cluster,image,npipe,tmpfs,volume|}", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1784,6 +1976,7 @@ services:
 					{
 						Label:            "volume",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to volume mounts.",
 						TextEdit:         textEdit("volume:\n          ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1807,6 +2000,7 @@ services:
 					{
 						Label:            "bind",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to bind mounts.",
 						TextEdit:         textEdit("bind:\n          ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1814,6 +2008,7 @@ services:
 					{
 						Label:            "consistency",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The consistency requirements for the mount. Available values are platform specific.",
 						TextEdit:         textEdit("consistency: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1821,6 +2016,7 @@ services:
 					{
 						Label:            "image",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to image mounts.",
 						TextEdit:         textEdit("image:\n          ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1828,6 +2024,7 @@ services:
 					{
 						Label:            "read_only",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Flag to set the volume as read-only.",
 						TextEdit:         textEdit("read_only: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1835,6 +2032,7 @@ services:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The source of the mount, a path on the host for a bind mount, a docker image reference for an image mount, or the name of a volume defined in the top-level volumes key. Not applicable for a tmpfs mount.",
 						TextEdit:         textEdit("source: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1842,6 +2040,7 @@ services:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The path in the container where the volume is mounted.",
 						TextEdit:         textEdit("target: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1849,6 +2048,7 @@ services:
 					{
 						Label:            "tmpfs",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to tmpfs mounts.",
 						TextEdit:         textEdit("tmpfs:\n          ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1856,6 +2056,7 @@ services:
 					{
 						Label:            "type",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The mount type: bind for mounting host directories, volume for named volumes, tmpfs for temporary filesystems, cluster for cluster volumes, npipe for named pipes, or image for mounting from an image.",
 						TextEdit:         textEdit("type: ${1|bind,cluster,image,npipe,tmpfs,volume|}", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1863,6 +2064,7 @@ services:
 					{
 						Label:            "volume",
 						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Configuration specific to volume mounts.",
 						TextEdit:         textEdit("volume:\n          ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1887,6 +2089,7 @@ services:
 					{
 						Label:            "create_host_path",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Create the host path if it doesn't exist.",
 						TextEdit:         textEdit("create_host_path: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1894,6 +2097,7 @@ services:
 					{
 						Label:            "propagation",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The propagation mode for the bind mount: 'shared', 'slave', 'private', 'rshared', 'rslave', or 'rprivate'.",
 						TextEdit:         textEdit("propagation: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1901,6 +2105,7 @@ services:
 					{
 						Label:            "recursive",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Recursively mount the source directory.",
 						TextEdit:         textEdit("recursive: ${1|disabled,enabled,readonly,writable|}", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1908,6 +2113,7 @@ services:
 					{
 						Label:            "selinux",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "SELinux relabeling options: 'z' for shared content, 'Z' for private unshared content.",
 						TextEdit:         textEdit("selinux: ${1|Z,z|}", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1932,6 +2138,7 @@ services:
 					{
 						Label:            "labels",
 						Detail:           types.CreateStringPointer("array or object"),
+						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
 						TextEdit:         textEdit("labels:\n            ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1939,6 +2146,7 @@ services:
 					{
 						Label:            "nocopy",
 						Detail:           types.CreateStringPointer("boolean or string"),
+						Documentation:    "Flag to disable copying of data from a container when a volume is created.",
 						TextEdit:         textEdit("nocopy: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -1946,6 +2154,7 @@ services:
 					{
 						Label:            "subpath",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path within the volume to mount instead of the volume root.",
 						TextEdit:         textEdit("subpath: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2131,6 +2340,7 @@ services:
 					{
 						Label:            "cpus",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "Reservation for how much of the available CPU resources, as number of cores, a container can use.",
 						TextEdit:         textEdit("cpus: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2138,6 +2348,7 @@ services:
 					{
 						Label:            "devices",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "Device reservations for containers, allowing services to access specific hardware devices.",
 						TextEdit:         textEdit("devices:\n            - capabilities:\n              - ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2145,6 +2356,7 @@ services:
 					{
 						Label:            "generic_resources",
 						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "User-defined resources for services, allowing services to reserve specialized hardware resources.",
 						TextEdit:         textEdit("generic_resources:\n            - ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2152,6 +2364,7 @@ services:
 					{
 						Label:            "memory",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Reservation on the amount of memory a container can allocate (e.g., '1g', '1024m').",
 						TextEdit:         textEdit("memory: ", 7, 10, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2469,12 +2682,14 @@ configs:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 5, 8, 0),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2482,6 +2697,7 @@ configs:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2489,6 +2705,7 @@ configs:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2500,6 +2717,7 @@ configs:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2528,12 +2746,14 @@ configs:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 6, 8, 0),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2541,6 +2761,7 @@ configs:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2548,6 +2769,7 @@ configs:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2559,6 +2781,7 @@ configs:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2585,12 +2808,14 @@ configs:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 5, 9, 1),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2598,6 +2823,7 @@ configs:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2605,6 +2831,7 @@ configs:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2616,6 +2843,7 @@ configs:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2642,12 +2870,14 @@ secrets:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 5, 8, 0),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2655,6 +2885,7 @@ secrets:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2662,6 +2893,7 @@ secrets:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2673,6 +2905,7 @@ secrets:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 5, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2701,12 +2934,14 @@ secrets:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 6, 8, 0),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2714,6 +2949,7 @@ secrets:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2721,6 +2957,7 @@ secrets:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2732,6 +2969,7 @@ secrets:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 6, 8, 0),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2758,12 +2996,14 @@ secrets:
 						Label:            "gid",
 						Detail:           types.CreateStringPointer("string"),
 						TextEdit:         textEdit("gid: ", 5, 9, 1),
+						Documentation:    "GID of the file in the container. Default is 0 (root).",
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 					{
 						Label:            "mode",
 						Detail:           types.CreateStringPointer("number or string"),
+						Documentation:    "File permission mode inside the container, in octal. Default is 0444 for configs and 0400 for secrets.",
 						TextEdit:         textEdit("mode: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2771,6 +3011,7 @@ secrets:
 					{
 						Label:            "source",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Name of the config or secret as defined in the top-level configs or secrets section.",
 						TextEdit:         textEdit("source: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2778,6 +3019,7 @@ secrets:
 					{
 						Label:            "target",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path in the container where the config or secret will be mounted. Defaults to /<source> for configs and /run/secrets/<source> for secrets.",
 						TextEdit:         textEdit("target: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
@@ -2789,6 +3031,7 @@ secrets:
 					{
 						Label:            "uid",
 						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "UID of the file in the container. Default is 0 (root).",
 						TextEdit:         textEdit("uid: ", 5, 9, 1),
 						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
