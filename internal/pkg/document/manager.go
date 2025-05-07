@@ -1,16 +1,19 @@
 package document
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/bep/debounce"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"go.lsp.dev/uri"
 )
 
@@ -30,6 +33,29 @@ type Manager struct {
 type documentLock struct {
 	mu    sync.Mutex
 	queue func(func())
+}
+
+func parseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {
+	dockerfileBytes, err := os.ReadFile(dockerfilePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	result, err := parser.Parse(bytes.NewReader(dockerfileBytes))
+	return dockerfileBytes, result, err
+}
+
+func OpenDockerfile(ctx context.Context, manager *Manager, path string) ([]byte, []*parser.Node) {
+	doc := manager.Get(ctx, uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))))
+	if doc != nil {
+		if dockerfile, ok := doc.(DockerfileDocument); ok {
+			return dockerfile.Input(), dockerfile.Nodes()
+		}
+	}
+	dockerfileBytes, result, err := parseDockerfile(path)
+	if err != nil {
+		return nil, nil
+	}
+	return dockerfileBytes, result.AST.Children
 }
 
 func NewDocumentManager(opts ...ManagerOpt) *Manager {

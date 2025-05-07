@@ -1,12 +1,9 @@
 package hcl
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -15,13 +12,8 @@ import (
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
-	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"go.lsp.dev/uri"
 )
-
-func LocalDockerfile(u *url.URL) (string, error) {
-	return types.AbsolutePath(u, "Dockerfile")
-}
 
 func Definition(ctx context.Context, definitionLinkSupport bool, manager *document.Manager, documentURI uri.URI, doc document.BakeHCLDocument, position protocol.Position) (any, error) {
 	body, ok := doc.File().Body.(*hclsyntax.Body)
@@ -130,7 +122,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 			target := value.AsString()
 
-			bytes, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
+			bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
 			lines := strings.Split(string(bytes), "\n")
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
@@ -191,7 +183,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 						end--
 					}
 					arg := string(doc.Input()[start:end])
-					bytes, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
+					bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
 					lines := strings.Split(string(bytes), "\n")
 					for _, child := range nodes {
 						if strings.EqualFold(child.Value, "ARG") {
@@ -454,27 +446,4 @@ func CalculateBlockLocation(definitionLinkSupport bool, input []byte, body *hcls
 		)
 	}
 	return nil
-}
-
-func ParseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {
-	dockerfileBytes, err := os.ReadFile(dockerfilePath)
-	if err != nil {
-		return nil, nil, err
-	}
-	result, err := parser.Parse(bytes.NewReader(dockerfileBytes))
-	return dockerfileBytes, result, err
-}
-
-func OpenDockerfile(ctx context.Context, manager *document.Manager, path string) ([]byte, []*parser.Node) {
-	doc := manager.Get(ctx, uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))))
-	if doc != nil {
-		if dockerfile, ok := doc.(document.DockerfileDocument); ok {
-			return dockerfile.Input(), dockerfile.Nodes()
-		}
-	}
-	dockerfileBytes, result, err := ParseDockerfile(path)
-	if err != nil {
-		return nil, nil
-	}
-	return dockerfileBytes, result.AST.Children
 }

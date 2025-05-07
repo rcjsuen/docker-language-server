@@ -11,6 +11,7 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/zclconf/go-cty/cty"
@@ -42,23 +43,23 @@ func shouldSuggest(content []byte, body *hclsyntax.Body, position protocol.Posit
 	return strings.TrimSpace(lines[position.Line]) != "}"
 }
 
-func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionParams, manager *document.Manager, document document.BakeHCLDocument) ([]protocol.InlineCompletionItem, error) {
+func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionParams, manager *document.Manager, bakeDocument document.BakeHCLDocument) ([]protocol.InlineCompletionItem, error) {
 	url, err := url.Parse(params.TextDocument.URI)
 	if err != nil {
 		return nil, fmt.Errorf("LSP client sent invalid URI: %v", params.TextDocument.URI)
 	}
 
-	body, ok := document.File().Body.(*hclsyntax.Body)
+	body, ok := bakeDocument.File().Body.(*hclsyntax.Body)
 	if !ok {
 		return nil, errors.New("unrecognized body in HCL document")
 	}
 
-	dockerfilePath, err := LocalDockerfile(url)
+	dockerfilePath, err := types.LocalDockerfile(url)
 	if err != nil {
 		return nil, fmt.Errorf("invalid document path: %v", url.Path)
 	}
 
-	if !shouldSuggest(document.Input(), body, params.Position) {
+	if !shouldSuggest(bakeDocument.Input(), body, params.Position) {
 		return nil, nil
 	}
 
@@ -86,7 +87,7 @@ func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionPara
 	argNames := []string{}
 	args := map[string]string{}
 	targets := []string{}
-	_, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
+	_, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
 	before := true
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "ARG") && before {
@@ -113,7 +114,7 @@ func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionPara
 
 	if len(targets) > 0 {
 		items := []protocol.InlineCompletionItem{}
-		lines := strings.Split(string(document.Input()), "\n")
+		lines := strings.Split(string(bakeDocument.Input()), "\n")
 		for _, target := range targets {
 			sb := strings.Builder{}
 			sb.WriteString(fmt.Sprintf("target \"%v\" {\n", target))
