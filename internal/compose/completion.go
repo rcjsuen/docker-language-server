@@ -3,6 +3,7 @@ package compose
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"unicode"
@@ -40,7 +41,12 @@ func array(line string, character int) bool {
 	return isArray
 }
 
-func Completion(ctx context.Context, params *protocol.CompletionParams, doc document.ComposeDocument) (*protocol.CompletionList, error) {
+func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, doc document.ComposeDocument) (*protocol.CompletionList, error) {
+	u, err := url.Parse(params.TextDocument.URI)
+	if err != nil {
+		return nil, fmt.Errorf("LSP client sent invalid URI: %v", params.TextDocument.URI)
+	}
+
 	if params.Position.Character == 0 {
 		items := []protocol.CompletionItem{}
 		for attributeName, schema := range schemaProperties() {
@@ -81,8 +87,12 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, doc docu
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
+	items, stop := buildTargetCompletionItems(params, manager, path, u, protocol.UInteger(len(wordPrefix)))
+	if stop {
+		return &protocol.CompletionList{Items: items}, nil
+	}
 
-	items := volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+	items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
 	if len(items) > 0 {
 		return &protocol.CompletionList{Items: items}, nil
 	}
@@ -199,6 +209,50 @@ func findDependencies(file *ast.File, dependencyType string) []string {
 		}
 	}
 	return services
+}
+
+func findBuildStages(params *protocol.CompletionParams, manager *document.Manager, dockerfilePath, prefix string, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	_, nodes := document.OpenDockerfile(context.Background(), manager, dockerfilePath)
+	items := []protocol.CompletionItem{}
+	for _, child := range nodes {
+		if strings.EqualFold(child.Value, "FROM") {
+			if child.Next != nil && child.Next.Next != nil && strings.EqualFold(child.Next.Next.Value, "AS") && child.Next.Next.Next != nil {
+				buildStage := child.Next.Next.Next.Value
+				if strings.HasPrefix(buildStage, prefix) {
+					items = append(items, protocol.CompletionItem{
+						Label:         buildStage,
+						Documentation: child.Next.Value,
+						TextEdit: protocol.TextEdit{
+							NewText: buildStage,
+							Range: protocol.Range{
+								Start: protocol.Position{
+									Line:      params.Position.Line,
+									Character: params.Position.Character - prefixLength,
+								},
+								End: params.Position,
+							},
+						},
+					})
+				}
+			}
+		}
+	}
+	return items
+}
+
+func buildTargetCompletionItems(params *protocol.CompletionParams, manager *document.Manager, path []*ast.MappingValueNode, u *url.URL, prefixLength protocol.UInteger) ([]protocol.CompletionItem, bool) {
+	if len(path) == 4 && path[2].Key.GetToken().Value == "build" && path[3].Key.GetToken().Value == "target" {
+		dockerfilePath, err := types.LocalDockerfile(u)
+		if err == nil {
+			if _, ok := path[3].Value.(*ast.NullNode); ok {
+				return findBuildStages(params, manager, dockerfilePath, "", prefixLength), true
+			} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
+				offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
+				return findBuildStages(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+			}
+		}
+	}
+	return nil, false
 }
 
 func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {

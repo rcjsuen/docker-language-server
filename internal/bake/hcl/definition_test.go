@@ -12,6 +12,7 @@ import (
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 	"github.com/stretchr/testify/require"
 	"go.lsp.dev/uri"
 )
@@ -24,7 +25,7 @@ func TestLocalDockerfileForNonWindows(t *testing.T) {
 
 	u, err := url.Parse("file:///home/unix/docker-bake.hcl")
 	require.NoError(t, err)
-	path, err := LocalDockerfile(u)
+	path, err := types.LocalDockerfile(u)
 	require.NoError(t, err)
 	require.Equal(t, "/home/unix/Dockerfile", path)
 }
@@ -37,7 +38,7 @@ func TestLocalDockerfileForWindows(t *testing.T) {
 
 	u, err := url.Parse("file:///c%3A/Users/windows/docker-bake.hcl")
 	require.NoError(t, err)
-	path, err := LocalDockerfile(u)
+	path, err := types.LocalDockerfile(u)
 	require.NoError(t, err)
 	require.Equal(t, "c:\\Users\\windows\\Dockerfile", path)
 }

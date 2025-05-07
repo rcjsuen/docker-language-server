@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
-func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, document document.BakeHCLDocument) (*protocol.CompletionList, error) {
+func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, bakeDocument document.BakeHCLDocument) (*protocol.CompletionList, error) {
 	filename := string(params.TextDocument.URI)
 
-	hclPos := parser.ConvertToHCLPosition(string(document.Input()), int(params.Position.Line), int(params.Position.Character))
-	candidates, err := document.Decoder().CompletionAtPos(ctx, filename, hclPos)
+	hclPos := parser.ConvertToHCLPosition(string(bakeDocument.Input()), int(params.Position.Line), int(params.Position.Character))
+	candidates, err := bakeDocument.Decoder().CompletionAtPos(ctx, filename, hclPos)
 	if err != nil {
 		var rangeErr *decoder.PosOutOfRangeError
 		if errors.As(err, &rangeErr) {
@@ -30,7 +30,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			return nil, fmt.Errorf("textDocument/completion encountered an error: %w", err)
 		}
 	}
-	body, ok := document.File().Body.(*hclsyntax.Body)
+	body, ok := bakeDocument.File().Body.(*hclsyntax.Body)
 	if !ok {
 		return nil, errors.New("unrecognized body in HCL document")
 	}
@@ -68,12 +68,12 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 				}
 			}
 
-			dockerfilePath, err := document.DockerfileForTarget(b)
+			dockerfilePath, err := bakeDocument.DockerfileForTarget(b)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
 
-			_, nodes := OpenDockerfile(ctx, manager, dockerfilePath)
+			_, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
 			if nodes != nil {
 				if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
 					if _, ok := attributes["dockerfile-inline"]; ok {

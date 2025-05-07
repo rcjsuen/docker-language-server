@@ -2171,7 +2171,7 @@ services:
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
 					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
-			}, doc)
+			}, nil, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.list, list)
 		})
@@ -2808,7 +2808,199 @@ secrets:
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
 					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
-			}, doc)
+			}, nil, doc)
+			require.NoError(t, err)
+			if tc.list == nil {
+				require.Nil(t, list)
+			} else {
+				require.Equal(t, tc.list, list)
+			}
+		})
+	}
+}
+
+func TestCompletion_ExternalFileLookups(t *testing.T) {
+	testCases := []struct {
+		name              string
+		dockerfileContent string
+		content           string
+		line              uint32
+		character         uint32
+		list              *protocol.CompletionList
+	}{
+		{
+			name:              "target attribute finds nothing",
+			dockerfileContent: "FROM scratch",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+		},
+		{
+			name:              "target attribute finds nothing",
+			dockerfileContent: "FROM scratch AS",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+		},
+		{
+			name:              "target attribute ignores target with an invalid AS",
+			dockerfileContent: "FROM scratch ABC base",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+		},
+		{
+			name:              "target attribute finds a target with uppercase AS",
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:         "base",
+						Documentation: "scratch",
+						TextEdit:      textEdit("base", 4, 14, 0),
+					},
+				},
+			},
+		},
+		{
+			name:              "target attribute finds a target with lowercase AS",
+			dockerfileContent: "FROM scratch as base",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:         "base",
+						Documentation: "scratch",
+						TextEdit:      textEdit("base", 4, 14, 0),
+					},
+				},
+			},
+		},
+		{
+			name:              "target attribute finds two build stages",
+			dockerfileContent: "FROM busybox as base\nFROM alpine as base2",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:         "base",
+						Documentation: "busybox",
+						TextEdit:      textEdit("base", 4, 14, 0),
+					},
+					{
+						Label:         "base2",
+						Documentation: "alpine",
+						TextEdit:      textEdit("base2", 4, 14, 0),
+					},
+				},
+			},
+		},
+		{
+			name:              "build stage suggested by prefix",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      target: a`,
+			line:      4,
+			character: 15,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:         "astage",
+						Documentation: "alpine",
+						TextEdit:      textEdit("astage", 4, 15, 1),
+					},
+				},
+			},
+		},
+		{
+			name:              "invalid prefix with a space is ignored",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      target: a a`,
+			line:      4,
+			character: 17,
+			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+		},
+		{
+			name:              "completion in the middle with a valid prefix",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      target: ab`,
+			line:      4,
+			character: 15,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:         "astage",
+						Documentation: "alpine",
+						TextEdit:      textEdit("astage", 4, 15, 1),
+					},
+				},
+			},
+		},
+	}
+
+	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile")), "/"))
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			if tc.dockerfileContent != "" {
+				changed, err := manager.Write(context.Background(), uri.URI(dockerfileURI), protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+				require.NoError(t, err)
+				require.True(t, changed)
+			}
+			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
 			require.NoError(t, err)
 			if tc.list == nil {
 				require.Nil(t, list)

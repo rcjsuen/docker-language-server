@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Compose
+  - textDocument/completion
+    - support build stage names for the `target` attribute ([#173](https://github.com/docker/docker-language-server/issues/173))
+
 ## [0.6.0] - 2025-05-07
 
 ### Added

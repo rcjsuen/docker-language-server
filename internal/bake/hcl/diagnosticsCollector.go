@@ -234,7 +234,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 
 // checkTargetArgs examines the args attribute of a target block.
 func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(dockerfilePath string, input []byte, expr *hclsyntax.ObjectConsExpr, source string) []protocol.Diagnostic {
-	_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+	_, nodes := document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
 	args := []string{}
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "ARG") {
@@ -283,7 +283,7 @@ func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(dockerfilePath string, e
 	value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 	target := value.AsString()
 
-	_, nodes := OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+	_, nodes := document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
 	found := false
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "FROM") {
