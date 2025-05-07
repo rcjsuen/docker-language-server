@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -26,6 +27,11 @@ func TestRename_Services(t *testing.T) {
 				},
 				NewName: "newName",
 			})
+			if edits != nil {
+				slices.SortFunc(edits.Changes[composeFileURI], func(a, b protocol.TextEdit) int {
+					return int(a.Range.Start.Line) - int(b.Range.Start.Line)
+				})
+			}
 			require.NoError(t, err)
 			require.Equal(t, tc.renameEdits(composeFileURI), edits)
 		})

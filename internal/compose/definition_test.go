@@ -405,6 +405,43 @@ volumes:
 				},
 			},
 		},
+		{
+			name: "extends as a string attribute",
+			content: `
+services:
+  test:
+    image: alpine
+  test2:
+    extends: test`,
+			line:      5,
+			character: 15,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 2},
+						End:   protocol.Position{Line: 2, Character: 6},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 13},
+						End:   protocol.Position{Line: 5, Character: 17},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 2},
+						End:   protocol.Position{Line: 2, Character: 6},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 2},
+						End:   protocol.Position{Line: 2, Character: 6},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {

@@ -20,7 +20,16 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Fixed
 
 - Compose
-  - suggest completion items for array items that use an object schema directly ([#161](https://github.com/docker/docker-language-server/issues/161))
+  - textDocument/completion
+    - suggest completion items for array items that use an object schema directly ([#161](https://github.com/docker/docker-language-server/issues/161))
+  - textDocument/definition
+    - consider `extends` when looking up a service reference ([#170](https://github.com/docker/docker-language-server/issues/170))
+  - textDocument/documentHighlight
+    - consider `extends` when looking up a service reference ([#170](https://github.com/docker/docker-language-server/issues/170))
+  - textDocument/prepareRename
+    - consider `extends` when looking up a service reference ([#170](https://github.com/docker/docker-language-server/issues/170))
+  - textDocument/rename
+    - consider `extends` when looking up a service reference ([#170](https://github.com/docker/docker-language-server/issues/170))
 
 ## [0.5.0] - 2025-05-05
 
