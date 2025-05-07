@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -247,6 +248,107 @@ services:
 			End:   protocol.Position{Line: 5, Character: 7},
 		},
 	},
+	{
+		name: "extends as a string attribute",
+		content: `
+services:
+  test:
+    image: alpine
+  test2:
+    extends: test`,
+		line:      5,
+		character: 15,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 2, 2, 6, protocol.DocumentHighlightKindWrite),
+			documentHighlight(5, 13, 5, 17, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 2},
+								End:   protocol.Position{Line: 2, Character: 6},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 5, Character: 13},
+								End:   protocol.Position{Line: 5, Character: 17},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 5, Character: 13},
+			End:   protocol.Position{Line: 5, Character: 17},
+		},
+	},
+	{
+		name: "extends as an object without a file attribute",
+		content: `
+services:
+  test:
+    image: alpine
+  test2:
+    extends:
+      service: test`,
+		line:      6,
+		character: 17,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 2, 2, 6, protocol.DocumentHighlightKindWrite),
+			documentHighlight(6, 15, 6, 19, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 2},
+								End:   protocol.Position{Line: 2, Character: 6},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 15},
+								End:   protocol.Position{Line: 6, Character: 19},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 15},
+			End:   protocol.Position{Line: 6, Character: 19},
+		},
+	},
+	{
+		name: "extends as an object without a file attribute",
+		content: `
+services:
+  test:
+    image: alpine
+  test2:
+    extends:
+      service: test
+      file: non-existent.yaml`,
+		line:      6,
+		character: 17,
+		ranges:    nil,
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return nil
+		},
+		prepareRename: nil,
+	},
 }
 
 func TestDocumentHighlight_Services(t *testing.T) {
@@ -256,6 +358,9 @@ func TestDocumentHighlight_Services(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
+			slices.SortFunc(ranges, func(a, b protocol.DocumentHighlight) int {
+				return int(a.Range.Start.Line) - int(b.Range.Start.Line)
+			})
 			require.NoError(t, err)
 			require.Equal(t, tc.ranges, ranges)
 		})

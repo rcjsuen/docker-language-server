@@ -36,6 +36,41 @@ func serviceDependencyReferences(node *ast.MappingValueNode, dependencyAttribute
 	return nil
 }
 
+func extendedServiceReferences(node *ast.MappingValueNode) []*token.Token {
+	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
+		tokens := []*token.Token{}
+		for _, serviceNode := range servicesNode.Values {
+			if serviceAttributes, ok := serviceNode.Value.(*ast.MappingNode); ok {
+				for _, attributeNode := range serviceAttributes.Values {
+					if attributeNode.Key.GetToken().Value == "extends" {
+						if extendedValue, ok := attributeNode.Value.(*ast.StringNode); ok {
+							tokens = append(tokens, extendedValue.GetToken())
+						} else if mappingNode, ok := attributeNode.Value.(*ast.MappingNode); ok {
+							localService := true
+							for _, extendsObjectAttribute := range mappingNode.Values {
+								if extendsObjectAttribute.Key.GetToken().Value == "file" {
+									localService = false
+									break
+								}
+							}
+
+							if localService {
+								for _, extendsObjectAttribute := range mappingNode.Values {
+									if extendsObjectAttribute.Key.GetToken().Value == "service" {
+										tokens = append(tokens, extendsObjectAttribute.Value.GetToken())
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return tokens
+	}
+	return nil
+}
+
 func volumeToken(t *token.Token) *token.Token {
 	idx := strings.Index(t.Value, ":")
 	if idx != -1 {
@@ -115,6 +150,7 @@ func DocumentHighlight(doc document.ComposeDocument, position protocol.Position)
 				switch s.Value {
 				case "services":
 					refs := serviceDependencyReferences(node, "depends_on", false)
+					refs = append(refs, extendedServiceReferences(node)...)
 					decls := declarations(node, "services")
 					highlights := highlightReferences(refs, decls, line, character)
 					if len(highlights) > 0 {
