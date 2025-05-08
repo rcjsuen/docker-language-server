@@ -563,5 +563,8 @@ func insertText(spacing, attributeName string, schema *jsonschema.Schema) string
 		}
 		return fmt.Sprintf("%v:", attributeName)
 	}
+	if slices.Contains(schemaTypes, "boolean") {
+		return fmt.Sprintf("%v: ${1|true,false|}", attributeName)
+	}
 	return fmt.Sprintf("%v: ", attributeName)
 }

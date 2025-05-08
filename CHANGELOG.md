@@ -10,6 +10,7 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/completion
     - support build stage names for the `target` attribute ([#173](https://github.com/docker/docker-language-server/issues/173))
     - set schema documentation to the completion items ([#176](https://github.com/docker/docker-language-server/issues/176))
+    - automatically suggest boolean values for simple boolean attributes ([#179](https://github.com/docker/docker-language-server/issues/179))
 
 ## [0.6.0] - 2025-05-07
 
