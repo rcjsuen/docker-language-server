@@ -28,12 +28,17 @@ func allServiceProperties(node ast.Node) map[string]map[string]ast.Node {
 	return nil
 }
 
-func hierarchyProperties(service string, serviceProps map[string]map[string]ast.Node, chain []map[string]ast.Node) []map[string]ast.Node {
+func hierarchyProperties(service string, serviceProps map[string]map[string]ast.Node, walked []string, chain []map[string]ast.Node) []map[string]ast.Node {
+	if !slices.Contains(walked, service) {
+		walked = append(walked, service)
+	} else {
+		return nil
+	}
 	if extends, ok := serviceProps[service]["extends"]; ok {
 		if s, ok := extends.(*ast.StringNode); ok {
 			// block self-referencing recursions
 			if s.Value != service {
-				chain = append(chain, hierarchyProperties(s.Value, serviceProps, chain)...)
+				chain = append(chain, hierarchyProperties(s.Value, serviceProps, walked, chain)...)
 			}
 		} else if mappingNode, ok := extends.(*ast.MappingNode); ok {
 			external := false
@@ -47,7 +52,7 @@ func hierarchyProperties(service string, serviceProps map[string]map[string]ast.
 			if !external {
 				for _, value := range mappingNode.Values {
 					if value.Key.GetToken().Value == "service" {
-						chain = append(chain, hierarchyProperties(value.Value.GetToken().Value, serviceProps, chain)...)
+						chain = append(chain, hierarchyProperties(value.Value.GetToken().Value, serviceProps, walked, chain)...)
 					}
 				}
 			}
@@ -70,7 +75,7 @@ func InlayHint(doc document.ComposeDocument, rng protocol.Range) ([]protocol.Inl
 				if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "services" {
 					serviceProps := allServiceProperties(node.Value)
 					for service, props := range serviceProps {
-						chain := hierarchyProperties(service, serviceProps, []map[string]ast.Node{})
+						chain := hierarchyProperties(service, serviceProps, []string{}, []map[string]ast.Node{})
 						if len(chain) == 1 {
 							continue
 						}
