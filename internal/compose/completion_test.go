@@ -2396,7 +2396,7 @@ services:
 	}
 }
 
-func TestCompletion_Custom(t *testing.T) {
+func TestCompletion_NamedDependencies(t *testing.T) {
 	testCases := []struct {
 		name      string
 		content   string
@@ -2487,6 +2487,80 @@ services:
 					{
 						Label:    "test2",
 						TextEdit: textEdit("test2", 5, 6, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "extends as a string",
+			content: `
+services:
+  test:
+    image: alpine
+    extends: 
+  test2:
+    image: alpine`,
+			line:      4,
+			character: 13,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 4, 13, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "extends as an object with the service attribute",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      service: 
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 15,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "test2",
+						TextEdit: textEdit("test2", 5, 15, 0),
+					},
+				},
+			},
+		},
+		{
+			name: "extends object attributes",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      
+  test2:
+    image: alpine`,
+			line:      5,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "file",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The file path where the service to extend is defined.",
+						TextEdit:         textEdit("file: ", 5, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "service",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The name of the service to extend.",
+						TextEdit:         textEdit("service: ${1|test2|}", 5, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
 			},

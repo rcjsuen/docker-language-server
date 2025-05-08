@@ -11,6 +11,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support build stage names for the `target` attribute ([#173](https://github.com/docker/docker-language-server/issues/173))
     - set schema documentation to the completion items ([#176](https://github.com/docker/docker-language-server/issues/176))
     - automatically suggest boolean values for simple boolean attributes ([#179](https://github.com/docker/docker-language-server/issues/179))
+    - suggest service names for a service's `extends` or `extends.service` attribute ([#184](https://github.com/docker/docker-language-server/issues/184))
 
 ### Fixed
 
