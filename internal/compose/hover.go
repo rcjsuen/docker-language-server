@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"unicode"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/goccy/go-yaml/ast"
+	"github.com/goccy/go-yaml/token"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -25,14 +27,89 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
-			m := constructNodePath([]ast.Node{}, mappingNode, int(params.Position.Line+1), int(params.Position.Character+1))
-			hover := hover(composeSchema, m, line, character, len(lines[params.Position.Line])+1)
-			if hover != nil {
-				return hover, nil
+			nodePath := constructNodePath([]ast.Node{}, mappingNode, int(params.Position.Line+1), int(params.Position.Character+1))
+			result := serviceHover(mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
+			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
+			if result != nil {
+				return result, nil
 			}
 		}
 	}
 	return nil, nil
+}
+
+func createServiceHover(mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
+	for _, node := range mappingNode.Values {
+		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "services" {
+			for _, service := range node.Value.(*ast.MappingNode).Values {
+				if service.Key.GetToken().Value == serviceName {
+					split := strings.Split(service.String(), "\n")
+					skip := -1
+					for i := range len(split) {
+						if skip == -1 {
+							for j := 0; j < len(split[i]); j++ {
+								if !unicode.IsSpace(rune(split[i][j])) {
+									skip = j
+									break
+								}
+							}
+						}
+						// extra check in case there are empty lines
+						if len(split[i]) > skip {
+							split[i] = split[i][skip:]
+						}
+					}
+					return &protocol.Hover{
+						Contents: protocol.MarkupContent{
+							Kind:  protocol.MarkupKindMarkdown,
+							Value: fmt.Sprintf("```YAML\n%v\n```", strings.Join(split, "\n")),
+						},
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func serviceHover(mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if (len(nodePath) == 4 || len(nodePath) == 5) && nodePath[0].GetToken().Value == "services" {
+		if nodePath[2].GetToken().Value == "extends" {
+			serviceName := nodePath[3].GetToken().Value
+			if len(nodePath) == 5 && nodePath[3].GetToken().Value == "service" {
+				if _, ok := nodePath[4].(*ast.StringNode); ok {
+					if nodePath[4].GetToken().Next == nil || nodePath[4].GetToken().Next.Type != token.MappingValueType {
+						serviceName = nodePath[4].GetToken().Value
+					}
+				} else {
+					return nil
+				}
+			} else if nodePath[3].GetToken().Next != nil && nodePath[3].GetToken().Next.Type == token.MappingValueType {
+				return nil
+			}
+			result := createServiceHover(mappingNode, serviceName)
+			if result != nil {
+				return result
+			}
+		}
+
+		if nodePath[2].GetToken().Value == "depends_on" {
+			if nodePath[3].GetToken().Next != nil &&
+				nodePath[3].GetToken().Next.Type == token.MappingValueType &&
+				nodePath[3].GetToken().Prev.Type == token.SequenceEntryType {
+				return nil
+			}
+			serviceName := nodePath[3].GetToken().Value
+			result := createServiceHover(mappingNode, serviceName)
+			if result != nil {
+				return result
+			}
+		}
+	}
+	return nil
 }
 
 func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength int) *protocol.Hover {

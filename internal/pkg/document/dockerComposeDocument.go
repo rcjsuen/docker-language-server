@@ -41,7 +41,7 @@ func (d *composeDocument) parse(_ bool) bool {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 
-	d.file, d.parsingError = parser.ParseBytes(d.input, 0)
+	d.file, d.parsingError = parser.ParseBytes(d.input, parser.ParseComments)
 	return true
 }
 

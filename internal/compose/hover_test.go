@@ -269,6 +269,175 @@ services:
 				},
 			},
 		},
+		{
+			name: "hovering over an extends service as a string",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends: test`,
+			line:      6,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.21` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over an extends service as a string with a comment",
+			content: `
+services:
+  test:
+    # comment
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends: test`,
+			line:      7,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  # comment
+  image: alpine:3.21` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over an extends object",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    extends:
+      service: test
+    image: alpine:3.21`,
+			line:      6,
+			character: 17,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.21` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over an invalid extends object with invalid attribute",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends:
+      test:`,
+			line:      7,
+			character: 8,
+			result:    nil,
+		},
+		{
+			name: "hovering over an invalid extends object with a service attribute",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends:
+      service:
+        test:`,
+			line:      8,
+			character: 10,
+			result:    nil,
+		},
+		{
+			name: "hovering over an extends service with whitespace",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+
+    attach: true
+  test2:
+    image: alpine:3.21
+    extends: test`,
+			line:      8,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.21
+
+  attach: true` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a depends_on array item",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    depends_on:
+      - test`,
+			line:      6,
+			character: 10,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.21` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a depends_on array item that is not a string",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    depends_on:
+      - test:`,
+			line:      6,
+			character: 10,
+			result:    nil,
+		},
+		{
+			name: "hovering over a depends_on object item",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    depends_on:
+      test:`,
+			line:      6,
+			character: 8,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.21` +
+						"\n```",
+				},
+			},
+		},
 	}
 
 	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
