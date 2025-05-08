@@ -736,6 +736,187 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 	}
 }
 
+func serviceBuildProperties(line, character, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	return []protocol.CompletionItem{
+		{
+			Label:            "additional_contexts",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
+			TextEdit:         textEdit("additional_contexts:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "args",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
+			TextEdit:         textEdit("args:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "cache_from",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "List of sources the image builder should use for cache resolution",
+			TextEdit:         textEdit("cache_from:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "cache_to",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Cache destinations for the build cache.",
+			TextEdit:         textEdit("cache_to:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "context",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Path to the build context. Can be a relative path or a URL.",
+			TextEdit:         textEdit("context: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "dockerfile",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Name of the Dockerfile to use for building the image.",
+			TextEdit:         textEdit("dockerfile: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "dockerfile_inline",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Inline Dockerfile content to use instead of a Dockerfile from the build context.",
+			TextEdit:         textEdit("dockerfile_inline: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "entitlements",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "List of extra privileged entitlements to grant to the build process.",
+			TextEdit:         textEdit("entitlements:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "extra_hosts",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Additional hostnames to be defined in the container's /etc/hosts file.",
+			TextEdit:         textEdit("extra_hosts:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "isolation",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Container isolation technology to use for the build process.",
+			TextEdit:         textEdit("isolation: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "labels",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
+			TextEdit:         textEdit("labels:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "network",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Network mode to use for the build. Options include 'default', 'none', 'host', or a network name.",
+			TextEdit:         textEdit("network: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "no_cache",
+			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Do not use cache when building the image.",
+			TextEdit:         textEdit("no_cache: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "platforms",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Platforms to build for, e.g., 'linux/amd64', 'linux/arm64', or 'windows/amd64'.",
+			TextEdit:         textEdit("platforms:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "privileged",
+			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Give extended privileges to the build container.",
+			TextEdit:         textEdit("privileged: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "pull",
+			Detail:           types.CreateStringPointer("boolean or string"),
+			Documentation:    "Always attempt to pull a newer version of the image.",
+			TextEdit:         textEdit("pull: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "secrets",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
+			TextEdit:         textEdit("secrets:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "shm_size",
+			Detail:           types.CreateStringPointer("integer or string"),
+			Documentation:    "Size of /dev/shm for the build container. A string value can use suffix like '2g' for 2 gigabytes.",
+			TextEdit:         textEdit("shm_size: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "ssh",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
+			TextEdit:         textEdit("ssh:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "tags",
+			Detail:           types.CreateStringPointer("array"),
+			Documentation:    "Additional tags to apply to the built image.",
+			TextEdit:         textEdit("tags:\n        - ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "target",
+			Detail:           types.CreateStringPointer("string"),
+			Documentation:    "Build stage to target in a multi-stage Dockerfile.",
+			TextEdit:         textEdit("target: ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "ulimits",
+			Detail:           types.CreateStringPointer("object"),
+			Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
+			TextEdit:         textEdit("ulimits:\n        ", line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+	}
+}
+
 func TestCompletion_Schema(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -1408,184 +1589,7 @@ services:
 			line:      4,
 			character: 6,
 			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:            "additional_contexts",
-						Detail:           types.CreateStringPointer("array or object"),
-						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-						TextEdit:         textEdit("additional_contexts:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "args",
-						Detail:           types.CreateStringPointer("array or object"),
-						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-						TextEdit:         textEdit("args:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "cache_from",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "List of sources the image builder should use for cache resolution",
-						TextEdit:         textEdit("cache_from:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "cache_to",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "Cache destinations for the build cache.",
-						TextEdit:         textEdit("cache_to:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "context",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Path to the build context. Can be a relative path or a URL.",
-						TextEdit:         textEdit("context: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "dockerfile",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Name of the Dockerfile to use for building the image.",
-						TextEdit:         textEdit("dockerfile: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "dockerfile_inline",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Inline Dockerfile content to use instead of a Dockerfile from the build context.",
-						TextEdit:         textEdit("dockerfile_inline: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "entitlements",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "List of extra privileged entitlements to grant to the build process.",
-						TextEdit:         textEdit("entitlements:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "extra_hosts",
-						Detail:           types.CreateStringPointer("array or object"),
-						Documentation:    "Additional hostnames to be defined in the container's /etc/hosts file.",
-						TextEdit:         textEdit("extra_hosts:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "isolation",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Container isolation technology to use for the build process.",
-						TextEdit:         textEdit("isolation: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "labels",
-						Detail:           types.CreateStringPointer("array or object"),
-						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-						TextEdit:         textEdit("labels:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "network",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Network mode to use for the build. Options include 'default', 'none', 'host', or a network name.",
-						TextEdit:         textEdit("network: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "no_cache",
-						Detail:           types.CreateStringPointer("boolean or string"),
-						Documentation:    "Do not use cache when building the image.",
-						TextEdit:         textEdit("no_cache: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "platforms",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "Platforms to build for, e.g., 'linux/amd64', 'linux/arm64', or 'windows/amd64'.",
-						TextEdit:         textEdit("platforms:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "privileged",
-						Detail:           types.CreateStringPointer("boolean or string"),
-						Documentation:    "Give extended privileges to the build container.",
-						TextEdit:         textEdit("privileged: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "pull",
-						Detail:           types.CreateStringPointer("boolean or string"),
-						Documentation:    "Always attempt to pull a newer version of the image.",
-						TextEdit:         textEdit("pull: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "secrets",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
-						TextEdit:         textEdit("secrets:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "shm_size",
-						Detail:           types.CreateStringPointer("integer or string"),
-						Documentation:    "Size of /dev/shm for the build container. A string value can use suffix like '2g' for 2 gigabytes.",
-						TextEdit:         textEdit("shm_size: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "ssh",
-						Detail:           types.CreateStringPointer("array or object"),
-						Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-						TextEdit:         textEdit("ssh:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "tags",
-						Detail:           types.CreateStringPointer("array"),
-						Documentation:    "Additional tags to apply to the built image.",
-						TextEdit:         textEdit("tags:\n        - ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "target",
-						Detail:           types.CreateStringPointer("string"),
-						Documentation:    "Build stage to target in a multi-stage Dockerfile.",
-						TextEdit:         textEdit("target: ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-					{
-						Label:            "ulimits",
-						Detail:           types.CreateStringPointer("object"),
-						Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
-						TextEdit:         textEdit("ulimits:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
-				},
+				Items: serviceBuildProperties(4, 6, 0),
 			},
 		},
 		{
@@ -2378,13 +2382,14 @@ services:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
 			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
 			list, err := Completion(context.Background(), &protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
 					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
-			}, nil, doc)
+			}, manager, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.list, list)
 		})
@@ -3062,14 +3067,17 @@ secrets:
 	}
 }
 
-func TestCompletion_ExternalFileLookups(t *testing.T) {
+func TestCompletion_BuildStageLookups(t *testing.T) {
+	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile")), "/"))
+
 	testCases := []struct {
 		name              string
+		dockerfileURI     string
 		dockerfileContent string
 		content           string
 		line              uint32
 		character         uint32
-		list              *protocol.CompletionList
+		list              func() *protocol.CompletionList
 	}{
 		{
 			name:              "target attribute finds nothing",
@@ -3081,7 +3089,9 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
+			},
 		},
 		{
 			name:              "target attribute finds nothing",
@@ -3093,7 +3103,9 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
+			},
 		},
 		{
 			name:              "target attribute ignores target with an invalid AS",
@@ -3105,7 +3117,9 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
+			},
 		},
 		{
 			name:              "target attribute finds a target with uppercase AS",
@@ -3117,14 +3131,16 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "base",
-						Documentation: "scratch",
-						TextEdit:      textEdit("base", 4, 14, 0),
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "scratch",
+							TextEdit:      textEdit("base", 4, 14, 0),
+						},
 					},
-				},
+				}
 			},
 		},
 		{
@@ -3137,14 +3153,16 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "base",
-						Documentation: "scratch",
-						TextEdit:      textEdit("base", 4, 14, 0),
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "scratch",
+							TextEdit:      textEdit("base", 4, 14, 0),
+						},
 					},
-				},
+				}
 			},
 		},
 		{
@@ -3157,19 +3175,21 @@ services:
       target: `,
 			line:      4,
 			character: 14,
-			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "base",
-						Documentation: "busybox",
-						TextEdit:      textEdit("base", 4, 14, 0),
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "busybox",
+							TextEdit:      textEdit("base", 4, 14, 0),
+						},
+						{
+							Label:         "base2",
+							Documentation: "alpine",
+							TextEdit:      textEdit("base2", 4, 14, 0),
+						},
 					},
-					{
-						Label:         "base2",
-						Documentation: "alpine",
-						TextEdit:      textEdit("base2", 4, 14, 0),
-					},
-				},
+				}
 			},
 		},
 		{
@@ -3182,14 +3202,16 @@ services:
       target: a`,
 			line:      4,
 			character: 15,
-			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "astage",
-						Documentation: "alpine",
-						TextEdit:      textEdit("astage", 4, 15, 1),
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "astage",
+							Documentation: "alpine",
+							TextEdit:      textEdit("astage", 4, 15, 1),
+						},
 					},
-				},
+				}
 			},
 		},
 		{
@@ -3202,7 +3224,9 @@ services:
       target: a a`,
 			line:      4,
 			character: 17,
-			list:      &protocol.CompletionList{Items: []protocol.CompletionItem{}},
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
+			},
 		},
 		{
 			name:              "completion in the middle with a valid prefix",
@@ -3214,26 +3238,134 @@ services:
       target: ab`,
 			line:      4,
 			character: 15,
-			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "astage",
-						Documentation: "alpine",
-						TextEdit:      textEdit("astage", 4, 15, 1),
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "astage",
+							Documentation: "alpine",
+							TextEdit:      textEdit("astage", 4, 15, 1),
+						},
 					},
-				},
+				}
+			},
+		},
+		{
+			name:              "no build stages suggested if dockerfile_inline used",
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      target: 
+      dockerfile_inline: FROM scratch`,
+			line:      4,
+			character: 14,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: nil,
+				}
+			},
+		},
+		{
+			name:              "no build stages suggested if the dockerfile attribute is defined and invalid",
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      dockerfile: non-existent.txt
+      target: `,
+			line:      5,
+			character: 14,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
+			},
+		},
+		{
+			name:              "build stages suggested if the dockerfile attribute is defined and valid",
+			dockerfileURI:     fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile2")), "/")),
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile2
+      target: `,
+			line:      5,
+			character: 14,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "scratch",
+							TextEdit:      textEdit("base", 5, 14, 0),
+						},
+					},
+				}
+			},
+		},
+		{
+			name:              "build completion items include autofilled stages when build is empty",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      `,
+			line:      4,
+			character: 6,
+			list: func() *protocol.CompletionList {
+				items := serviceBuildProperties(4, 6, 0)
+				for i := range items {
+					if items[i].Label == "target" {
+						items[i].TextEdit = textEdit("target: ${1|bstage,astage|}", 4, 6, 0)
+						break
+					}
+				}
+				return &protocol.CompletionList{
+					Items: items,
+				}
+			},
+		},
+		{
+			name:              "build completion items include autofilled stages when build is empty",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      `,
+			line:      5,
+			character: 6,
+			list: func() *protocol.CompletionList {
+				items := serviceBuildProperties(5, 6, 0)
+				for i := range items {
+					if items[i].Label == "target" {
+						items[i].TextEdit = textEdit("target: ${1|bstage,astage|}", 5, 6, 0)
+						break
+					}
+				}
+				return &protocol.CompletionList{
+					Items: items,
+				}
 			},
 		},
 	}
 
-	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "Dockerfile")), "/"))
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
 			if tc.dockerfileContent != "" {
-				changed, err := manager.Write(context.Background(), uri.URI(dockerfileURI), protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+				u := dockerfileURI
+				if tc.dockerfileURI != "" {
+					u = tc.dockerfileURI
+				}
+				changed, err := manager.Write(context.Background(), uri.URI(u), protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
 				require.NoError(t, err)
 				require.True(t, changed)
 			}
@@ -3248,7 +3380,7 @@ services:
 			if tc.list == nil {
 				require.Nil(t, list)
 			} else {
-				require.Equal(t, tc.list, list)
+				require.Equal(t, tc.list(), list)
 			}
 		})
 	}

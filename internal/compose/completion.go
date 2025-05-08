@@ -15,6 +15,12 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
+type completionItemText struct {
+	label         string
+	newText       string
+	documentation string
+}
+
 func prefix(line string, character int) string {
 	sb := strings.Builder{}
 	for i := range character {
@@ -101,7 +107,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
 	}
 	isArray := array(lines[lspLine], character-1)
-	nodeProps, arrayAttributes := nodeProperties(path, line, character)
+	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
 	if isArray != arrayAttributes {
 		return nil, nil
 	}
@@ -184,6 +190,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					},
 				}
 			}
+			item.TextEdit = modifyTextEdit(manager, u, item.TextEdit.(protocol.TextEdit), attributeName, path)
 			items = append(items, item)
 		}
 	}
@@ -194,6 +201,54 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return strings.Compare(a.Label, b.Label)
 	})
 	return &protocol.CompletionList{Items: items}, nil
+}
+
+func createChoiceSnippetText(itemTexts []completionItemText) string {
+	sb := strings.Builder{}
+	sb.WriteString("${1|")
+	for i, stage := range itemTexts {
+		sb.WriteString(stage.newText)
+		if i != len(itemTexts)-1 {
+			sb.WriteString(",")
+		}
+	}
+	sb.WriteString("|}")
+	return sb.String()
+}
+
+func modifyTextEdit(manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+	if attributeName == "target" && len(path) == 3 && path[2].Key.GetToken().Value == "build" {
+		if _, ok := path[2].Value.(*ast.NullNode); ok {
+			dockerfilePath, err := types.LocalDockerfile(u)
+			if err == nil {
+				stages := findBuildStages(manager, dockerfilePath, "")
+				if len(stages) > 0 {
+					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+					return edit
+				}
+			}
+		} else if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
+			dockerfileAttributePath := "Dockerfile"
+			for _, buildAttribute := range mappingNode.Values {
+				switch buildAttribute.Key.GetToken().Value {
+				case "dockerfile_inline":
+					return edit
+				case "dockerfile":
+					dockerfileAttributePath = buildAttribute.Value.GetToken().Value
+				}
+			}
+
+			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
+			if err == nil {
+				stages := findBuildStages(manager, dockerfilePath, "")
+				if len(stages) > 0 {
+					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+					return edit
+				}
+			}
+		}
+	}
+	return edit
 }
 
 func findDependencies(file *ast.File, dependencyType string) []string {
@@ -216,27 +271,18 @@ func findDependencies(file *ast.File, dependencyType string) []string {
 	return services
 }
 
-func findBuildStages(params *protocol.CompletionParams, manager *document.Manager, dockerfilePath, prefix string, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func findBuildStages(manager *document.Manager, dockerfilePath, prefix string) []completionItemText {
 	_, nodes := document.OpenDockerfile(context.Background(), manager, dockerfilePath)
-	items := []protocol.CompletionItem{}
+	items := []completionItemText{}
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "FROM") {
 			if child.Next != nil && child.Next.Next != nil && strings.EqualFold(child.Next.Next.Value, "AS") && child.Next.Next.Next != nil {
 				buildStage := child.Next.Next.Next.Value
 				if strings.HasPrefix(buildStage, prefix) {
-					items = append(items, protocol.CompletionItem{
-						Label:         buildStage,
-						Documentation: child.Next.Value,
-						TextEdit: protocol.TextEdit{
-							NewText: buildStage,
-							Range: protocol.Range{
-								Start: protocol.Position{
-									Line:      params.Position.Line,
-									Character: params.Position.Character - prefixLength,
-								},
-								End: params.Position,
-							},
-						},
+					items = append(items, completionItemText{
+						label:         buildStage,
+						documentation: child.Next.Value,
+						newText:       buildStage,
 					})
 				}
 			}
@@ -247,17 +293,50 @@ func findBuildStages(params *protocol.CompletionParams, manager *document.Manage
 
 func buildTargetCompletionItems(params *protocol.CompletionParams, manager *document.Manager, path []*ast.MappingValueNode, u *url.URL, prefixLength protocol.UInteger) ([]protocol.CompletionItem, bool) {
 	if len(path) == 4 && path[2].Key.GetToken().Value == "build" && path[3].Key.GetToken().Value == "target" {
-		dockerfilePath, err := types.LocalDockerfile(u)
-		if err == nil {
-			if _, ok := path[3].Value.(*ast.NullNode); ok {
-				return findBuildStages(params, manager, dockerfilePath, "", prefixLength), true
-			} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
-				offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
-				return findBuildStages(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+		if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
+			dockerfileAttributePath := "Dockerfile"
+			for _, buildAttribute := range mappingNode.Values {
+				switch buildAttribute.Key.GetToken().Value {
+				case "dockerfile_inline":
+					return nil, true
+				case "dockerfile":
+					dockerfileAttributePath = buildAttribute.Value.GetToken().Value
+				}
+			}
+
+			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
+			if err == nil {
+				if _, ok := path[3].Value.(*ast.NullNode); ok {
+					return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
+				} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
+					offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
+					return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+				}
 			}
 		}
 	}
 	return nil, false
+}
+
+func createBuildStageItems(params *protocol.CompletionParams, manager *document.Manager, dockerfilePath, prefix string, prefixLength protocol.UInteger) []protocol.CompletionItem {
+	items := []protocol.CompletionItem{}
+	for _, itemText := range findBuildStages(manager, dockerfilePath, prefix) {
+		items = append(items, protocol.CompletionItem{
+			Label:         itemText.label,
+			Documentation: itemText.documentation,
+			TextEdit: protocol.TextEdit{
+				NewText: itemText.newText,
+				Range: protocol.Range{
+					Start: protocol.Position{
+						Line:      params.Position.Line,
+						Character: params.Position.Character - prefixLength,
+					},
+					End: params.Position,
+				},
+			},
+		})
+	}
+	return items
 }
 
 func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
