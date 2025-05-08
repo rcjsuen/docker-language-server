@@ -35,7 +35,7 @@ func schemaProperties() map[string]*jsonschema.Schema {
 	return composeSchema.Properties
 }
 
-func nodeProperties(nodes []*ast.MappingValueNode, line, column int) (any, bool) {
+func nodeProperties(nodes []*ast.MappingValueNode, line, column int) ([]*ast.MappingValueNode, any, bool) {
 	if composeSchema != nil && slices.Contains(composeSchema.Types.ToStrings(), "object") && composeSchema.Properties != nil {
 		if prop, ok := composeSchema.Properties[nodes[0].Key.GetToken().Value]; ok {
 			for regexp, property := range prop.PatternProperties {
@@ -47,18 +47,15 @@ func nodeProperties(nodes []*ast.MappingValueNode, line, column int) (any, bool)
 			}
 		}
 	}
-	return nil, false
+	return nodes, nil, false
 }
 
-func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffset int, properties map[string]*jsonschema.Schema, arrayAttributes bool) (any, bool) {
+func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffset int, properties map[string]*jsonschema.Schema, arrayAttributes bool) ([]*ast.MappingValueNode, any, bool) {
 	if len(nodes) == nodeOffset {
-		return properties, arrayAttributes
+		return nodes, properties, arrayAttributes
 	}
-	if len(nodes) >= nodeOffset+2 && nodes[nodeOffset].Key.GetToken().Position.Column == column {
-		return properties, false
-	}
-	if column == nodes[nodeOffset].Key.GetToken().Position.Column {
-		return properties, false
+	if nodes[nodeOffset].Key.GetToken().Position.Column == column {
+		return nodes[0:nodeOffset], properties, false
 	}
 
 	value := nodes[nodeOffset].Key.GetToken().Value
@@ -96,7 +93,7 @@ func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffs
 
 				for regexp, property := range schema.PatternProperties {
 					if len(nodes) == nodeOffset+1 {
-						return nil, false
+						return nodes, nil, false
 					}
 
 					nextValue := nodes[nodeOffset+1].Key.GetToken().Value
@@ -124,11 +121,11 @@ func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffs
 
 		if nodes[nodeOffset].Key.GetToken().Position.Column < column {
 			if nodes[nodeOffset].Key.GetToken().Position.Line == line {
-				return prop, false
+				return nodes, prop, false
 			}
 			return recurseNodeProperties(nodes, line, column, nodeOffset+1, prop.Properties, false)
 		}
-		return prop.Properties, false
+		return nodes, prop.Properties, false
 	}
-	return properties, false
+	return nodes, properties, false
 }
