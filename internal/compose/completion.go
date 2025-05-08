@@ -21,6 +21,67 @@ type completionItemText struct {
 	documentation string
 }
 
+type textEditModifier struct {
+	isInterested func(attributeName string, path []*ast.MappingValueNode) bool
+	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit
+}
+
+var buildTargetModifier = textEditModifier{
+	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
+		return attributeName == "target" && len(path) == 3 && path[2].Key.GetToken().Value == "build"
+	},
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+		if _, ok := path[2].Value.(*ast.NullNode); ok {
+			dockerfilePath, err := types.LocalDockerfile(u)
+			if err == nil {
+				stages := findBuildStages(manager, dockerfilePath, "")
+				if len(stages) > 0 {
+					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+					return edit
+				}
+			}
+		} else if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
+			dockerfileAttributePath := "Dockerfile"
+			for _, buildAttribute := range mappingNode.Values {
+				switch buildAttribute.Key.GetToken().Value {
+				case "dockerfile_inline":
+					return edit
+				case "dockerfile":
+					dockerfileAttributePath = buildAttribute.Value.GetToken().Value
+				}
+			}
+
+			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
+			if err == nil {
+				stages := findBuildStages(manager, dockerfilePath, "")
+				if len(stages) > 0 {
+					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+					return edit
+				}
+			}
+		}
+		return edit
+	},
+}
+
+var serviceSuggestionModifier = textEditModifier{
+	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
+		return attributeName == "service" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "extends"
+	},
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+		services := []completionItemText{}
+		for _, service := range findDependencies(file, "services") {
+			if service != path[1].Key.GetToken().Value {
+				services = append(services, completionItemText{newText: service})
+			}
+		}
+		edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(services))
+		return edit
+	},
+}
+
+var textEditModifiers = []textEditModifier{buildTargetModifier, serviceSuggestionModifier}
+
 func prefix(line string, character int) string {
 	sb := strings.Builder{}
 	for i := range character {
@@ -89,7 +150,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	}
 
 	wordPrefix := prefix(lines[lspLine], character-1)
-	dependencies := dependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
+	dependencies := dependencyCompletionItems(file, path, nodeProps, params, protocol.UInteger(len(wordPrefix)))
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
@@ -107,7 +169,6 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
 	}
 	isArray := array(lines[lspLine], character-1)
-	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
 	if isArray != arrayAttributes {
 		return nil, nil
 	}
@@ -190,7 +251,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					},
 				}
 			}
-			item.TextEdit = modifyTextEdit(manager, u, item.TextEdit.(protocol.TextEdit), attributeName, path)
+			item.TextEdit = modifyTextEdit(file, manager, u, item.TextEdit.(protocol.TextEdit), attributeName, path)
 			items = append(items, item)
 		}
 	}
@@ -216,36 +277,10 @@ func createChoiceSnippetText(itemTexts []completionItemText) string {
 	return sb.String()
 }
 
-func modifyTextEdit(manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
-	if attributeName == "target" && len(path) == 3 && path[2].Key.GetToken().Value == "build" {
-		if _, ok := path[2].Value.(*ast.NullNode); ok {
-			dockerfilePath, err := types.LocalDockerfile(u)
-			if err == nil {
-				stages := findBuildStages(manager, dockerfilePath, "")
-				if len(stages) > 0 {
-					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
-					return edit
-				}
-			}
-		} else if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
-			dockerfileAttributePath := "Dockerfile"
-			for _, buildAttribute := range mappingNode.Values {
-				switch buildAttribute.Key.GetToken().Value {
-				case "dockerfile_inline":
-					return edit
-				case "dockerfile":
-					dockerfileAttributePath = buildAttribute.Value.GetToken().Value
-				}
-			}
-
-			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
-			if err == nil {
-				stages := findBuildStages(manager, dockerfilePath, "")
-				if len(stages) > 0 {
-					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
-					return edit
-				}
-			}
+func modifyTextEdit(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+	for _, modified := range textEditModifiers {
+		if modified.isInterested(attributeName, path) {
+			return modified.modify(file, manager, u, edit, attributeName, path)
 		}
 	}
 	return edit
@@ -339,7 +374,7 @@ func createBuildStageItems(params *protocol.CompletionParams, manager *document.
 	return items
 }
 
-func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, nodeProps any, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	dependency := map[string]string{
 		"depends_on": "services",
 		"networks":   "networks",
@@ -347,6 +382,30 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, par
 	for serviceAttribute, dependencyType := range dependency {
 		items := namedDependencyCompletionItems(file, path, serviceAttribute, dependencyType, params, prefixLength)
 		if len(items) > 0 {
+			return items
+		}
+	}
+	if len(path) >= 3 && path[2].Key.GetToken().Value == "extends" && path[0].Key.GetToken().Value == "services" {
+		if (len(path) == 4 && path[3].Key.GetToken().Value == "service") || params.Position.Line == protocol.UInteger(path[2].Key.GetToken().Position.Line)-1 {
+			items := []protocol.CompletionItem{}
+			for _, service := range findDependencies(file, "services") {
+				if service != path[1].Key.GetToken().Value {
+					item := protocol.CompletionItem{
+						Label: service,
+						TextEdit: protocol.TextEdit{
+							NewText: service,
+							Range: protocol.Range{
+								Start: protocol.Position{
+									Line:      params.Position.Line,
+									Character: params.Position.Character - prefixLength,
+								},
+								End: params.Position,
+							},
+						},
+					}
+					items = append(items, item)
+				}
+			}
 			return items
 		}
 	}
