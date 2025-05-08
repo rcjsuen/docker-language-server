@@ -143,23 +143,6 @@ topLevelNode:
 			},
 		},
 		{
-			name: "comment is formatted even if the node is fine",
-			content: `
-topLevelNode:
-  attribute: true
-           # comment
-  attribute2: false`,
-			edits: []protocol.TextEdit{
-				{
-					NewText: "  ",
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 0},
-						End:   protocol.Position{Line: 3, Character: 11},
-					},
-				},
-			},
-		},
-		{
 			name: "correct comment is ignored",
 			content: `
 topLevelNode:

@@ -12,6 +12,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - set schema documentation to the completion items ([#176](https://github.com/docker/docker-language-server/issues/176))
     - automatically suggest boolean values for simple boolean attributes ([#179](https://github.com/docker/docker-language-server/issues/179))
     - suggest service names for a service's `extends` or `extends.service` attribute ([#184](https://github.com/docker/docker-language-server/issues/184))
+  - textDocument/hover
+    - render a referenced service's YAML content as a hover ([#157](https://github.com/docker/docker-language-server/issues/157))
 
 ### Fixed
 
