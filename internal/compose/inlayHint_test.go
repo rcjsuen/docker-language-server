@@ -199,6 +199,16 @@ services:
     extends: web`,
 			inlayHints: []protocol.InlayHint{},
 		},
+		{
+			name: "circular dependency",
+			content: `
+services:
+  test:
+    extends: test2
+  test2:
+    extends: test`,
+			inlayHints: []protocol.InlayHint{},
+		},
 	}
 
 	for _, tc := range testCases {

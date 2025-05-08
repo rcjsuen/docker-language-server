@@ -12,6 +12,12 @@ All notable changes to the Docker Language Server will be documented in this fil
     - set schema documentation to the completion items ([#176](https://github.com/docker/docker-language-server/issues/176))
     - automatically suggest boolean values for simple boolean attributes ([#179](https://github.com/docker/docker-language-server/issues/179))
 
+### Fixed
+
+- Compose
+  - textDocument/inlayHint
+    - prevent circular service dependencies from crashing the server ([#182](https://github.com/docker/docker-language-server/issues/182))
+
 ## [0.6.0] - 2025-05-07
 
 ### Added
