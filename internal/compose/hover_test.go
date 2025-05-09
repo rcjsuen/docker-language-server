@@ -91,7 +91,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `bind`\n- `cluster`\n- `image`\n- `npipe`\n- `tmpfs`\n- `volume`\n",
+					Value: "The mount type: bind for mounting host directories, volume for named volumes, tmpfs for temporary filesystems, cluster for cluster volumes, npipe for named pipes, or image for mounting from an image.\n\nAllowed values:\n- `bind`\n- `cluster`\n- `image`\n- `npipe`\n- `tmpfs`\n- `volume`\n",
 				},
 			},
 		},
@@ -109,7 +109,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `Z`\n- `z`\n",
+					Value: "SELinux relabeling options: 'z' for shared content, 'Z' for private unshared content.\n\nAllowed values:\n- `Z`\n- `z`\n",
 				},
 			},
 		},
@@ -127,7 +127,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
 				},
 			},
 		},
@@ -145,7 +145,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
 				},
 			},
 		},
@@ -163,7 +163,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
 				},
 			},
 		},
@@ -181,7 +181,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
 				},
 			},
 		},
@@ -196,7 +196,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `host`\n- `private`\n",
+					Value: "Specify the cgroup namespace to join. Use 'host' to use the host's cgroup namespace, or 'private' to use a private cgroup namespace.\n\nAllowed values:\n- `host`\n- `private`\n",
 				},
 			},
 		},
@@ -213,7 +213,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `service_completed_successfully`\n- `service_healthy`\n- `service_started`\n",
+					Value: "Condition to wait for. 'service_started' waits until the service has started, 'service_healthy' waits until the service is healthy (as defined by its healthcheck), 'service_completed_successfully' waits until the service has completed successfully.\n\nAllowed values:\n- `service_completed_successfully`\n- `service_healthy`\n- `service_started`\n",
 				},
 			},
 		},
@@ -231,7 +231,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `rebuild`\n- `restart`\n- `sync`\n- `sync+exec`\n- `sync+restart`\n",
+					Value: "Action to take when a change is detected: rebuild the container, sync files, restart the container, sync and restart, or sync and execute a command.\n\nAllowed values:\n- `rebuild`\n- `restart`\n- `sync`\n- `sync+exec`\n- `sync+restart`\n",
 				},
 			},
 		},
@@ -248,7 +248,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `start-first`\n- `stop-first`\n",
+					Value: "Order of operations during rollbacks: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n",
 				},
 			},
 		},
@@ -265,7 +265,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Allowed values:\n- `start-first`\n- `stop-first`\n",
+					Value: "Order of operations during updates: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n",
 				},
 			},
 		},

@@ -146,6 +146,10 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 			if property.Enum != nil {
 				if match.GetToken().Position.Column <= column && column <= lineLength {
 					var builder bytes.Buffer
+					if property.Description != "" {
+						builder.WriteString(property.Description)
+						builder.WriteString("\n\n")
+					}
 					builder.WriteString("Allowed values:\n")
 					enumValues := []string{}
 					for _, value := range property.Enum.Values {
