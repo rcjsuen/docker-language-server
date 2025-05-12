@@ -19,7 +19,7 @@ func TestRename_Services(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range serviceReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Rename(doc, &protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -43,7 +43,7 @@ func TestRename_Networks(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range networkReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Rename(doc, &protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -62,7 +62,7 @@ func TestRename_Volumes(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range volumeReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Rename(doc, &protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -81,7 +81,7 @@ func TestRename_Configs(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range configReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Rename(doc, &protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -100,7 +100,7 @@ func TestRename_Secrets(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range secretReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Rename(doc, &protocol.RenameParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},

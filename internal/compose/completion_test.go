@@ -2383,7 +2383,7 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
-			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
 			list, err := Completion(context.Background(), &protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -3124,7 +3124,8 @@ secrets:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
+			manager := document.NewDocumentManager()
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
 			list, err := Completion(context.Background(), &protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
@@ -3443,7 +3444,7 @@ services:
 				require.NoError(t, err)
 				require.True(t, changed)
 			}
-			doc := document.NewComposeDocument(uri.URI(composeFileURI), 1, []byte(tc.content))
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
 			list, err := Completion(context.Background(), &protocol.CompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},

@@ -114,6 +114,14 @@ func (m *Manager) Version(ctx context.Context, u uri.URI) (int32, error) {
 // If no file exists at the path or the URI is of an invalid type, an error is
 // returned.
 func (m *Manager) Read(ctx context.Context, u uri.URI) (doc Document, err error) {
+	return m.tryReading(ctx, u, true)
+}
+
+// Read returns the contents of the file for the given URI.
+//
+// If no file exists at the path or the URI is of an invalid type, an error is
+// returned.
+func (m *Manager) tryReading(ctx context.Context, u uri.URI, create bool) (doc Document, err error) {
 	m.mu.Lock()
 	defer func() {
 		if err == nil {
@@ -128,6 +136,9 @@ func (m *Manager) Read(ctx context.Context, u uri.URI) (doc Document, err error)
 	if doc, found = m.docs[u]; !found {
 		_, err = m.readAndParse(ctx, u)
 		doc = m.docs[u]
+		if !create {
+			delete(m.docs, u)
+		}
 	}
 
 	if os.IsNotExist(err) {
@@ -213,6 +224,8 @@ func (m *Manager) readAndParse(ctx context.Context, u uri.URI) (bool, error) {
 	identifier := protocol.DockerfileLanguage
 	if strings.HasSuffix(string(u), "hcl") {
 		identifier = protocol.DockerBakeLanguage
+	} else if strings.HasSuffix(string(u), "yml") || strings.HasSuffix(string(u), "yaml") {
+		identifier = protocol.DockerComposeLanguage
 	}
 
 	if _, found := m.docs[u]; !found {
@@ -229,7 +242,7 @@ func (m *Manager) parse(_ context.Context, uri uri.URI, identifier protocol.Lang
 	doc, loaded := m.docs[uri]
 	changed := true
 	if !loaded {
-		doc = m.newDocFunc(uri, identifier, version, input)
+		doc = m.newDocFunc(m, uri, identifier, version, input)
 		m.docs[uri] = doc
 		m.diagnosticsProcessing[uri] = &documentLock{queue: debounce.New(time.Millisecond * 50)}
 	} else {

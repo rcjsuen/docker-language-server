@@ -139,7 +139,7 @@ func TestCalculateDiagnostics(t *testing.T) {
 	c := NewService()
 	for _, tc := range testCases {
 		uri := uri.URI("uri:///Dockerfile")
-		doc := document.NewDocument(uri, protocol.DockerfileLanguage, 1, []byte(tc.content))
+		doc := document.NewDocument(document.NewDocumentManager(), uri, protocol.DockerfileLanguage, 1, []byte(tc.content))
 		testConfigs := []struct {
 			description   string
 			shouldScan    bool

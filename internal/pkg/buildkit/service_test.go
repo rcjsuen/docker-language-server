@@ -458,7 +458,7 @@ func TestParse(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			RemoveOverlappingIssues = false
-			doc := document.NewDocument(uri.URI("uri:///Dockerfile"), protocol.DockerfileLanguage, 1, []byte(tc.content))
+			doc := document.NewDocument(document.NewDocumentManager(), uri.URI("uri:///Dockerfile"), protocol.DockerfileLanguage, 1, []byte(tc.content))
 			diagnostics := collector.CollectDiagnostics("buildkit-testing-source", contextPath, doc, tc.content)
 			require.Equal(t, tc.diagnostics, diagnostics)
 

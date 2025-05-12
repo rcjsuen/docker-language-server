@@ -379,7 +379,7 @@ first:
 	u := uri.URI(composeFileURI)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			edits, err := Formatting(doc, protocol.FormattingOptions{
 				protocol.FormattingOptionTabSize: float64(2),
 			})

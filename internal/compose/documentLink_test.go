@@ -166,7 +166,7 @@ include:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument("docker-compose.yml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), "docker-compose.yml", 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)
@@ -419,7 +419,8 @@ services:
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument("docker-compose.yml", 1, []byte(tc.content))
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "docker-compose.yml", 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)

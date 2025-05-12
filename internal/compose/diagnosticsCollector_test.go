@@ -44,7 +44,7 @@ service:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			collector := NewComposeDiagnosticsCollector()
-			doc := document.NewComposeDocument(composeFileURI, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), composeFileURI, 1, []byte(tc.content))
 			diagnostics := collector.CollectDiagnostics("docker-language-server", "", doc, "")
 			require.Equal(t, tc.diagnostics, diagnostics)
 		})

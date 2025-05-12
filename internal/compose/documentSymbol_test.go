@@ -290,7 +290,7 @@ networks:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument("docker-compose.yml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), "docker-compose.yml", 1, []byte(tc.content))
 			symbols, err := DocumentSymbol(context.Background(), doc)
 			require.NoError(t, err)
 			var result []any

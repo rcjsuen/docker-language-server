@@ -9,6 +9,11 @@ import (
 	"github.com/goccy/go-yaml/token"
 )
 
+type dependencyReference struct {
+	dependencyType     string
+	documentHighlights []protocol.DocumentHighlight
+}
+
 func serviceDependencyReferences(node *ast.MappingValueNode, dependencyAttributeName string, arrayOnly bool) []*token.Token {
 	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
 		tokens := []*token.Token{}
@@ -129,9 +134,14 @@ func declarations(node *ast.MappingValueNode, dependencyType string) []*token.To
 }
 
 func DocumentHighlight(doc document.ComposeDocument, position protocol.Position) ([]protocol.DocumentHighlight, error) {
+	_, references := DocumentHighlights(doc, position)
+	return references.documentHighlights, nil
+}
+
+func DocumentHighlights(doc document.ComposeDocument, position protocol.Position) (string, dependencyReference) {
 	file := doc.File()
 	if file == nil || len(file.Docs) == 0 {
-		return nil, nil
+		return "", dependencyReference{documentHighlights: nil}
 	}
 
 	line := int(position.Line) + 1
@@ -152,9 +162,9 @@ func DocumentHighlight(doc document.ComposeDocument, position protocol.Position)
 					refs := serviceDependencyReferences(node, "depends_on", false)
 					refs = append(refs, extendedServiceReferences(node)...)
 					decls := declarations(node, "services")
-					highlights := highlightReferences(refs, decls, line, character)
-					if len(highlights) > 0 {
-						return highlights, nil
+					name, highlights := highlightReferences("services", refs, decls, line, character)
+					if len(highlights.documentHighlights) > 0 {
+						return name, highlights
 					}
 					networkRefs = serviceDependencyReferences(node, "networks", false)
 					configRefs = serviceDependencyReferences(node, "configs", true)
@@ -171,28 +181,28 @@ func DocumentHighlight(doc document.ComposeDocument, position protocol.Position)
 				}
 			}
 		}
-		highlights := highlightReferences(networkRefs, networkDeclarations, line, character)
-		if len(highlights) > 0 {
-			return highlights, nil
+		name, highlights := highlightReferences("networks", networkRefs, networkDeclarations, line, character)
+		if len(highlights.documentHighlights) > 0 {
+			return name, highlights
 		}
-		highlights = highlightReferences(volumeRefs, volumeDeclarations, line, character)
-		if len(highlights) > 0 {
-			return highlights, nil
+		name, highlights = highlightReferences("volumes", volumeRefs, volumeDeclarations, line, character)
+		if len(highlights.documentHighlights) > 0 {
+			return name, highlights
 		}
-		highlights = highlightReferences(configRefs, configDeclarations, line, character)
-		if len(highlights) > 0 {
-			return highlights, nil
+		name, highlights = highlightReferences("configs", configRefs, configDeclarations, line, character)
+		if len(highlights.documentHighlights) > 0 {
+			return name, highlights
 		}
-		highlights = highlightReferences(secretRefs, secretDeclarations, line, character)
-		if len(highlights) > 0 {
-			return highlights, nil
+		name, highlights = highlightReferences("secrets", secretRefs, secretDeclarations, line, character)
+		if len(highlights.documentHighlights) > 0 {
+			return name, highlights
 		}
-		return highlights, nil
+		return "", dependencyReference{documentHighlights: nil}
 	}
-	return nil, nil
+	return "", dependencyReference{documentHighlights: nil}
 }
 
-func highlightReferences(refs, decls []*token.Token, line, character int) []protocol.DocumentHighlight {
+func highlightReferences(dependencyType string, refs, decls []*token.Token, line, character int) (string, dependencyReference) {
 	var highlightedName *string
 	for _, reference := range refs {
 		if inToken(reference, line, character) {
@@ -223,34 +233,28 @@ func highlightReferences(refs, decls []*token.Token, line, character int) []prot
 				highlights = append(highlights, documentHighlightFromToken(declaration, protocol.DocumentHighlightKindWrite))
 			}
 		}
-		return highlights
+		return *highlightedName, dependencyReference{dependencyType: dependencyType, documentHighlights: highlights}
 	}
-	return nil
+	return "", dependencyReference{documentHighlights: nil}
+}
+
+func rangeFromToken(t *token.Token) *protocol.Range {
+	return &protocol.Range{
+		Start: protocol.Position{
+			Line:      protocol.UInteger(t.Position.Line) - 1,
+			Character: protocol.UInteger(t.Position.Column) - 1,
+		},
+		End: protocol.Position{
+			Line:      protocol.UInteger(t.Position.Line) - 1,
+			Character: protocol.UInteger(t.Position.Column+len(t.Value)) - 1,
+		},
+	}
 }
 
 func documentHighlightFromToken(t *token.Token, kind protocol.DocumentHighlightKind) protocol.DocumentHighlight {
-	return documentHighlight(
-		protocol.UInteger(t.Position.Line)-1,
-		protocol.UInteger(t.Position.Column)-1,
-		protocol.UInteger(t.Position.Line)-1,
-		protocol.UInteger(t.Position.Column+len(t.Value))-1,
-		kind,
-	)
-}
-
-func documentHighlight(startLine, startCharacter, endLine, endCharacter protocol.UInteger, kind protocol.DocumentHighlightKind) protocol.DocumentHighlight {
 	return protocol.DocumentHighlight{
-		Kind: &kind,
-		Range: protocol.Range{
-			Start: protocol.Position{
-				Line:      startLine,
-				Character: startCharacter,
-			},
-			End: protocol.Position{
-				Line:      endLine,
-				Character: endCharacter,
-			},
-		},
+		Kind:  &kind,
+		Range: *rangeFromToken(t),
 	}
 }
 

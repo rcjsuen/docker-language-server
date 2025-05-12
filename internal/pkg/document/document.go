@@ -15,13 +15,13 @@ type Document interface {
 	LanguageIdentifier() protocol.LanguageIdentifier
 }
 
-type NewDocumentFunc func(u uri.URI, identifier protocol.LanguageIdentifier, version int32, input []byte) Document
+type NewDocumentFunc func(mgr *Manager, u uri.URI, identifier protocol.LanguageIdentifier, version int32, input []byte) Document
 
-func NewDocument(u uri.URI, identifier protocol.LanguageIdentifier, version int32, input []byte) Document {
+func NewDocument(mgr *Manager, u uri.URI, identifier protocol.LanguageIdentifier, version int32, input []byte) Document {
 	if identifier == protocol.DockerBakeLanguage {
 		return NewBakeHCLDocument(u, version, input)
 	} else if identifier == protocol.DockerComposeLanguage {
-		return NewComposeDocument(u, version, input)
+		return NewComposeDocument(mgr, u, version, input)
 	}
 	return NewDockerfileDocument(u, version, input)
 }
