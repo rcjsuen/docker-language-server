@@ -119,7 +119,8 @@ include:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for path, content := range tc.externalContent {
-				os.WriteFile(filepath.Join(folder, path), []byte(content), 0644)
+				err := os.WriteFile(filepath.Join(folder, path), []byte(content), 0644)
+				require.NoError(t, err)
 			}
 			mgr := NewDocumentManager()
 			u := uri.URI(temporaryComposeFileURI)

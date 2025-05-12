@@ -745,7 +745,9 @@ services:
 	for _, tc := range testCases {
 		u := uri.URI(composeFileURI)
 		mgr := document.NewDocumentManager()
-		mgr.Write(context.Background(), uri.URI(otherFileURI), protocol.DockerComposeLanguage, 1, []byte(tc.otherContent))
+		changed, err := mgr.Write(context.Background(), uri.URI(otherFileURI), protocol.DockerComposeLanguage, 1, []byte(tc.otherContent))
+		require.NoError(t, err)
+		require.True(t, changed)
 		doc := document.NewComposeDocument(mgr, u, 1, []byte(tc.content))
 		params := protocol.DefinitionParams{
 			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
