@@ -443,7 +443,7 @@ services:
 	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(uri.URI(temporaryBakeFile), 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(temporaryBakeFile), 1, []byte(tc.content))
 			result, err := Hover(context.Background(), &protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: temporaryBakeFile},

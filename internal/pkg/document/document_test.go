@@ -79,7 +79,7 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			document := NewDocument("", protocol.DockerfileLanguage, 1, []byte(tc.content))
+			document := NewDocument(NewDocumentManager(), "", protocol.DockerfileLanguage, 1, []byte(tc.content))
 			document.Update(2, []byte(tc.newContent))
 			if tc.hasNodes {
 				require.Equal(t, tc.instructionValue, document.(DockerfileDocument).Nodes()[0].Value)

@@ -14,6 +14,22 @@ import (
 	"go.lsp.dev/uri"
 )
 
+func documentHighlight(startLine, startCharacter, endLine, endCharacter protocol.UInteger, kind protocol.DocumentHighlightKind) protocol.DocumentHighlight {
+	return protocol.DocumentHighlight{
+		Kind: &kind,
+		Range: protocol.Range{
+			Start: protocol.Position{
+				Line:      startLine,
+				Character: startCharacter,
+			},
+			End: protocol.Position{
+				Line:      endLine,
+				Character: endCharacter,
+			},
+		},
+	}
+}
+
 var serviceReferenceTestCases = []struct {
 	name          string
 	content       string
@@ -356,7 +372,7 @@ func TestDocumentHighlight_Services(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range serviceReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
 			slices.SortFunc(ranges, func(a, b protocol.DocumentHighlight) int {
 				return int(a.Range.Start.Line) - int(b.Range.Start.Line)
@@ -721,7 +737,7 @@ func TestDocumentHighlight_Networks(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range networkReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.ranges, ranges)
@@ -1073,7 +1089,7 @@ func TestDocumentHighlight_Volumes(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range volumeReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.ranges, ranges)
@@ -1299,7 +1315,7 @@ func TestDocumentHighlight_Configs(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range configReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.ranges, ranges)
@@ -1525,7 +1541,7 @@ func TestDocumentHighlight_Secrets(t *testing.T) {
 	u := uri.URI(composeFileURI)
 	for _, tc := range secretReferenceTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(u, 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
 			require.NoError(t, err)
 			require.Equal(t, tc.ranges, ranges)
