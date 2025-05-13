@@ -14,8 +14,8 @@ import (
 
 type Service interface {
 	textdocument.DiagnosticsCollector
-	Analyze(image string) ([]Diagnostic, error)
-	Hover(ctx context.Context, image string) (*protocol.Hover, error)
+	Analyze(documentURI protocol.DocumentUri, image string) ([]Diagnostic, error)
+	Hover(ctx context.Context, documentURI protocol.DocumentUri, image string) (*protocol.Hover, error)
 }
 
 type ServiceImpl struct {
@@ -29,11 +29,21 @@ func NewService() Service {
 	}
 }
 
-func (s *ServiceImpl) Hover(ctx context.Context, image string) (*protocol.Hover, error) {
+func (s *ServiceImpl) Hover(ctx context.Context, documentURI protocol.DocumentUri, image string) (*protocol.Hover, error) {
+	config := configuration.Get(documentURI)
 	resp, err := s.manager.Get(&ScoutImageKey{Image: image})
 	if err == nil {
 		hovers := []string{}
 		for _, info := range resp.Infos {
+			if !config.Experimental.Scout.CriticalHighVulnerabilities && info.Kind == "critical_high_vulnerabilities" {
+				continue
+			}
+			if !config.Experimental.Scout.RecommendedTag && info.Kind == "recommended_tag" {
+				continue
+			}
+			if !config.Experimental.Scout.Vulnerabilites && info.Kind == "vulnerabilities" {
+				continue
+			}
 			hovers = append(hovers, info.Description.Markdown)
 		}
 
@@ -49,12 +59,34 @@ func (s *ServiceImpl) Hover(ctx context.Context, image string) (*protocol.Hover,
 	return nil, err
 }
 
-func (s *ServiceImpl) Analyze(image string) ([]Diagnostic, error) {
+func (s *ServiceImpl) Analyze(documentURI protocol.DocumentUri, image string) ([]Diagnostic, error) {
+	config := configuration.Get(documentURI)
+	if !config.Experimental.VulnerabilityScanning {
+		return nil, nil
+	}
+
 	resp, err := s.manager.Get(&ScoutImageKey{Image: image})
 	if err != nil {
 		return nil, err
 	}
-	return resp.Diagnostics, nil
+
+	diagnostics := make([]Diagnostic, len(resp.Diagnostics))
+	for _, diagnostic := range resp.Diagnostics {
+		if !config.Experimental.Scout.CriticalHighVulnerabilities && diagnostic.Kind == "critical_high_vulnerabilities" {
+			continue
+		}
+		if !config.Experimental.Scout.NotPinnedDigest && diagnostic.Kind == "not_pinned_digest" {
+			continue
+		}
+		if !config.Experimental.Scout.RecommendedTag && diagnostic.Kind == "recommended_tag" {
+			continue
+		}
+		if !config.Experimental.Scout.Vulnerabilites && diagnostic.Kind == "vulnerabilities" {
+			continue
+		}
+		diagnostics = append(diagnostics, diagnostic)
+	}
+	return diagnostics, nil
 }
 
 func (s *ServiceImpl) CalculateDiagnostics(ctx context.Context, source string, doc document.Document) ([]protocol.Diagnostic, error) {
@@ -80,6 +112,19 @@ func (s *ServiceImpl) CalculateDiagnostics(ctx context.Context, source string, d
 				}
 
 				for _, diagnostic := range resp.Diagnostics {
+					if !config.Experimental.Scout.CriticalHighVulnerabilities && diagnostic.Kind == "critical_high_vulnerabilities" {
+						continue
+					}
+					if !config.Experimental.Scout.NotPinnedDigest && diagnostic.Kind == "not_pinned_digest" {
+						continue
+					}
+					if !config.Experimental.Scout.RecommendedTag && diagnostic.Kind == "recommended_tag" {
+						continue
+					}
+					if !config.Experimental.Scout.Vulnerabilites && diagnostic.Kind == "vulnerabilities" {
+						continue
+					}
+
 					namedEdits := []types.NamedEdit{}
 					for _, edit := range resp.Edits {
 						if diagnostic.Kind == edit.Diagnostic {

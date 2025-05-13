@@ -6,6 +6,11 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Added
 
+- Dockerfile
+  - textDocument/hover
+    - support configuring vulnerability hovers with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
+  - textDocument/publishDiagnostics
+    - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
 - Compose
   - textDocument/completion
     - support build stage names for the `target` attribute ([#173](https://github.com/docker/docker-language-server/issues/173))
@@ -16,6 +21,9 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support navigating to a dependency that is defined in another file ([#190](https://github.com/docker/docker-language-server/issues/190))
   - textDocument/hover
     - render a referenced service's YAML content as a hover ([#157](https://github.com/docker/docker-language-server/issues/157))
+- Bake
+  - textDocument/publishDiagnostics
+    - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
 
 ### Fixed
 

@@ -147,7 +147,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 							if templateExpr.IsStringLiteral() {
 								value, _ := templateExpr.Value(&hcl.EvalContext{})
 								target := value.AsString()
-								imageDiagnostics, err := c.scout.Analyze(target)
+								imageDiagnostics, err := c.scout.Analyze(protocol.DocumentUri(doc.URI()), target)
 								if err == nil {
 									for _, diagnostic := range imageDiagnostics {
 										if diagnostic.Kind == "critical_high_vulnerabilities" || diagnostic.Kind == "vulnerabilities" {

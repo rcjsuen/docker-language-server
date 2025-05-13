@@ -19,7 +19,20 @@ func HandleConfiguration(t *testing.T, conn *jsonrpc2.Conn, request *jsonrpc2.Re
 	require.NoError(t, err)
 	configurations := []configuration.Configuration{}
 	for range configurationParams.Items {
-		configurations = append(configurations, configuration.Configuration{Experimental: configuration.Experimental{VulnerabilityScanning: scanning}})
+		configurations = append(
+			configurations,
+			configuration.Configuration{
+				Experimental: configuration.Experimental{
+					VulnerabilityScanning: scanning,
+					Scout: configuration.Scout{
+						CriticalHighVulnerabilities: true,
+						NotPinnedDigest:             true,
+						RecommendedTag:              true,
+						Vulnerabilites:              true,
+					},
+				},
+			},
+		)
 	}
 	require.NoError(t, conn.Reply(context.Background(), request.ID, configurations))
 }
