@@ -26,6 +26,15 @@ type Configuration struct {
 type Experimental struct {
 	// docker.lsp.experimental.vulnerabilityScanning
 	VulnerabilityScanning bool `json:"vulnerabilityScanning"`
+	// docker.lsp.experimental.scout
+	Scout Scout `json:"scout"`
+}
+
+type Scout struct {
+	CriticalHighVulnerabilities bool `json:"criticalHighVulnerabilities"`
+	NotPinnedDigest             bool `json:"notPinnedDigest"`
+	RecommendedTag              bool `json:"recommendedTag"`
+	Vulnerabilites              bool `json:"vulnerabilites"`
 }
 
 var configurations = make(map[protocol.DocumentUri]Configuration)
@@ -34,6 +43,12 @@ var defaultConfiguration = Configuration{
 	Telemetry: TelemetrySettingAll,
 	Experimental: Experimental{
 		VulnerabilityScanning: true,
+		Scout: Scout{
+			CriticalHighVulnerabilities: true,
+			NotPinnedDigest:             true,
+			RecommendedTag:              true,
+			Vulnerabilites:              true,
+		},
 	},
 }
 

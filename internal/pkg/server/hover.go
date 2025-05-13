@@ -29,7 +29,7 @@ func (s *Server) TextDocumentHover(ctx *glsp.Context, params *protocol.HoverPara
 	if ok {
 		instruction := dockerfileDocument.Instruction(params.Position)
 		if instruction != nil && strings.EqualFold(instruction.Value, "FROM") && instruction.Next != nil {
-			return s.scoutService.Hover(ctx.Context, instruction.Next.Value)
+			return s.scoutService.Hover(ctx.Context, params.TextDocument.URI, instruction.Next.Value)
 		}
 		return nil, nil
 	}
