@@ -2,9 +2,7 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## [0.7.0] - 2025-05-09
-
-### Added
+ ## [Unreleased]
 
 - Dockerfile
   - textDocument/hover
@@ -12,18 +10,25 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/publishDiagnostics
     - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
 - Compose
+  - updated Compose schema to the latest version
+  - textDocument/definition
+    - support navigating to a dependency that is defined in another file ([#190](https://github.com/docker/docker-language-server/issues/190))
+- Bake
+  - textDocument/publishDiagnostics
+    - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
+
+## [0.7.0] - 2025-05-09
+
+### Added
+
+- Compose
   - textDocument/completion
     - support build stage names for the `target` attribute ([#173](https://github.com/docker/docker-language-server/issues/173))
     - set schema documentation to the completion items ([#176](https://github.com/docker/docker-language-server/issues/176))
     - automatically suggest boolean values for simple boolean attributes ([#179](https://github.com/docker/docker-language-server/issues/179))
     - suggest service names for a service's `extends` or `extends.service` attribute ([#184](https://github.com/docker/docker-language-server/issues/184))
-  - textDocument/definition
-    - support navigating to a dependency that is defined in another file ([#190](https://github.com/docker/docker-language-server/issues/190))
   - textDocument/hover
     - render a referenced service's YAML content as a hover ([#157](https://github.com/docker/docker-language-server/issues/157))
-- Bake
-  - textDocument/publishDiagnostics
-    - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
 
 ### Fixed
 
