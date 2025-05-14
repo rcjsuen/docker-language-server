@@ -127,7 +127,7 @@ func TestCollectDiagnostics(t *testing.T) {
 		},
 		{
 			name:        "args references built-in args",
-			content:     "target \"t1\" {\n  args = {\n    HTTP_PROXY = \"\"\n    HTTPS_PROXY = \"\"\n    FTP_PROXY = \"\"\n    NO_PROXY = \"\"\n    ALL_PROXY = \"\"\n  }\n}",
+			content:     "target \"t1\" {\n  args = {\n    HTTP_PROXY = \"\"\n    HTTPS_PROXY = \"\"\n    FTP_PROXY = \"\"\n    NO_PROXY = \"\"\n    ALL_PROXY = \"\"\n    BUILDKIT_SYNTAX = \"\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
