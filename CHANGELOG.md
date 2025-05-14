@@ -4,6 +4,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 
  ## [Unreleased]
 
+### Added
+
 - Dockerfile
   - textDocument/hover
     - support configuring vulnerability hovers with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
@@ -16,6 +18,12 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/publishDiagnostics
     - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
+
+### Fixed
+
+- Bake
+  - textDocument/publishDiagnostics
+    - stop flagging `BUILDKIT_SYNTAX` as an unrecognized `ARG` ([#187](https://github.com/docker/docker-language-server/issues/187))
 
 ## [0.7.0] - 2025-05-09
 
