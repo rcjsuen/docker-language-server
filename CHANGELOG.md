@@ -23,6 +23,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 
+- Compose
+  - textDocument/completion
+    - fix panic in code completion in an empty file ([#196](https://github.com/docker/docker-language-server/issues/196))
 - Bake
   - textDocument/publishDiagnostics
     - stop flagging `BUILDKIT_SYNTAX` as an unrecognized `ARG` ([#187](https://github.com/docker/docker-language-server/issues/187))

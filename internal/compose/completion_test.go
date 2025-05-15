@@ -15,6 +15,41 @@ import (
 	"go.lsp.dev/uri"
 )
 
+var topLevelNodes = []protocol.CompletionItem{
+	{
+		Label:         "configs",
+		Documentation: "Configurations that are shared among multiple services.",
+	},
+	{
+		Label:         "include",
+		Documentation: "compose sub-projects to be included.",
+	},
+	{
+		Label:         "name",
+		Documentation: "define the Compose project name, until user defines one explicitly.",
+	},
+	{
+		Label:         "networks",
+		Documentation: "Networks that are shared among multiple services.",
+	},
+	{
+		Label:         "secrets",
+		Documentation: "Secrets that are shared among multiple services.",
+	},
+	{
+		Label:         "services",
+		Documentation: "The services that will be used by your application.",
+	},
+	{
+		Label:         "version",
+		Documentation: "declared for backward compatibility, ignored. Please remove it.",
+	},
+	{
+		Label:         "volumes",
+		Documentation: "Named volumes that are shared among multiple services.",
+	},
+}
+
 func serviceProperties(line, character, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	return []protocol.CompletionItem{
 		{
@@ -934,40 +969,90 @@ configs:
 			line:      3,
 			character: 0,
 			list: &protocol.CompletionList{
-				Items: []protocol.CompletionItem{
-					{
-						Label:         "configs",
-						Documentation: "Configurations that are shared among multiple services.",
-					},
-					{
-						Label:         "include",
-						Documentation: "compose sub-projects to be included.",
-					},
-					{
-						Label:         "name",
-						Documentation: "define the Compose project name, until user defines one explicitly.",
-					},
-					{
-						Label:         "networks",
-						Documentation: "Networks that are shared among multiple services.",
-					},
-					{
-						Label:         "secrets",
-						Documentation: "Secrets that are shared among multiple services.",
-					},
-					{
-						Label:         "services",
-						Documentation: "The services that will be used by your application.",
-					},
-					{
-						Label:         "version",
-						Documentation: "declared for backward compatibility, ignored. Please remove it.",
-					},
-					{
-						Label:         "volumes",
-						Documentation: "Named volumes that are shared among multiple services.",
-					},
-				},
+				Items: topLevelNodes,
+			},
+		},
+		{
+			name:      "top level node suggestions with a space in the front",
+			content:   ` `,
+			line:      0,
+			character: 1,
+			list: &protocol.CompletionList{
+				Items: topLevelNodes,
+			},
+		},
+		{
+			name: "top level node suggestions with indented content but code completion is unindented",
+			content: `
+ configs:
+   test:
+`,
+			line:      3,
+			character: 0,
+			list:      nil,
+		},
+		{
+			name: "top level node suggestions with indented content and code completion is aligned correctly",
+			content: `
+ configs:
+   test:
+ `,
+			line:      3,
+			character: 1,
+			list: &protocol.CompletionList{
+				Items: topLevelNodes,
+			},
+		},
+		{
+			name: "alignment correct with multiple documents",
+			content: `
+---
+---
+ configs:
+   test:
+ `,
+			line:      5,
+			character: 1,
+			list: &protocol.CompletionList{
+				Items: topLevelNodes,
+			},
+		},
+		{
+			name: "alignment incorrect with multiple documents",
+			content: `
+---
+configs:
+  test:
+---
+ configs:
+   test2:
+`,
+			line:      7,
+			character: 0,
+			list:      nil,
+		},
+		{
+			name: "top level node suggestions with indented content and code completion is aligned correctly but in a comment",
+			content: `
+ configs:
+   test:
+#`,
+			line:      3,
+			character: 1,
+			list:      nil,
+		},
+		{
+			name: "top level node suggestions with multiple files",
+			content: `
+---
+ configs:
+   test:
+---
+`,
+			line:      5,
+			character: 0,
+			list: &protocol.CompletionList{
+				Items: topLevelNodes,
 			},
 		},
 		{
