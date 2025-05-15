@@ -110,7 +110,7 @@ func TestHover(t *testing.T) {
 			position:            protocol.Position{Line: 0, Character: 4},
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindPlainText,
+					Kind:  protocol.MarkupKindMarkdown,
 					Value: "declared for backward compatibility, ignored. Please remove it.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
 				},
 			},
