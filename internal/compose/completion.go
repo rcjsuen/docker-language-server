@@ -108,31 +108,34 @@ func array(line string, character int) bool {
 	return isArray
 }
 
+func createTopLevelItems() []protocol.CompletionItem {
+	items := []protocol.CompletionItem{}
+	for attributeName, schema := range schemaProperties() {
+		item := protocol.CompletionItem{Label: attributeName}
+		if schema.Description != "" {
+			item.Documentation = schema.Description
+		}
+		items = append(items, item)
+	}
+	slices.SortFunc(items, func(a, b protocol.CompletionItem) int {
+		return strings.Compare(a.Label, b.Label)
+	})
+	return items
+}
+
+func calculateTopLevelNodeOffset(file *ast.File) int {
+	if len(file.Docs) == 1 {
+		if m, ok := file.Docs[0].Body.(*ast.MappingNode); ok {
+			return m.Values[0].Key.GetToken().Position.Column - 1
+		}
+	}
+	return -1
+}
+
 func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, doc document.ComposeDocument) (*protocol.CompletionList, error) {
 	u, err := url.Parse(params.TextDocument.URI)
 	if err != nil {
 		return nil, fmt.Errorf("LSP client sent invalid URI: %v", params.TextDocument.URI)
-	}
-
-	if params.Position.Character == 0 {
-		items := []protocol.CompletionItem{}
-		for attributeName, schema := range schemaProperties() {
-			item := protocol.CompletionItem{Label: attributeName}
-			if schema.Description != "" {
-				item.Documentation = schema.Description
-			}
-			items = append(items, item)
-		}
-		slices.SortFunc(items, func(a, b protocol.CompletionItem) int {
-			return strings.Compare(a.Label, b.Label)
-		})
-		return &protocol.CompletionList{Items: items}, nil
-	}
-
-	lines := strings.Split(string(doc.Input()), "\n")
-	lspLine := int(params.Position.Line)
-	if strings.HasPrefix(strings.TrimSpace(lines[lspLine]), "#") {
-		return nil, nil
 	}
 
 	file := doc.File()
@@ -140,10 +143,23 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return nil, nil
 	}
 
+	lspLine := int(params.Position.Line)
+	topLevelNodeOffset := calculateTopLevelNodeOffset(file)
+	if topLevelNodeOffset != -1 && params.Position.Character == uint32(topLevelNodeOffset) {
+		return &protocol.CompletionList{Items: createTopLevelItems()}, nil
+	}
+
+	lines := strings.Split(string(doc.Input()), "\n")
+	if strings.HasPrefix(strings.TrimSpace(lines[lspLine]), "#") {
+		return nil, nil
+	}
+
 	line := int(lspLine) + 1
 	character := int(params.Position.Character) + 1
 	path := constructCompletionNodePath(file, line)
-	if len(path) == 1 {
+	if len(path) == 0 {
+		return &protocol.CompletionList{Items: createTopLevelItems()}, nil
+	} else if len(path) == 1 {
 		return nil, nil
 	} else if path[1].Key.GetToken().Position.Column >= character {
 		return nil, nil
@@ -452,9 +468,19 @@ func namedDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode
 }
 
 func constructCompletionNodePath(file *ast.File, line int) []*ast.MappingValueNode {
-	for _, documentNode := range file.Docs {
-		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
-			return NodeStructure(line, mappingNode.Values)
+	for i := range len(file.Docs) {
+		if i+1 == len(file.Docs) {
+			if mappingNode, ok := file.Docs[i].Body.(*ast.MappingNode); ok {
+				return NodeStructure(line, mappingNode.Values)
+			}
+		}
+
+		if m, ok := file.Docs[i].Body.(*ast.MappingNode); ok {
+			if n, ok := file.Docs[i+1].Body.(*ast.MappingNode); ok {
+				if m.Values[0].Key.GetToken().Position.Line <= line && line <= n.Values[0].Key.GetToken().Position.Line {
+					return NodeStructure(line, m.Values)
+				}
+			}
 		}
 	}
 	return nil
