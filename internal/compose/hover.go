@@ -1,7 +1,6 @@
 package compose
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"slices"
@@ -119,6 +118,9 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 		}
 
 		if nested, ok := schema.Items.(*jsonschema.Schema); ok {
+			if nested.Ref != nil {
+				nested = nested.Ref
+			}
 			for _, n := range nested.OneOf {
 				if n.Types != nil && slices.Contains(n.Types.ToStrings(), "object") {
 					if len(n.Properties) > 0 {
@@ -145,7 +147,7 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 		if property, ok := schema.Properties[match.GetToken().Value]; ok {
 			if property.Enum != nil {
 				if match.GetToken().Position.Column <= column && column <= lineLength {
-					var builder bytes.Buffer
+					var builder strings.Builder
 					if property.Description != "" {
 						builder.WriteString(property.Description)
 						builder.WriteString("\n\n")
@@ -159,6 +161,12 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 					for _, value := range enumValues {
 						builder.WriteString(fmt.Sprintf("- `%v`\n", value))
 					}
+					builder.WriteString("\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)")
+					builder.WriteString(fmt.Sprintf(
+						"\n\n[Online documentation](https://docs.docker.com/reference/compose-file/%v/#%v)",
+						nodes[0].GetToken().Value,
+						nodes[2].GetToken().Value,
+					))
 					return &protocol.Hover{
 						Contents: protocol.MarkupContent{
 							Kind:  protocol.MarkupKindMarkdown,
@@ -169,10 +177,45 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 			}
 
 			if match.GetToken().Position.Line == line && match.GetToken().Position.Column+len(match.GetToken().Value) >= column && property.Description != "" {
+				var builder strings.Builder
+				builder.WriteString(property.Description)
+				builder.WriteString("\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)")
+				switch nodes[0].GetToken().Value {
+				case "name":
+					builder.WriteString("\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)")
+				case "version":
+					builder.WriteString("\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)")
+				case "include":
+					if len(nodes) == 1 {
+						builder.WriteString(fmt.Sprintf(
+							"\n\n[Online documentation](https://docs.docker.com/reference/compose-file/%v/)",
+							nodes[0].GetToken().Value,
+						))
+					} else {
+						builder.WriteString(fmt.Sprintf(
+							"\n\n[Online documentation](https://docs.docker.com/reference/compose-file/%v/#%v)",
+							nodes[0].GetToken().Value,
+							nodes[1].GetToken().Value,
+						))
+					}
+				default:
+					if len(nodes) == 1 {
+						builder.WriteString(fmt.Sprintf(
+							"\n\n[Online documentation](https://docs.docker.com/reference/compose-file/%v/)",
+							nodes[0].GetToken().Value,
+						))
+					} else {
+						builder.WriteString(fmt.Sprintf(
+							"\n\n[Online documentation](https://docs.docker.com/reference/compose-file/%v/#%v)",
+							nodes[0].GetToken().Value,
+							nodes[2].GetToken().Value,
+						))
+					}
+				}
 				return &protocol.Hover{
 					Contents: protocol.MarkupContent{
-						Kind:  protocol.MarkupKindPlainText,
-						Value: property.Description,
+						Kind:  protocol.MarkupKindMarkdown,
+						Value: builder.String(),
 					},
 				}
 			}

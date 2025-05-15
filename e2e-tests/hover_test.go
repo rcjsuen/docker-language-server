@@ -111,7 +111,7 @@ func TestHover(t *testing.T) {
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindPlainText,
-					Value: "declared for backward compatibility, ignored. Please remove it.",
+					Value: "declared for backward compatibility, ignored. Please remove it.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
 				},
 			},
 		},

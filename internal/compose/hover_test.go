@@ -29,8 +29,8 @@ func TestHover(t *testing.T) {
 			character: 4,
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindPlainText,
-					Value: "declared for backward compatibility, ignored. Please remove it.",
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "declared for backward compatibility, ignored. Please remove it.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
 				},
 			},
 		},
@@ -41,8 +41,8 @@ func TestHover(t *testing.T) {
 			character: 4,
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindPlainText,
-					Value: "define the Compose project name, until user defines one explicitly.",
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "define the Compose project name, until user defines one explicitly.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
 				},
 			},
 		},
@@ -67,8 +67,21 @@ func TestHover(t *testing.T) {
 			character: 4,
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindPlainText,
-					Value: "compose sub-projects to be included.",
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "compose sub-projects to be included.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/include/)",
+				},
+			},
+		},
+		{
+			name: "include's project_directory attribute",
+			content: `include:
+- project_directory: folder`,
+			line:      1,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Path to resolve relative paths set in the Compose file\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/include/#project_directory)",
 				},
 			},
 		},
@@ -91,7 +104,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "The mount type: bind for mounting host directories, volume for named volumes, tmpfs for temporary filesystems, cluster for cluster volumes, npipe for named pipes, or image for mounting from an image.\n\nAllowed values:\n- `bind`\n- `cluster`\n- `image`\n- `npipe`\n- `tmpfs`\n- `volume`\n",
+					Value: "The mount type: bind for mounting host directories, volume for named volumes, tmpfs for temporary filesystems, cluster for cluster volumes, npipe for named pipes, or image for mounting from an image.\n\nAllowed values:\n- `bind`\n- `cluster`\n- `image`\n- `npipe`\n- `tmpfs`\n- `volume`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -109,7 +122,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "SELinux relabeling options: 'z' for shared content, 'Z' for private unshared content.\n\nAllowed values:\n- `Z`\n- `z`\n",
+					Value: "SELinux relabeling options: 'z' for shared content, 'Z' for private unshared content.\n\nAllowed values:\n- `Z`\n- `z`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -127,7 +140,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -145,7 +158,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -163,7 +176,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -181,7 +194,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n",
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
 				},
 			},
 		},
@@ -196,7 +209,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Specify the cgroup namespace to join. Use 'host' to use the host's cgroup namespace, or 'private' to use a private cgroup namespace.\n\nAllowed values:\n- `host`\n- `private`\n",
+					Value: "Specify the cgroup namespace to join. Use 'host' to use the host's cgroup namespace, or 'private' to use a private cgroup namespace.\n\nAllowed values:\n- `host`\n- `private`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#cgroup)",
 				},
 			},
 		},
@@ -213,7 +226,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Condition to wait for. 'service_started' waits until the service has started, 'service_healthy' waits until the service is healthy (as defined by its healthcheck), 'service_completed_successfully' waits until the service has completed successfully.\n\nAllowed values:\n- `service_completed_successfully`\n- `service_healthy`\n- `service_started`\n",
+					Value: "Condition to wait for. 'service_started' waits until the service has started, 'service_healthy' waits until the service is healthy (as defined by its healthcheck), 'service_completed_successfully' waits until the service has completed successfully.\n\nAllowed values:\n- `service_completed_successfully`\n- `service_healthy`\n- `service_started`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#depends_on)",
 				},
 			},
 		},
@@ -231,7 +244,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Action to take when a change is detected: rebuild the container, sync files, restart the container, sync and restart, or sync and execute a command.\n\nAllowed values:\n- `rebuild`\n- `restart`\n- `sync`\n- `sync+exec`\n- `sync+restart`\n",
+					Value: "Action to take when a change is detected: rebuild the container, sync files, restart the container, sync and restart, or sync and execute a command.\n\nAllowed values:\n- `rebuild`\n- `restart`\n- `sync`\n- `sync+exec`\n- `sync+restart`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#develop)",
 				},
 			},
 		},
@@ -248,7 +261,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Order of operations during rollbacks: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n",
+					Value: "Order of operations during rollbacks: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#deploy)",
 				},
 			},
 		},
@@ -265,7 +278,7 @@ services:
 			result: &protocol.Hover{
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Order of operations during updates: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n",
+					Value: "Order of operations during updates: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#deploy)",
 				},
 			},
 		},
@@ -451,15 +464,7 @@ services:
 				},
 			}, doc)
 			require.NoError(t, err)
-			if tc.result == nil {
-				require.Nil(t, result)
-			} else {
-				require.NotNil(t, result)
-				require.Nil(t, result.Range)
-				markupContent, ok := result.Contents.(protocol.MarkupContent)
-				require.True(t, ok)
-				require.Equal(t, tc.result.Contents, markupContent)
-			}
+			require.Equal(t, tc.result, result)
 		})
 	}
 }
