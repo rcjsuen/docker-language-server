@@ -1,4 +1,4 @@
-FROM golang:1.23.8-alpine3.21 AS base
+FROM golang:1.24.3-alpine3.21 AS base
 WORKDIR /build
 RUN apk update && apk upgrade && apk add --no-cache ca-certificates go make && update-ca-certificates
 COPY . .
