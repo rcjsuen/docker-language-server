@@ -27,7 +27,7 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			nodePath := constructNodePath([]ast.Node{}, mappingNode, int(params.Position.Line+1), int(params.Position.Character+1))
-			result := serviceHover(mappingNode, nodePath)
+			result := serviceHover(doc, mappingNode, nodePath)
 			if result != nil {
 				return result, nil
 			}
@@ -40,41 +40,50 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 	return nil, nil
 }
 
-func createServiceHover(mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
+func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
+	split := strings.Split(node.String(), "\n")
+	skip := -1
+	for i := range len(split) {
+		if skip == -1 {
+			for j := range len(split[i]) {
+				if !unicode.IsSpace(rune(split[i][j])) {
+					skip = j
+					break
+				}
+			}
+		}
+		// extra check in case there are empty lines
+		if len(split[i]) > skip {
+			split[i] = split[i][skip:]
+		}
+	}
+	return &protocol.Hover{
+		Contents: protocol.MarkupContent{
+			Kind:  protocol.MarkupKindMarkdown,
+			Value: fmt.Sprintf("```YAML\n%v\n```", strings.Join(split, "\n")),
+		},
+	}
+}
+
+func createServiceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
 	for _, node := range mappingNode.Values {
 		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "services" {
 			for _, service := range node.Value.(*ast.MappingNode).Values {
 				if service.Key.GetToken().Value == serviceName {
-					split := strings.Split(service.String(), "\n")
-					skip := -1
-					for i := range len(split) {
-						if skip == -1 {
-							for j := 0; j < len(split[i]); j++ {
-								if !unicode.IsSpace(rune(split[i][j])) {
-									skip = j
-									break
-								}
-							}
-						}
-						// extra check in case there are empty lines
-						if len(split[i]) > skip {
-							split[i] = split[i][skip:]
-						}
-					}
-					return &protocol.Hover{
-						Contents: protocol.MarkupContent{
-							Kind:  protocol.MarkupKindMarkdown,
-							Value: fmt.Sprintf("```YAML\n%v\n```", strings.Join(split, "\n")),
-						},
-					}
+					return createYamlHover(service)
 				}
 			}
 		}
 	}
+
+	node, _ := dependencyLookup(doc, "services", serviceName)
+	if node != nil {
+		return createYamlHover(node)
+	}
 	return nil
 }
 
-func serviceHover(mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
 	if (len(nodePath) == 4 || len(nodePath) == 5) && nodePath[0].GetToken().Value == "services" {
 		if nodePath[2].GetToken().Value == "extends" {
 			serviceName := nodePath[3].GetToken().Value
@@ -89,7 +98,7 @@ func serviceHover(mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.H
 			} else if nodePath[3].GetToken().Next != nil && nodePath[3].GetToken().Next.Type == token.MappingValueType {
 				return nil
 			}
-			result := createServiceHover(mappingNode, serviceName)
+			result := createServiceHover(doc, mappingNode, serviceName)
 			if result != nil {
 				return result
 			}
@@ -102,7 +111,7 @@ func serviceHover(mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.H
 				return nil
 			}
 			serviceName := nodePath[3].GetToken().Value
-			result := createServiceHover(mappingNode, serviceName)
+			result := createServiceHover(doc, mappingNode, serviceName)
 			if result != nil {
 				return result
 			}

@@ -33,24 +33,10 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 	}
 
 	if definitionRange == nil {
-		files, _ := doc.IncludedFiles()
-	fileSearch:
-		for u, file := range files {
-			for _, doc := range file.Docs {
-				if mappingNode, ok := doc.Body.(*ast.MappingNode); ok {
-					for _, node := range mappingNode.Values {
-						if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependency.dependencyType {
-							for _, service := range node.Value.(*ast.MappingNode).Values {
-								if s, ok := service.Key.(*ast.StringNode); ok && s.Value == name {
-									definitionRange = rangeFromToken(s.Token)
-									targetURI = u
-									break fileSearch
-								}
-							}
-						}
-					}
-				}
-			}
+		node, u := dependencyLookup(doc, dependency.dependencyType, name)
+		if node != nil {
+			definitionRange = rangeFromToken(node.Key.GetToken())
+			targetURI = u
 		}
 	}
 
@@ -72,4 +58,24 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 		), nil
 	}
 	return nil, nil
+}
+
+func dependencyLookup(doc document.ComposeDocument, dependencyType, name string) (*ast.MappingValueNode, string) {
+	files, _ := doc.IncludedFiles()
+	for u, file := range files {
+		for _, doc := range file.Docs {
+			if mappingNode, ok := doc.Body.(*ast.MappingNode); ok {
+				for _, node := range mappingNode.Values {
+					if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
+						for _, service := range node.Value.(*ast.MappingNode).Values {
+							if s, ok := service.Key.(*ast.StringNode); ok && s.Value == name {
+								return service, u
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil, ""
 }

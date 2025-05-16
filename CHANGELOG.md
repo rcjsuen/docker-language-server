@@ -17,6 +17,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support navigating to a dependency that is defined in another file ([#190](https://github.com/docker/docker-language-server/issues/190))
   - textDocument/hover
     - improve hover result by linking to the schema and the online documentation ([#199](https://github.com/docker/docker-language-server/issues/199))
+    - add support for hovering over service names that are defined in a different file ([#207](https://github.com/docker/docker-language-server/issues/207))
 - Bake
   - textDocument/publishDiagnostics
     - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
