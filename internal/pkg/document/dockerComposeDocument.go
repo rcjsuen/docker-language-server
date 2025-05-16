@@ -37,7 +37,10 @@ func NewComposeDocument(mgr *Manager, u uri.URI, version int32, input []byte) Co
 			uri:        u,
 			identifier: protocol.DockerComposeLanguage,
 			version:    version,
-			input:      input,
+			// change all CRLF to LFs
+			// https://github.com/goccy/go-yaml/issues/560
+			// https://github.com/docker/docker-language-server/issues/205
+			input: []byte(strings.Replace(string(input), "\r\n", "\n", -1)),
 		},
 		mgr: mgr,
 	}
