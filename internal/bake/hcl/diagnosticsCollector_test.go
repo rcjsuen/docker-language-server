@@ -126,6 +126,21 @@ func TestCollectDiagnostics(t *testing.T) {
 			},
 		},
 		{
+			name:        "args resolution to a dockerfile that points to a variable",
+			content:     "variable var { }\ntarget \"t1\" {\n  dockerfile = var\nargs = {\n    missing = \"value\"\n  }\n}",
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name:        "args resolution when inherting a parent that points to a var",
+			content:     "variable var { }\ntarget \"t1\" {\n  inherits = [var]\nargs = {\n    missing = \"value\"\n  }\n}",
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name:        "args resolution when inherting a parent that points to a ${var}",
+			content:     "variable var { }\ntarget \"t1\" {\n  inherits = [\"${var}\"]\nargs = {\n    missing = \"value\"\n  }\n}",
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
 			name:        "args references built-in args",
 			content:     "target \"t1\" {\n  args = {\n    HTTP_PROXY = \"\"\n    HTTPS_PROXY = \"\"\n    FTP_PROXY = \"\"\n    NO_PROXY = \"\"\n    ALL_PROXY = \"\"\n    BUILDKIT_SYNTAX = \"\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
@@ -212,13 +227,67 @@ target "lint2" {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
 			bytes := []byte(tc.content)
-			err := os.WriteFile(bakeFilePath, bytes, 0644)
-			require.NoError(t, err)
-			t.Cleanup(func() {
-				err := os.Remove(bakeFilePath)
-				require.NoError(t, err)
-			})
+			collector := &BakeHCLDiagnosticsCollector{docs: manager, scout: scout.NewService()}
+			doc := document.NewBakeHCLDocument(bakeFileURI, 1, bytes)
+			diagnostics := collector.CollectDiagnostics("docker-language-server", "", doc, "")
+			require.Equal(t, tc.diagnostics, diagnostics)
+		})
+	}
+}
 
+func TestCollectDiagnostics_InterFileDependency(t *testing.T) {
+	testCases := []struct {
+		name        string
+		content     string
+		diagnostics []protocol.Diagnostic
+	}{
+		{
+			name: "child target's Dockerfile defines the ARG",
+			content: `
+target parent {
+  args = {
+    other = "value2"
+  }
+}
+
+target foo {
+  dockerfile = "Dockerfile2"
+  inherits = ["parent"]
+}`,
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name: "child target's Dockerfile defines the ARG but not another child",
+			content: `
+target parent {
+  args = {
+    other = "value2"
+  }
+}
+
+target foo {
+  dockerfile = "Dockerfile2"
+  inherits = ["parent"]
+}
+
+target foo2 {
+  inherits = ["parent"]
+}`,
+			diagnostics: []protocol.Diagnostic{},
+		},
+	}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
+	diagnosticsTestFolderPath := filepath.Join(projectRoot, "testdata", "diagnostics")
+	bakeFilePath := filepath.Join(diagnosticsTestFolderPath, "docker-bake.hcl")
+	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(bakeFilePath), "/")))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			bytes := []byte(tc.content)
 			collector := &BakeHCLDiagnosticsCollector{docs: manager, scout: scout.NewService()}
 			doc := document.NewBakeHCLDocument(bakeFileURI, 1, bytes)
 			diagnostics := collector.CollectDiagnostics("docker-language-server", "", doc, "")

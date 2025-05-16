@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
+	"github.com/moby/buildkit/frontend/dockerfile/parser"
 	"github.com/moby/buildkit/solver/errdefs"
 )
 
@@ -112,13 +113,23 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 		}
 	}
 
-	body, ok := doc.(document.BakeHCLDocument).File().Body.(*hclsyntax.Body)
+	bakeDoc := doc.(document.BakeHCLDocument)
+	body, ok := bakeDoc.File().Body.(*hclsyntax.Body)
 	if !ok {
 		return diagnostics
 	}
 
+	targetDockerfiles := map[string]string{}
+	dockerfileContent := map[string][]*parser.Node{}
+	for _, b := range body.Blocks {
+		if b.Type == "target" && len(b.Labels) == 1 {
+			dockerfilePath, _ := bakeDoc.DockerfileForTarget(b)
+			targetDockerfiles[b.Labels[0]] = dockerfilePath
+		}
+	}
+
 	for _, block := range body.Blocks {
-		if block.Type == "target" {
+		if block.Type == "target" && len(block.Labels) == 1 {
 			if _, ok := block.Body.Attributes["dockerfile-inline"]; ok {
 				if attribute, ok := block.Body.Attributes["dockerfile"]; ok {
 					diagnostics = append(diagnostics, protocol.Diagnostic{
@@ -206,7 +217,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			dockerfilePath, err := doc.(document.BakeHCLDocument).DockerfileForTarget(block)
+			dockerfilePath, err := bakeDoc.DockerfileForTarget(block)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
@@ -214,7 +225,16 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 			if attribute, ok := block.Body.Attributes["target"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
 					if literalValueExpr, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
-						diagnostic := c.checkTargetTarget(dockerfilePath, expr, literalValueExpr, source)
+						dockerfile := targetDockerfiles[block.Labels[0]]
+						if dockerfile == "" {
+							dockerfileContent[""] = nil
+						}
+						nodes, ok := dockerfileContent[dockerfile]
+						if !ok {
+							_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+							dockerfileContent[block.Labels[0]] = nodes
+						}
+						diagnostic := c.checkTargetTarget(nodes, expr, literalValueExpr, source)
 						if diagnostic != nil {
 							diagnostics = append(diagnostics, *diagnostic)
 						}
@@ -224,7 +244,31 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 
 			if attribute, ok := block.Body.Attributes["args"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok {
-					argsDiagnostics := c.checkTargetArgs(dockerfilePath, input, expr, source)
+					args := make(map[string]struct{})
+					for _, b := range body.Blocks {
+						if b.Type == "target" && len(b.Labels) == 1 && b.Labels[0] != block.Labels[0] {
+							parents, _ := bakeDoc.ParentTargets(b.Labels[0])
+							if slices.Contains(parents, block.Labels[0]) {
+								dockerfile := targetDockerfiles[b.Labels[0]]
+								if dockerfile == "" {
+									dockerfileContent[""] = nil
+								}
+								nodes, ok := dockerfileContent[dockerfile]
+								if !ok {
+									_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfile)
+									dockerfileContent[dockerfile] = nodes
+								}
+								c.collectARGs(nodes, args)
+							}
+						}
+					}
+
+					nodes, ok := dockerfileContent[dockerfilePath]
+					if !ok {
+						_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+						dockerfileContent[dockerfilePath] = nodes
+					}
+					argsDiagnostics := c.checkTargetArgs(nodes, input, expr, source, args)
 					diagnostics = append(diagnostics, argsDiagnostics...)
 				}
 			}
@@ -233,10 +277,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 	return diagnostics
 }
 
-// checkTargetArgs examines the args attribute of a target block.
-func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(dockerfilePath string, input []byte, expr *hclsyntax.ObjectConsExpr, source string) []protocol.Diagnostic {
-	_, nodes := document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
-	args := []string{}
+func (c *BakeHCLDiagnosticsCollector) collectARGs(nodes []*parser.Node, args map[string]struct{}) {
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "ARG") {
 			child = child.Next
@@ -246,12 +287,16 @@ func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(dockerfilePath string, inp
 				if idx != -1 {
 					value = value[:idx]
 				}
-				args = append(args, value)
+				args[value] = struct{}{}
 				child = child.Next
 			}
 		}
 	}
+}
 
+// checkTargetArgs examines the args attribute of a target block.
+func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(nodes []*parser.Node, input []byte, expr *hclsyntax.ObjectConsExpr, source string, args map[string]struct{}) []protocol.Diagnostic {
+	c.collectARGs(nodes, args)
 	diagnostics := []protocol.Diagnostic{}
 	for _, item := range expr.Items {
 		start := item.KeyExpr.Range().Start.Byte
@@ -264,27 +309,23 @@ func (c *BakeHCLDiagnosticsCollector) checkTargetArgs(dockerfilePath string, inp
 		if slices.Contains(builtinArgs, arg) {
 			continue
 		}
-
-		diagnostic := checkStringLiteral(
-			source,
-			arg,
-			fmt.Sprintf("'%v' not defined as an ARG in your Dockerfile", arg),
-			args,
-			item.KeyExpr.Range(),
-		)
-
-		if diagnostic != nil {
+		if _, ok := args[arg]; !ok {
+			diagnostic := createDiagnostic(
+				source,
+				fmt.Sprintf("'%v' not defined as an ARG in your Dockerfile", arg),
+				item.KeyExpr.Range(),
+			)
 			diagnostics = append(diagnostics, *diagnostic)
 		}
+
 	}
 	return diagnostics
 }
 
-func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(dockerfilePath string, expr *hclsyntax.TemplateExpr, literalValueExpr *hclsyntax.LiteralValueExpr, source string) *protocol.Diagnostic {
+func (c *BakeHCLDiagnosticsCollector) checkTargetTarget(nodes []*parser.Node, expr *hclsyntax.TemplateExpr, literalValueExpr *hclsyntax.LiteralValueExpr, source string) *protocol.Diagnostic {
 	value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 	target := value.AsString()
 
-	_, nodes := document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
 	found := false
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "FROM") {
@@ -330,7 +371,10 @@ func checkStringLiteral(diagnosticSource, attributeValue, message string, expect
 	if slices.Contains(expectedValues, attributeValue) {
 		return nil
 	}
+	return createDiagnostic(diagnosticSource, message, attributeRange)
+}
 
+func createDiagnostic(diagnosticSource, message string, attributeRange hcl.Range) *protocol.Diagnostic {
 	return &protocol.Diagnostic{
 		Message:  message,
 		Source:   types.CreateStringPointer(diagnosticSource),
