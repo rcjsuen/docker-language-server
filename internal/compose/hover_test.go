@@ -492,13 +492,69 @@ services:
 		},
 	}
 
-	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(temporaryBakeFile), 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(composeFile), 1, []byte(tc.content))
 			result, err := Hover(context.Background(), &protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
-					TextDocument: protocol.TextDocumentIdentifier{URI: temporaryBakeFile},
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFile},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
+func TestHover_InterFileSupport(t *testing.T) {
+	testCases := []struct {
+		name         string
+		content      string
+		otherContent string
+		line         uint32
+		character    uint32
+		result       *protocol.Hover
+	}{
+		{
+			name: "hovering over an extends service as a string",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  test2:
+    image: alpine:3.21
+    extends: test`,
+			otherContent: `
+services:
+  test:
+    image: alpine:3.20`,
+			line:      6,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `test:
+  image: alpine:3.20` +
+						"\n```",
+				},
+			},
+		},
+	}
+
+	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	composeOtherFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.other.yaml")), "/"))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			changed, err := mgr.Write(context.Background(), uri.URI(composeOtherFile), protocol.DockerComposeLanguage, 1, []byte(tc.otherContent))
+			require.NoError(t, err)
+			require.True(t, changed)
+			doc := document.NewComposeDocument(mgr, uri.URI(composeFile), 1, []byte(tc.content))
+			result, err := Hover(context.Background(), &protocol.HoverParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFile},
 					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
 			}, doc)
