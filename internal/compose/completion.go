@@ -360,8 +360,10 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 				if _, ok := path[3].Value.(*ast.NullNode); ok {
 					return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
 				} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
-					offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
-					return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+					if int(params.Position.Line) == path[3].Value.GetToken().Position.Line-1 {
+						offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
+						return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+					}
 				}
 			}
 		}
