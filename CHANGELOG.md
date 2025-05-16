@@ -29,6 +29,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/publishDiagnostics
     - stop flagging `BUILDKIT_SYNTAX` as an unrecognized `ARG` ([#187](https://github.com/docker/docker-language-server/issues/187))
+    - use inheritance to determine if an `ARG` is truly unused ([#198](https://github.com/docker/docker-language-server/issues/198))
 
 ## [0.7.0] - 2025-05-09
 

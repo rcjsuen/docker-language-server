@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"sync"
 
 	"github.com/docker/buildx/bake"
@@ -24,6 +25,7 @@ type BakeHCLDocument interface {
 	Decoder() *decoder.PathDecoder
 	File() *hcl.File
 	DockerfileForTarget(block *hclsyntax.Block) (string, error)
+	ParentTargets(target string) ([]string, bool)
 }
 
 type BakePrintOutput struct {
@@ -84,6 +86,80 @@ func (d *bakeHCLDocument) Decoder() *decoder.PathDecoder {
 	return d.decoder
 }
 
+func (d *bakeHCLDocument) findParentTargets(targets []string, target string) ([]string, bool) {
+	if slices.Contains(targets, target) {
+		return targets, false
+	} else {
+		targets = append(targets, target)
+	}
+
+	body := d.file.Body.(*hclsyntax.Body)
+	found := false
+	for _, block := range body.Blocks {
+		if block.Type == "target" && len(block.Labels) > 0 && block.Labels[0] == target {
+			found = true
+			if attr, ok := block.Body.Attributes["inherits"]; ok {
+				if tupleConsExpr, ok := attr.Expr.(*hclsyntax.TupleConsExpr); ok {
+					if len(tupleConsExpr.Exprs) == 0 {
+						return targets, true
+					}
+
+					for _, e := range tupleConsExpr.Exprs {
+						if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
+							if templateExpr.IsStringLiteral() {
+								value, _ := templateExpr.Value(&hcl.EvalContext{})
+								parent := value.AsString()
+								newTargets, resolved := d.findParentTargets(targets, parent)
+								if !resolved {
+									return nil, false
+								}
+								targets = newTargets
+							} else {
+								return nil, false
+							}
+						} else {
+							return nil, false
+						}
+					}
+					return targets, true
+				}
+				return nil, false
+			}
+			break
+		}
+	}
+	if !found {
+		return nil, false
+	}
+	return targets, true
+}
+
+func (d *bakeHCLDocument) ParentTargets(target string) ([]string, bool) {
+	body, ok := d.file.Body.(*hclsyntax.Body)
+	if !ok {
+		return nil, true
+	}
+
+	for _, block := range body.Blocks {
+		if block.Type == "target" && len(block.Labels) > 0 && block.Labels[0] == target {
+			if attr, ok := block.Body.Attributes["inherits"]; ok {
+				if _, ok := attr.Expr.(*hclsyntax.TupleConsExpr); ok {
+					parents, resolved := d.findParentTargets([]string{}, target)
+					if !resolved {
+						return nil, false
+					}
+					idx := slices.Index(parents, target)
+					parents[idx] = parents[len(parents)-1]
+					return parents[:len(parents)-1], true
+				}
+				return nil, false
+			}
+			return nil, true
+		}
+	}
+	return nil, true
+}
+
 func (d *bakeHCLDocument) extractBakeOutput() {
 	body, ok := d.File().Body.(*hclsyntax.Body)
 	if !ok {
@@ -137,6 +213,13 @@ func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (string, e
 		return "", errors.New("cannot parse Bake file")
 	}
 
+	if dockerfileAttribute, ok := block.Body.Attributes["dockerfile"]; ok {
+		// if the dockerfile attribute is not a simple string, do not try to resolve it
+		if expr, ok := dockerfileAttribute.Expr.(*hclsyntax.TemplateExpr); !ok || len(expr.Parts) != 1 {
+			return "", nil
+		}
+	}
+
 	url, err := url.Parse(string(d.URI()))
 	if err != nil {
 		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(d.URI()))
@@ -146,19 +229,19 @@ func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (string, e
 		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(d.URI()))
 	}
 
-	if block, ok := d.bakePrintOutput.Target[block.Labels[0]]; ok {
-		if block.DockerfileInline != nil {
+	if target, ok := d.bakePrintOutput.Target[block.Labels[0]]; ok {
+		if target.DockerfileInline != nil {
 			return "", nil
-		} else if block.Context != nil {
-			contextPath = *block.Context
+		} else if target.Context != nil {
+			contextPath = *target.Context
 			contextPath, err = types.AbsolutePath(url, contextPath)
 			if err != nil {
 				return "", nil
 			}
 		}
 
-		if block.Dockerfile != nil {
-			return filepath.Join(contextPath, *block.Dockerfile), nil
+		if target.Dockerfile != nil {
+			return filepath.Join(contextPath, *target.Dockerfile), nil
 		}
 		return filepath.Join(contextPath, "Dockerfile"), nil
 	}
