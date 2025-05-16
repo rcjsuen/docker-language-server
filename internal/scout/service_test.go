@@ -433,7 +433,7 @@ func TestGetHovers_IgnoresSpecifics(t *testing.T) {
 		{
 			name:  "ubuntu:24.04 (all)",
 			image: "ubuntu:24.04",
-			value: "Image vulnerabilities:   0C   0H   2M   6L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
+			value: "Image vulnerabilities:   0C   0H   2M   6L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
 			config: configuration.Scout{
 				CriticalHighVulnerabilities: true,
 				NotPinnedDigest:             true,
@@ -444,7 +444,7 @@ func TestGetHovers_IgnoresSpecifics(t *testing.T) {
 		{
 			name:  "ubuntu:24.04 (Vulnerabilites=false)",
 			image: "ubuntu:24.04",
-			value: "Recommended tags:\n\n<table>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
+			value: "Recommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
 			config: configuration.Scout{
 				CriticalHighVulnerabilities: true,
 				NotPinnedDigest:             true,
