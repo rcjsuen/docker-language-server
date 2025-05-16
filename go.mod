@@ -1,6 +1,6 @@
 module github.com/docker/docker-language-server
 
-go 1.23.8
+go 1.24.3
 
 require (
 	github.com/bep/debounce v1.2.1
