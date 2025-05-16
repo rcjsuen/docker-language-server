@@ -3411,6 +3411,44 @@ services:
 			},
 		},
 		{
+			name:              "completion on line different from the target attribute",
+			dockerfileContent: "FROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      target:
+        `,
+			line:      5,
+			character: 8,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "astage",
+							Documentation: "alpine",
+							TextEdit:      textEdit("astage", 5, 8, 0),
+						},
+					},
+				}
+			},
+		},
+		{
+			name:              "completion on a different line from target that already has content",
+			dockerfileContent: "FROM scratch AS stage",
+			content: `
+services:
+  postgres:
+    build:
+      target: ab
+        `,
+			line:      5,
+			character: 8,
+			list: func() *protocol.CompletionList {
+				return nil
+			},
+		},
+		{
 			name:              "no build stages suggested if dockerfile_inline used",
 			dockerfileContent: "FROM scratch AS base",
 			content: `
