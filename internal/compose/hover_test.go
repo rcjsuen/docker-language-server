@@ -548,7 +548,9 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			mgr.Write(context.Background(), uri.URI(composeOtherFile), protocol.DockerComposeLanguage, 1, []byte(tc.otherContent))
+			changed, err := mgr.Write(context.Background(), uri.URI(composeOtherFile), protocol.DockerComposeLanguage, 1, []byte(tc.otherContent))
+			require.NoError(t, err)
+			require.True(t, changed)
 			doc := document.NewComposeDocument(mgr, uri.URI(composeFile), 1, []byte(tc.content))
 			result, err := Hover(context.Background(), &protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
