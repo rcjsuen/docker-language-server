@@ -451,6 +451,45 @@ services:
 				},
 			},
 		},
+		{
+			name: "container_name attribute on services",
+			content: `
+services:
+  test:
+    container_name: abc`,
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
+		{
+			name:      "container_name attribute with a comment before it",
+			content:   "services:\n  test:\n#\n    container_name: abc",
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
+		{
+			name:      "container_name attribute with a comment before it (CRLF)",
+			content:   "services:\r\n  test:\r\n#\r\n    container_name: abc",
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
 	}
 
 	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
