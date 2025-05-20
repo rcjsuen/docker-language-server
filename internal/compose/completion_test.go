@@ -50,13 +50,13 @@ var topLevelNodes = []protocol.CompletionItem{
 	},
 }
 
-func serviceProperties(line, character, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func serviceProperties(line, character, prefixLength protocol.UInteger, spacing string) []protocol.CompletionItem {
 	return []protocol.CompletionItem{
 		{
 			Label:            "annotations",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-			TextEdit:         textEdit("annotations:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("annotations:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -71,7 +71,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "blkio_config",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Block IO configuration for the service.",
-			TextEdit:         textEdit("blkio_config:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("blkio_config:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -87,7 +87,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "cap_add",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Add Linux capabilities. For example, 'CAP_SYS_ADMIN', 'SYS_ADMIN', or 'NET_ADMIN'.",
-			TextEdit:         textEdit("cap_add:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("cap_add:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -95,7 +95,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "cap_drop",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Drop Linux capabilities. For example, 'CAP_SYS_ADMIN', 'SYS_ADMIN', or 'NET_ADMIN'.",
-			TextEdit:         textEdit("cap_drop:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("cap_drop:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -127,7 +127,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "configs",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
-			TextEdit:         textEdit("configs:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("configs:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -215,7 +215,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "credential_spec",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Configure the credential spec for managed service account.",
-			TextEdit:         textEdit("credential_spec:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("credential_spec:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -223,7 +223,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "depends_on",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Express dependency between services. Service dependencies cause services to be started in dependency order. The dependent service will wait for the dependency to be ready before starting.",
-			TextEdit:         textEdit("depends_on:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("depends_on:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -247,7 +247,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "device_cgroup_rules",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "A list of unique string values.",
-			TextEdit:         textEdit("device_cgroup_rules:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("device_cgroup_rules:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -255,7 +255,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "devices",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "List of device mappings for the container.",
-			TextEdit:         textEdit("devices:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("devices:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -271,7 +271,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "dns_opt",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Custom DNS options to be passed to the container's DNS resolver.",
-			TextEdit:         textEdit("dns_opt:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("dns_opt:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -310,7 +310,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "environment",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-			TextEdit:         textEdit("environment:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("environment:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -318,7 +318,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "expose",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Expose ports without publishing them to the host machine - they'll only be accessible to linked services.",
-			TextEdit:         textEdit("expose:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("expose:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -334,7 +334,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "external_links",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Link to services started outside this Compose application. Specify services as <service_name>:<alias>.",
-			TextEdit:         textEdit("external_links:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("external_links:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -342,7 +342,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "extra_hosts",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Additional hostnames to be defined in the container's /etc/hosts file.",
-			TextEdit:         textEdit("extra_hosts:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("extra_hosts:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -357,7 +357,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "group_add",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Add additional groups which user inside the container should be member of.",
-			TextEdit:         textEdit("group_add:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("group_add:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -365,7 +365,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "healthcheck",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Configuration options to determine whether the container is healthy.",
-			TextEdit:         textEdit("healthcheck:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("healthcheck:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -420,7 +420,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "labels",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-			TextEdit:         textEdit("labels:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("labels:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -428,7 +428,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "links",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Link to containers in another service. Either specify both the service name and a link alias (SERVICE:ALIAS), or just the service name.",
-			TextEdit:         textEdit("links:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("links:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -436,7 +436,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "logging",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Logging configuration for the service.",
-			TextEdit:         textEdit("logging:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("logging:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -492,7 +492,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "networks",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Networks to join, referencing entries under the top-level networks key. Can be a list of network names or a mapping of network name to network configuration.",
-			TextEdit:         textEdit("networks:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("networks:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -540,7 +540,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "ports",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Expose container ports. Short format ([HOST:]CONTAINER[/PROTOCOL]).",
-			TextEdit:         textEdit("ports:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("ports:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -548,7 +548,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "post_start",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Commands to run after the container starts. If any command fails, the container stops.",
-			TextEdit:         textEdit("post_start:\n      - command:", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("post_start:\n%v      - command:", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -556,7 +556,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "pre_stop",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Commands to run before the container stops. If any command fails, the container stop is aborted.",
-			TextEdit:         textEdit("pre_stop:\n      - command:", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("pre_stop:\n%v      - command:", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -572,7 +572,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "profiles",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "A list of unique string values.",
-			TextEdit:         textEdit("profiles:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("profiles:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -580,7 +580,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "provider",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Specify a service which will not be manage by Compose directly, and delegate its management to an external provider.",
-			TextEdit:         textEdit("provider:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("provider:\n%v      type: ${1:model}\n%v      options:\n%v        ${2:model}: ${3:ai/example-model}", spacing, spacing, spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -636,7 +636,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "secrets",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Configuration for service configs or secrets, defining how they are mounted in the container.",
-			TextEdit:         textEdit("secrets:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("secrets:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -644,7 +644,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "security_opt",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Override the default labeling scheme for each container.",
-			TextEdit:         textEdit("security_opt:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("security_opt:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -684,7 +684,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "storage_opt",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Storage driver options for the container.",
-			TextEdit:         textEdit("storage_opt:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("storage_opt:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -692,7 +692,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "sysctls",
 			Detail:           types.CreateStringPointer("array or object"),
 			Documentation:    "Either a dictionary mapping keys to values, or a list of strings.",
-			TextEdit:         textEdit("sysctls:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("sysctls:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -716,7 +716,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "ulimits",
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
-			TextEdit:         textEdit("ulimits:\n      ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("ulimits:\n%v      ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -748,7 +748,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "volumes",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Mount host paths or named volumes accessible to the container. Short syntax (VOLUME:CONTAINER_PATH[:MODE])",
-			TextEdit:         textEdit("volumes:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("volumes:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -756,7 +756,7 @@ func serviceProperties(line, character, prefixLength protocol.UInteger) []protoc
 			Label:            "volumes_from",
 			Detail:           types.CreateStringPointer("array"),
 			Documentation:    "Mount volumes from another service or container. Optionally specify read-only access (ro) or read-write (rw).",
-			TextEdit:         textEdit("volumes_from:\n      - ", line, character, prefixLength),
+			TextEdit:         textEdit(fmt.Sprintf("volumes_from:\n%v      - ", spacing), line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -1313,7 +1313,19 @@ services:
 			line:      3,
 			character: 4,
 			list: &protocol.CompletionList{
-				Items: serviceProperties(3, 4, 0),
+				Items: serviceProperties(3, 4, 0, ""),
+			},
+		},
+		{
+			name: "service attributes respects spacing",
+			content: `
+  services:
+    test:
+      `,
+			line:      3,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: serviceProperties(3, 6, 0, "  "),
 			},
 		},
 		{
@@ -1325,7 +1337,7 @@ services:
 			line:      3,
 			character: 5,
 			list: &protocol.CompletionList{
-				Items: serviceProperties(3, 5, 1),
+				Items: serviceProperties(3, 5, 1, ""),
 			},
 		},
 		{
@@ -1836,7 +1848,7 @@ services:
 			line:      4,
 			character: 4,
 			list: &protocol.CompletionList{
-				Items: serviceProperties(4, 4, 0),
+				Items: serviceProperties(4, 4, 0, ""),
 			},
 		},
 		{
@@ -1862,7 +1874,7 @@ services:
 			line:      5,
 			character: 4,
 			list: &protocol.CompletionList{
-				Items: serviceProperties(5, 4, 0),
+				Items: serviceProperties(5, 4, 0, ""),
 			},
 		},
 		{
@@ -1983,7 +1995,7 @@ services:
 			line:      5,
 			character: 4,
 			list: &protocol.CompletionList{
-				Items: serviceProperties(5, 4, 0),
+				Items: serviceProperties(5, 4, 0, ""),
 			},
 		},
 		{
@@ -3218,11 +3230,7 @@ secrets:
 				},
 			}, nil, doc)
 			require.NoError(t, err)
-			if tc.list == nil {
-				require.Nil(t, list)
-			} else {
-				require.Equal(t, tc.list, list)
-			}
+			require.Equal(t, tc.list, list)
 		})
 	}
 }
@@ -3575,11 +3583,73 @@ services:
 				},
 			}, manager, doc)
 			require.NoError(t, err)
-			if tc.list == nil {
-				require.Nil(t, list)
-			} else {
-				require.Equal(t, tc.list(), list)
-			}
+			require.Equal(t, tc.list(), list)
+		})
+	}
+}
+
+func TestCompletion_CustomServiceProvider(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		list      *protocol.CompletionList
+	}{
+		{
+			name: "type auto-suggests model",
+			content: `
+services:
+  custom:
+    provider:
+      `,
+			line:      4,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "configs",
+						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Config files to pass to the provider.",
+						TextEdit:         textEdit("configs:\n        ", 4, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "options",
+						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Provider-specific options.",
+						TextEdit:         textEdit("options:\n        ", 4, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "type",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "External component used by Compose to manage setup and teardown lifecycle of the service.",
+						TextEdit:         textEdit("type: ${1:model}", 4, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+	}
+
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.list, list)
 		})
 	}
 }

@@ -23,14 +23,14 @@ type completionItemText struct {
 
 type textEditModifier struct {
 	isInterested func(attributeName string, path []*ast.MappingValueNode) bool
-	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit
+	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit
 }
 
 var buildTargetModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "target" && len(path) == 3 && path[2].Key.GetToken().Value == "build"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		if _, ok := path[2].Value.(*ast.NullNode); ok {
 			dockerfilePath, err := types.LocalDockerfile(u)
 			if err == nil {
@@ -68,7 +68,7 @@ var serviceSuggestionModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "service" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "extends"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		services := []completionItemText{}
 		for _, service := range findDependencies(file, "services") {
 			if service != path[1].Key.GetToken().Value {
@@ -80,7 +80,27 @@ var serviceSuggestionModifier = textEditModifier{
 	},
 }
 
-var textEditModifiers = []textEditModifier{buildTargetModifier, serviceSuggestionModifier}
+var serviceProviderModifier = textEditModifier{
+	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
+		return attributeName == "provider" && len(path) == 2 && path[0].Key.GetToken().Value == "services"
+	},
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+		edit.NewText = fmt.Sprintf("provider:\n%vtype: ${1:model}\n%voptions:\n%v  ${2:model}: ${3:ai/example-model}", spacing, spacing, spacing)
+		return edit
+	},
+}
+
+var serviceProviderTypeModifier = textEditModifier{
+	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
+		return attributeName == "type" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "provider"
+	},
+	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+		edit.NewText = "type: ${1:model}"
+		return edit
+	},
+}
+
+var textEditModifiers = []textEditModifier{buildTargetModifier, serviceSuggestionModifier, serviceProviderModifier, serviceProviderTypeModifier}
 
 func prefix(line string, character int) string {
 	sb := strings.Builder{}
@@ -217,12 +237,13 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			}
 		}
 		sb.WriteString("  ")
+		spacing := sb.String()
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
 				Detail: extractDetail(schema),
 				Label:  attributeName,
 				TextEdit: protocol.TextEdit{
-					NewText: insertText(sb.String(), attributeName, schema),
+					NewText: insertText(spacing, attributeName, schema),
 					Range: protocol.Range{
 						Start: protocol.Position{
 							Line:      params.Position.Line,
@@ -267,7 +288,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					},
 				}
 			}
-			item.TextEdit = modifyTextEdit(file, manager, u, item.TextEdit.(protocol.TextEdit), attributeName, path)
+			item.TextEdit = modifyTextEdit(file, manager, u, item.TextEdit.(protocol.TextEdit), attributeName, spacing, path)
 			items = append(items, item)
 		}
 	}
@@ -293,10 +314,10 @@ func createChoiceSnippetText(itemTexts []completionItemText) string {
 	return sb.String()
 }
 
-func modifyTextEdit(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName string, path []*ast.MappingValueNode) protocol.TextEdit {
+func modifyTextEdit(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 	for _, modified := range textEditModifiers {
 		if modified.isInterested(attributeName, path) {
-			return modified.modify(file, manager, u, edit, attributeName, path)
+			return modified.modify(file, manager, u, edit, attributeName, spacing, path)
 		}
 	}
 	return edit
