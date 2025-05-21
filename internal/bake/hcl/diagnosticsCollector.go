@@ -68,18 +68,18 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 	_, err := bake.ParseFile(input, doc.URI().Filename())
 	diagnostics := []protocol.Diagnostic{}
 	if err != nil {
-		var errorSource *errdefs.ErrorSource
+		var sourceError *errdefs.SourceError
 		var sourceRange *protocol.Range
-		if errors.As(err, &errorSource) && len(errorSource.Ranges) > 0 {
+		if errors.As(err, &sourceError) && len(sourceError.Ranges) > 0 {
 			lines := strings.Split(string(input), "\n")
 			sourceRange = &protocol.Range{
 				Start: protocol.Position{
-					Line:      uint32(errorSource.Ranges[0].Start.Line) - 1,
+					Line:      uint32(sourceError.Ranges[0].Start.Line) - 1,
 					Character: 0,
 				},
 				End: protocol.Position{
-					Line:      uint32(errorSource.Ranges[0].Start.Line) - 1,
-					Character: uint32(len(lines[errorSource.Ranges[0].Start.Line-1])),
+					Line:      uint32(sourceError.Ranges[0].Start.Line) - 1,
+					Character: uint32(len(lines[sourceError.Ranges[0].Start.Line-1])),
 				},
 			}
 		}
