@@ -30,7 +30,7 @@ func TestCollectDiagnostics(t *testing.T) {
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
-						Start: protocol.Position{Line: 0, Character: 0},
+						Start: protocol.Position{Line: 0, Character: 7},
 						End:   protocol.Position{Line: 0, Character: 8},
 					},
 				},
@@ -45,8 +45,8 @@ func TestCollectDiagnostics(t *testing.T) {
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 					Range: protocol.Range{
-						Start: protocol.Position{Line: 1, Character: 0},
-						End:   protocol.Position{Line: 1, Character: 15},
+						Start: protocol.Position{Line: 1, Character: 15},
+						End:   protocol.Position{Line: 2, Character: 0},
 					},
 				},
 			},
@@ -213,6 +213,42 @@ target "lint2" {
 			name:        "context folder used for looking for the Dockerfile",
 			content:     "target \"backend\" {\n  context = \"./backend\"\n  args = {\n    BACKEND_VAR=\"changed\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name: "malformed variable interpolation has the right line numbers",
+			content: `target x {
+  tags = ["${var"]
+  dockerfile = "./Dockerfile"
+}`,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "Invalid multi-line string (Quoted strings may not be split over multiple lines. To produce a multi-line string, either use the \\n escape to represent a newline character or use the \"heredoc\" multi-line template syntax.)",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 18},
+						End:   protocol.Position{Line: 2, Character: 0},
+					},
+				},
+				{
+					Message:  "Invalid multi-line string (Quoted strings may not be split over multiple lines. To produce a multi-line string, either use the \\n escape to represent a newline character or use the \"heredoc\" multi-line template syntax.)",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 29},
+						End:   protocol.Position{Line: 3, Character: 0},
+					},
+				},
+				{
+					Message:  "Unclosed template interpolation sequence (There is no closing brace for this interpolation sequence before the end of the quoted template. This might be caused by incorrect nesting inside the given expression.)",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 11},
+						End:   protocol.Position{Line: 1, Character: 13},
+					},
+				},
+			},
 		},
 	}
 

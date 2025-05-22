@@ -92,19 +92,19 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
 			}
 
-			if hclDiagnostic.Context == nil {
+			if hclDiagnostic.Subject == nil {
 				if sourceRange != nil {
 					diagnostic.Range = *sourceRange
 				}
 			} else {
 				diagnostic.Range = protocol.Range{
 					Start: protocol.Position{
-						Line:      uint32(hclDiagnostic.Context.Start.Line) - 1,
-						Character: uint32(hclDiagnostic.Context.Start.Column) - 1,
+						Line:      uint32(hclDiagnostic.Subject.Start.Line) - 1,
+						Character: uint32(hclDiagnostic.Subject.Start.Column) - 1,
 					},
 					End: protocol.Position{
-						Line:      uint32(hclDiagnostic.Context.End.Line) - 1,
-						Character: uint32(hclDiagnostic.Context.End.Column) - 1,
+						Line:      uint32(hclDiagnostic.Subject.End.Line) - 1,
+						Character: uint32(hclDiagnostic.Subject.End.Column) - 1,
 					},
 				}
 			}
