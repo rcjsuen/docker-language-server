@@ -44,22 +44,6 @@ func TestCalculateDiagnostics(t *testing.T) {
 			content: "FROM alpine:3.16.1",
 			diagnostics: []protocol.Diagnostic{
 				{
-					Message: "The image can be pinned to a digest",
-					Code:    &protocol.IntegerOrString{Value: "not_pinned_digest"},
-					Source:  types.CreateStringPointer("scout-testing-source"),
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 0, Character: 0},
-						End:   protocol.Position{Line: 0, Character: 18},
-					},
-					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint),
-					Data: []types.NamedEdit{
-						{
-							Title: "Pin the base image digest",
-							Edit:  "FROM alpine:3.16.1@sha256:7580ece7963bfa863801466c0a488f11c86f85d9988051a9f9c68cb27f6b7872",
-						},
-					},
-				},
-				{
 					Message: "The image contains 1 critical and 3 high vulnerabilities",
 					Code:    &protocol.IntegerOrString{Value: "critical_high_vulnerabilities"},
 					Source:  types.CreateStringPointer("scout-testing-source"),
@@ -102,22 +86,6 @@ func TestCalculateDiagnostics(t *testing.T) {
 			name:    "outdated alpine:3.16.1 with --platform flag",
 			content: "FROM --platform=$BUILDPLATFORM alpine:3.16.1",
 			diagnostics: []protocol.Diagnostic{
-				{
-					Message: "The image can be pinned to a digest",
-					Code:    &protocol.IntegerOrString{Value: "not_pinned_digest"},
-					Source:  types.CreateStringPointer("scout-testing-source"),
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 0, Character: 0},
-						End:   protocol.Position{Line: 0, Character: 44},
-					},
-					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint),
-					Data: []types.NamedEdit{
-						{
-							Title: "Pin the base image digest",
-							Edit:  "FROM --platform=$BUILDPLATFORM alpine:3.16.1@sha256:7580ece7963bfa863801466c0a488f11c86f85d9988051a9f9c68cb27f6b7872",
-						},
-					},
-				},
 				{
 					Message: "The image contains 1 critical and 3 high vulnerabilities",
 					Code:    &protocol.IntegerOrString{Value: "critical_high_vulnerabilities"},
@@ -184,12 +152,7 @@ func TestCalculateDiagnostics(t *testing.T) {
 						configuration.Configuration{
 							Experimental: configuration.Experimental{
 								VulnerabilityScanning: true,
-								Scout: configuration.Scout{
-									CriticalHighVulnerabilities: true,
-									NotPinnedDigest:             true,
-									RecommendedTag:              true,
-									Vulnerabilites:              true,
-								},
+								Scout:                 configuration.Get("/tmp/non-existent-file-to-get-default-config").Experimental.Scout,
 							}},
 					)
 				},
@@ -246,7 +209,6 @@ func TestCalculateDiagnostics_IgnoresSpecifics(t *testing.T) {
 			name:    "alpine:3.16.1",
 			content: "FROM alpine:3.16.1",
 			codes: []string{
-				"not_pinned_digest",
 				"critical_high_vulnerabilities",
 				"recommended_tag",
 			},
@@ -255,7 +217,6 @@ func TestCalculateDiagnostics_IgnoresSpecifics(t *testing.T) {
 			name:    "ubuntu:24.04",
 			content: "FROM ubuntu:24.04",
 			codes: []string{
-				"not_pinned_digest",
 				"recommended_tag",
 				"vulnerabilities",
 			},
@@ -316,12 +277,7 @@ func TestCalculateDiagnostics_IgnoresSpecifics(t *testing.T) {
 					protocol.DocumentUri(uri),
 					configuration.Configuration{Experimental: configuration.Experimental{
 						VulnerabilityScanning: true,
-						Scout: configuration.Scout{
-							CriticalHighVulnerabilities: true,
-							NotPinnedDigest:             true,
-							RecommendedTag:              true,
-							Vulnerabilites:              true,
-						},
+						Scout:                 configuration.Get("/tmp/non-existent-file-to-get-default-config").Experimental.Scout,
 					}},
 				)
 
@@ -335,7 +291,7 @@ func TestCalculateDiagnostics_IgnoresSpecifics(t *testing.T) {
 						}
 					}
 					if !found {
-						require.Fail(t, "Expected diagnostic not found")
+						require.Fail(t, "Diagnostic not found", "Expected diagnostic code: %v", code)
 					}
 				}
 
