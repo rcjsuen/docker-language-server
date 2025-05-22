@@ -22,6 +22,12 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/publishDiagnostics
     - support filtering vulnerability diagnostics with an experimental setting ([#192](https://github.com/docker/docker-language-server/issues/192))
 
+### Changed
+
+- Dockerfile
+  - textDocument/publishDiagnostics
+    - hide `not_pinned_digest` diagnostics from Scout by default ([#216](https://github.com/docker/docker-language-server/issues/216))
+
 ### Fixed
 
 - Compose

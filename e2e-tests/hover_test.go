@@ -24,12 +24,7 @@ func HandleConfiguration(t *testing.T, conn *jsonrpc2.Conn, request *jsonrpc2.Re
 			configuration.Configuration{
 				Experimental: configuration.Experimental{
 					VulnerabilityScanning: scanning,
-					Scout: configuration.Scout{
-						CriticalHighVulnerabilities: true,
-						NotPinnedDigest:             true,
-						RecommendedTag:              true,
-						Vulnerabilites:              true,
-					},
+					Scout:                 configuration.Get("/tmp/non-existent-file-to-get-default-config").Experimental.Scout,
 				},
 			},
 		)

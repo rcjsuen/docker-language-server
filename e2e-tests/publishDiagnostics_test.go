@@ -195,22 +195,6 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 					},
 				},
 				{
-					Message:  "The image can be pinned to a digest",
-					Source:   types.CreateStringPointer("docker-language-server"),
-					Code:     &protocol.IntegerOrString{Value: "not_pinned_digest"},
-					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityHint),
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 0, Character: 0},
-						End:   protocol.Position{Line: 0, Character: 18},
-					},
-					Data: []any{
-						map[string]any{
-							"edit":  "FROM alpine:3.16.1@sha256:7580ece7963bfa863801466c0a488f11c86f85d9988051a9f9c68cb27f6b7872",
-							"title": "Pin the base image digest",
-						},
-					},
-				},
-				{
 					Message:  "The image contains 1 critical and 3 high vulnerabilities",
 					Source:   types.CreateStringPointer("docker-language-server"),
 					Code:     &protocol.IntegerOrString{Value: "critical_high_vulnerabilities"},

@@ -45,7 +45,7 @@ var defaultConfiguration = Configuration{
 		VulnerabilityScanning: true,
 		Scout: Scout{
 			CriticalHighVulnerabilities: true,
-			NotPinnedDigest:             true,
+			NotPinnedDigest:             false,
 			RecommendedTag:              true,
 			Vulnerabilites:              true,
 		},
