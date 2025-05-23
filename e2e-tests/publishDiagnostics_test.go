@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
+	"github.com/docker/docker-language-server/internal/configuration"
 	"github.com/docker/docker-language-server/internal/pkg/buildkit"
 	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -34,7 +35,15 @@ func (h *PublishDiagnosticsHandler) Handle(_ context.Context, conn *jsonrpc2.Con
 		}
 	case protocol.ServerWorkspaceConfiguration:
 		if !request.Notif && request.Params != nil {
-			HandleConfiguration(h.t, conn, request, true)
+			HandleConfiguration(
+				h.t,
+				conn,
+				request,
+				configuration.Experimental{
+					VulnerabilityScanning: true,
+					Scout:                 configuration.Get("/tmp/non-existent-file-to-get-default-config").Experimental.Scout,
+				},
+			)
 		}
 	}
 }

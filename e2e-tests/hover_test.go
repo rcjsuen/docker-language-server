@@ -13,35 +13,29 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func HandleConfiguration(t *testing.T, conn *jsonrpc2.Conn, request *jsonrpc2.Request, scanning bool) {
+func HandleConfiguration(t *testing.T, conn *jsonrpc2.Conn, request *jsonrpc2.Request, experimental configuration.Experimental) {
 	var configurationParams protocol.ConfigurationParams
 	err := json.Unmarshal(*request.Params, &configurationParams)
 	require.NoError(t, err)
 	configurations := []configuration.Configuration{}
 	for range configurationParams.Items {
-		configurations = append(
-			configurations,
-			configuration.Configuration{
-				Experimental: configuration.Experimental{
-					VulnerabilityScanning: scanning,
-					Scout:                 configuration.Get("/tmp/non-existent-file-to-get-default-config").Experimental.Scout,
-				},
-			},
-		)
+		configurations = append(configurations, configuration.Configuration{Experimental: experimental})
 	}
 	require.NoError(t, conn.Reply(context.Background(), request.ID, configurations))
 }
 
 type ConfigurationHandler struct {
-	t        *testing.T
-	scanning bool
+	t            *testing.T
+	handled      bool
+	experimental configuration.Experimental
 }
 
 func (h *ConfigurationHandler) Handle(_ context.Context, conn *jsonrpc2.Conn, request *jsonrpc2.Request) {
 	switch request.Method {
 	case protocol.ServerWorkspaceConfiguration:
 		if !request.Notif && request.Params != nil {
-			HandleConfiguration(h.t, conn, request, h.scanning)
+			HandleConfiguration(h.t, conn, request, h.experimental)
+			h.handled = true
 		}
 	}
 }
