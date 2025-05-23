@@ -30,6 +30,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 
+- Dockerfile
+  - textDocument/publishDiagnostics
+    - ignore the diagnostic's URL and do not set it if it is evaluated to be the empty string ([#219](https://github.com/docker/docker-language-server/issues/219))
 - Compose
   - textDocument/completion
     - fix panic in code completion in an empty file ([#196](https://github.com/docker/docker-language-server/issues/196))

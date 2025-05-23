@@ -158,9 +158,11 @@ func convertToDiagnostics(source string, doc document.DockerfileDocument, lines 
 			Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
 			Source:   types.CreateStringPointer(source),
 			Message:  message,
-			CodeDescription: &protocol.CodeDescription{
+		}
+		if warning.URL != "" {
+			diagnostic.CodeDescription = &protocol.CodeDescription{
 				HRef: warning.URL,
-			},
+			}
 		}
 		if warning.RuleName == "MaintainerDeprecated" {
 			diagnostic.Tags = []protocol.DiagnosticTag{protocol.DiagnosticTagDeprecated}
