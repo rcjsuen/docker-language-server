@@ -6,8 +6,16 @@ import (
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 )
 
-const ConfigTelemetry = "docker.lsp.telemetry"
-const ConfigExperimentalVulnerabilityScanning = "docker.lsp.experimental.vulnerabilityScanning"
+const (
+	ConfigTelemetry = "docker.lsp.telemetry"
+
+	ConfigExperimentalVulnerabilityScanning = "docker.lsp.experimental.vulnerabilityScanning"
+
+	ConfigExperimentalScoutCriticalHighVulnerabilities = "docker.lsp.experimental.scout.criticalHighVulnerabilities"
+	ConfigExperimentalScoutNotPinnedDigest             = "docker.lsp.experimental.scout.notPinnedDigest"
+	ConfigExperimentalScoutRecommendedTag              = "docker.lsp.experimental.scout.recommendedTag"
+	ConfigExperimentalScoutVulnerabilities             = "docker.lsp.experimental.scout.vulnerabilities"
+)
 
 type TelemetrySetting string
 

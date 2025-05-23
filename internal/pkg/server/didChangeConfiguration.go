@@ -8,22 +8,34 @@ import (
 
 func (s *Server) WorkspaceDidChangeConfiguration(ctx *glsp.Context, params *protocol.DidChangeConfigurationParams) error {
 	changedSettings, _ := params.Settings.([]any)
+	scoutConfigurationChanged := false
 	for _, setting := range changedSettings {
 		config := setting.(string)
-		if config == configuration.ConfigTelemetry {
+		switch config {
+		case configuration.ConfigTelemetry:
 			go s.FetchUnscopedConfiguration()
+		case configuration.ConfigExperimentalVulnerabilityScanning:
+			fallthrough
+		case configuration.ConfigExperimentalScoutCriticalHighVulnerabilities:
+			fallthrough
+		case configuration.ConfigExperimentalScoutNotPinnedDigest:
+			fallthrough
+		case configuration.ConfigExperimentalScoutRecommendedTag:
+			fallthrough
+		case configuration.ConfigExperimentalScoutVulnerabilities:
+			scoutConfigurationChanged = true
 		}
+	}
 
-		if config == configuration.ConfigExperimentalVulnerabilityScanning {
-			scopes := configuration.Documents()
-			if len(scopes) > 0 {
-				go func() {
-					defer s.handlePanic("WorkspaceDidChangeConfiguration")
+	if scoutConfigurationChanged {
+		scopes := configuration.Documents()
+		if len(scopes) > 0 {
+			go func() {
+				defer s.handlePanic("WorkspaceDidChangeConfiguration")
 
-					s.FetchConfigurations(scopes)
-					s.recomputeDiagnostics()
-				}()
-			}
+				s.FetchConfigurations(scopes)
+				s.recomputeDiagnostics()
+			}()
 		}
 	}
 	return nil
