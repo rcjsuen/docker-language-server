@@ -4,6 +4,14 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Changed
+
+- Dockerfile
+  - textDocument/hover
+    - `recommended_tag` diagnostics are now hidden by default ([#223](https://github.com/docker/docker-language-server/issues/223))
+  - textDocument/publishDiagnostics
+    - recommended tag hovers are now hidden by default ([#223](https://github.com/docker/docker-language-server/issues/223))
+
 ### Fixed
 
 - Dockerfile
