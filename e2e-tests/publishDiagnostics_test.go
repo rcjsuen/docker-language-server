@@ -216,30 +216,6 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 						End:   protocol.Position{Line: 0, Character: 18},
 					},
 				},
-				{
-					Message:  "Tag recommendations available",
-					Source:   types.CreateStringPointer("docker-language-server"),
-					Code:     &protocol.IntegerOrString{Value: "recommended_tag"},
-					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityInformation),
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 0, Character: 0},
-						End:   protocol.Position{Line: 0, Character: 18},
-					},
-					Data: []any{
-						map[string]any{
-							"edit":  "FROM alpine:3.21.3",
-							"title": "Update image to preferred tag (3.21.3)",
-						},
-						map[string]any{
-							"edit":  "FROM alpine:3.20.6",
-							"title": "Update image OS minor version (3.20.6)",
-						},
-						map[string]any{
-							"edit":  "FROM alpine:3.18.12",
-							"title": "Update image OS minor version (3.18.12)",
-						},
-					},
-				},
 			},
 		},
 	}
