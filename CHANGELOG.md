@@ -7,6 +7,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Fixed
 
 - Dockerfile
+  - textDocument/hover
+    - hide vulnerability hovers if the top level setting is disabled ([#226](https://github.com/docker/docker-language-server/issues/226))
   - textDocument/publishDiagnostics
     - consider flag changes when determining whether to scan a file again or not ([#224](https://github.com/docker/docker-language-server/issues/224))
 
