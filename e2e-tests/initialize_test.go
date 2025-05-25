@@ -33,13 +33,13 @@ func createDidOpenTextDocumentParams(homedir, testName, text string, languageID 
 	}
 }
 
-func createDidChangeTextDocumentParams(homedir, testName, text string) protocol.DidChangeTextDocumentParams {
+func createDidChangeTextDocumentParams(homedir, testName, text string, version int32) protocol.DidChangeTextDocumentParams {
 	return protocol.DidChangeTextDocumentParams{
 		TextDocument: protocol.VersionedTextDocumentIdentifier{
 			TextDocumentIdentifier: protocol.TextDocumentIdentifier{
 				URI: protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(homedir, testName)), "/"))),
 			},
-			Version: 1,
+			Version: version,
 		},
 		ContentChanges: []any{
 			protocol.TextDocumentContentChangeEvent{

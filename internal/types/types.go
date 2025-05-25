@@ -16,6 +16,10 @@ func CreateBoolPointer(b bool) *bool {
 	return &b
 }
 
+func CreateInt32Pointer(i int32) *int32 {
+	return &i
+}
+
 func CreateStringPointer(s string) *string {
 	return &s
 }

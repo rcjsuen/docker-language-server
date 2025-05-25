@@ -91,9 +91,11 @@ func TestDocumentLink(t *testing.T) {
 	err = conn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
 	require.NoError(t, err)
 
+	version := int32(2)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			didChange := createDidChangeTextDocumentParams(testFolder, "DocumentLink.hcl", tc.content)
+			didChange := createDidChangeTextDocumentParams(testFolder, "DocumentLink.hcl", tc.content, version)
+			version++
 			err = conn.Notify(context.Background(), protocol.MethodTextDocumentDidChange, didChange)
 			require.NoError(t, err)
 
