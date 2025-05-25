@@ -318,115 +318,24 @@ func TestCalculateDiagnostics_IgnoresSpecifics(t *testing.T) {
 
 func TestGetHovers(t *testing.T) {
 	testCases := []struct {
-		image string
-		value string
+		image  string
+		result *protocol.Hover
 	}{
 		{
 			image: "alpine:3.16.1",
-			value: "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
 		},
 	}
 
+	u := "file:///tmp/Dockerfile"
 	s := NewService()
 	for _, tc := range testCases {
 		t.Run(tc.image, func(t *testing.T) {
-			hover, err := s.Hover(context.Background(), "file:///tmp/Dockerfile", tc.image)
-			if os.Getenv("DOCKER_NETWORK_NONE") == "true" {
-				var dns *net.DNSError
-				require.True(t, errors.As(err, &dns))
-				return
-			}
-
-			require.Nil(t, err)
-			markupContent, ok := hover.Contents.(protocol.MarkupContent)
-			require.True(t, ok)
-			require.Equal(t, protocol.MarkupKindMarkdown, markupContent.Kind)
-			require.Equal(t, tc.value, markupContent.Value)
-		})
-	}
-}
-
-func TestGetHovers_IgnoresSpecifics(t *testing.T) {
-	testCases := []struct {
-		name   string
-		image  string
-		value  string
-		config configuration.Scout
-	}{
-		{
-			name:  "alpine:3.16.1 (all)",
-			image: "alpine:3.16.1",
-			value: "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: true,
-				NotPinnedDigest:             true,
-				RecommendedTag:              true,
-				Vulnerabilites:              true,
-			},
-		},
-		{
-			name:  "alpine:3.16.1 (CriticalHighVulnerabilities=false)",
-			image: "alpine:3.16.1",
-			value: "Recommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: false,
-				NotPinnedDigest:             true,
-				RecommendedTag:              true,
-				Vulnerabilites:              true,
-			},
-		},
-		{
-			name:  "alpine:3.16.1 (RecommendedTag=false)",
-			image: "alpine:3.16.1",
-			value: "Current image vulnerabilities:   1C   3H   9M   0L ",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: true,
-				NotPinnedDigest:             true,
-				RecommendedTag:              false,
-				Vulnerabilites:              true,
-			},
-		},
-		{
-			name:  "ubuntu:24.04 (all)",
-			image: "ubuntu:24.04",
-			value: "Image vulnerabilities:   0C   0H   2M   6L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: true,
-				NotPinnedDigest:             true,
-				RecommendedTag:              true,
-				Vulnerabilites:              true,
-			},
-		},
-		{
-			name:  "ubuntu:24.04 (Vulnerabilites=false)",
-			image: "ubuntu:24.04",
-			value: "Recommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: true,
-				NotPinnedDigest:             true,
-				RecommendedTag:              true,
-				Vulnerabilites:              false,
-			},
-		},
-		{
-			name:  "ubuntu:24.04 (Vulnerabilites=false)",
-			image: "ubuntu:24.04",
-			value: "Image vulnerabilities:   0C   0H   2M   6L ",
-			config: configuration.Scout{
-				CriticalHighVulnerabilities: true,
-				NotPinnedDigest:             true,
-				RecommendedTag:              false,
-				Vulnerabilites:              true,
-			},
-		},
-	}
-
-	s := NewService()
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			u := "file:///tmp/Dockerfile"
-			defer configuration.Remove(u)
-			configuration.Store(u, configuration.Configuration{Experimental: configuration.Experimental{Scout: tc.config}})
 			hover, err := s.Hover(context.Background(), u, tc.image)
 			if os.Getenv("DOCKER_NETWORK_NONE") == "true" {
 				var dns *net.DNSError
@@ -435,10 +344,182 @@ func TestGetHovers_IgnoresSpecifics(t *testing.T) {
 			}
 
 			require.Nil(t, err)
-			markupContent, ok := hover.Contents.(protocol.MarkupContent)
-			require.True(t, ok)
-			require.Equal(t, protocol.MarkupKindMarkdown, markupContent.Kind)
-			require.Equal(t, tc.value, markupContent.Value)
+			require.Equal(t, tc.result, hover)
+		})
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.image, func(t *testing.T) {
+			defer configuration.Remove(u)
+			configuration.Store(u, configuration.Configuration{Experimental: configuration.Experimental{
+				VulnerabilityScanning: false,
+				Scout: configuration.Scout{
+					CriticalHighVulnerabilities: true,
+					NotPinnedDigest:             true,
+					RecommendedTag:              true,
+					Vulnerabilites:              true,
+				},
+			}})
+			hover, err := s.Hover(context.Background(), u, tc.image)
+			if os.Getenv("DOCKER_NETWORK_NONE") == "true" {
+				var dns *net.DNSError
+				require.True(t, errors.As(err, &dns))
+				return
+			}
+
+			require.Nil(t, err)
+			require.Nil(t, hover)
+		})
+	}
+}
+
+func TestGetHovers_IgnoresSpecifics(t *testing.T) {
+	testCases := []struct {
+		name   string
+		image  string
+		config configuration.Scout
+		result *protocol.Hover
+	}{
+		{
+			name:  "alpine:3.16.1 (all)",
+			image: "alpine:3.16.1",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: true,
+				NotPinnedDigest:             true,
+				RecommendedTag:              true,
+				Vulnerabilites:              true,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Current image vulnerabilities:   1C   3H   9M   0L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
+		},
+		{
+			name:  "alpine:3.16.1 (CriticalHighVulnerabilities=false)",
+			image: "alpine:3.16.1",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: false,
+				NotPinnedDigest:             true,
+				RecommendedTag:              true,
+				Vulnerabilites:              true,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Recommended tags:\n\n<table>\n<tr><td><code>3.21.3</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.20.6</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>3.18.12</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
+		},
+		{
+			name:  "alpine:3.16.1 (RecommendedTag=false)",
+			image: "alpine:3.16.1",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: true,
+				NotPinnedDigest:             true,
+				RecommendedTag:              false,
+				Vulnerabilites:              true,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Current image vulnerabilities:   1C   3H   9M   0L ",
+				},
+			},
+		},
+		{
+			name:  "ubuntu:24.04 (all)",
+			image: "ubuntu:24.04",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: true,
+				NotPinnedDigest:             true,
+				RecommendedTag:              true,
+				Vulnerabilites:              true,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Image vulnerabilities:   0C   0H   2M   6L \r\n\r\nRecommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
+		},
+		{
+			name:  "ubuntu:24.04 (Vulnerabilites=false)",
+			image: "ubuntu:24.04",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: true,
+				NotPinnedDigest:             true,
+				RecommendedTag:              true,
+				Vulnerabilites:              false,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Recommended tags:\n\n<table>\n<tr><td><code>25.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  0M</td><td align=\"right\">  0L</td><td align=\"right\"></td></tr>\n<tr><td><code>25.04</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  3M</td><td align=\"right\">  5L</td><td align=\"right\"></td></tr>\n<tr><td><code>24.10</code></td><td align=\"right\">  0C</td><td align=\"right\">  0H</td><td align=\"right\">  5M</td><td align=\"right\">  6L</td><td align=\"right\"></td></tr>\n</table>\n",
+				},
+			},
+		},
+		{
+			name:  "ubuntu:24.04 (Vulnerabilites=false)",
+			image: "ubuntu:24.04",
+			config: configuration.Scout{
+				CriticalHighVulnerabilities: true,
+				NotPinnedDigest:             true,
+				RecommendedTag:              false,
+				Vulnerabilites:              true,
+			},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Image vulnerabilities:   0C   0H   2M   6L ",
+				},
+			},
+		},
+	}
+
+	u := "file:///tmp/Dockerfile"
+	s := NewService()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			defer configuration.Remove(u)
+			configuration.Store(u, configuration.Configuration{Experimental: configuration.Experimental{
+				VulnerabilityScanning: true,
+				Scout:                 tc.config,
+			}})
+			hover, err := s.Hover(context.Background(), u, tc.image)
+			if os.Getenv("DOCKER_NETWORK_NONE") == "true" {
+				var dns *net.DNSError
+				require.True(t, errors.As(err, &dns))
+				return
+			}
+
+			require.Nil(t, err)
+			require.Equal(t, tc.result, hover)
+		})
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.image, func(t *testing.T) {
+			defer configuration.Remove(u)
+			configuration.Store(u, configuration.Configuration{Experimental: configuration.Experimental{
+				VulnerabilityScanning: false,
+				Scout: configuration.Scout{
+					CriticalHighVulnerabilities: true,
+					NotPinnedDigest:             true,
+					RecommendedTag:              true,
+					Vulnerabilites:              true,
+				},
+			}})
+			hover, err := s.Hover(context.Background(), u, tc.image)
+			if os.Getenv("DOCKER_NETWORK_NONE") == "true" {
+				var dns *net.DNSError
+				require.True(t, errors.As(err, &dns))
+				return
+			}
+
+			require.Nil(t, err)
+			require.Nil(t, hover)
 		})
 	}
 }

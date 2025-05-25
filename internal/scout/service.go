@@ -31,6 +31,10 @@ func NewService() Service {
 
 func (s *ServiceImpl) Hover(ctx context.Context, documentURI protocol.DocumentUri, image string) (*protocol.Hover, error) {
 	config := configuration.Get(documentURI)
+	if !config.Experimental.VulnerabilityScanning {
+		return nil, nil
+	}
+
 	resp, err := s.manager.Get(&ScoutImageKey{Image: image})
 	if err == nil {
 		hovers := []string{}
