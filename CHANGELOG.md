@@ -2,7 +2,15 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
- ## [0.8.0] - 2025-05-23
+## [Unreleased]
+
+### Fixed
+
+- Dockerfile
+  - textDocument/publishDiagnostics
+    - consider flag changes when determining whether to scan a file again or not ([#224](https://github.com/docker/docker-language-server/issues/224))
+
+## [0.8.0] - 2025-05-23
 
 ### Added
 

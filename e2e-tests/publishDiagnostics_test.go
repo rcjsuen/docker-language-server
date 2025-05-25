@@ -282,4 +282,44 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 			require.Equal(t, int32(1), *params.Version)
 		})
 	}
+
+	t.Run(fmt.Sprintf("flag changes (len(workspaceFolders) == %v, removeOverlappingIssues=%v)", len(initializeParams.WorkspaceFolders), removeOverlappingIssues), func(t *testing.T) {
+		didOpen := createDidOpenTextDocumentParams(homedir, t.Name(), "FROM scratch", protocol.DockerfileLanguage)
+		err := conn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
+		require.NoError(t, err)
+
+		<-handler.responseChannel
+		params := handler.diagnostics
+		require.Equal(t, protocol.PublishDiagnosticsParams{
+			URI:         didOpen.TextDocument.URI,
+			Version:     types.CreateInt32Pointer(1),
+			Diagnostics: []protocol.Diagnostic{},
+		}, params)
+
+		didChange := createDidChangeTextDocumentParams(homedir, t.Name(), "FROM --platform=linux/amd64 scratch", 2)
+		err = conn.Notify(context.Background(), protocol.MethodTextDocumentDidChange, didChange)
+		require.NoError(t, err)
+
+		<-handler.responseChannel
+		params = handler.diagnostics
+		require.Equal(t, protocol.PublishDiagnosticsParams{
+			URI:     didOpen.TextDocument.URI,
+			Version: types.CreateInt32Pointer(2),
+			Diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "FROM --platform flag should not use a constant value (FROM --platform flag should not use constant value \"linux/amd64\")",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityWarning),
+					Code:     &protocol.IntegerOrString{Value: "FromPlatformFlagConstDisallowed"},
+					CodeDescription: &protocol.CodeDescription{
+						HRef: "https://docs.docker.com/go/dockerfile/rule/from-platform-flag-const-disallowed/",
+					},
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 35},
+					},
+				},
+			},
+		}, params)
+	})
 }

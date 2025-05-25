@@ -91,6 +91,16 @@ func (d *dockerfileDocument) parse(force bool) bool {
 }
 
 func compareNodes(n1, n2 *parser.Node) bool {
+	if len(n1.Flags) != len(n2.Flags) {
+		return true
+	}
+
+	for i := range n1.Flags {
+		if n1.Flags[i] != n2.Flags[i] {
+			return true
+		}
+	}
+
 	for {
 		if n1 == nil {
 			return n2 != nil
