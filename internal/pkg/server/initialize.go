@@ -142,8 +142,6 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 			dynamicFormatting = true
 			s.registerFormattingCapability()
 		}
-	}
-	if params.Capabilities.TextDocument != nil {
 		if params.Capabilities.TextDocument.Rename != nil &&
 			params.Capabilities.TextDocument.Rename.DynamicRegistration != nil &&
 			*params.Capabilities.TextDocument.Rename.DynamicRegistration {
