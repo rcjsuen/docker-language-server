@@ -15,7 +15,7 @@ func (s *Server) TextDocumentInlayHint(ctx *glsp.Context, params *protocol.Inlay
 		return nil, err
 	}
 	defer doc.Close()
-	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.InlayHint(doc.(document.ComposeDocument), params.Range)
 	} else if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		return hcl.InlayHint(s.docs, doc.(document.BakeHCLDocument), params.Range)

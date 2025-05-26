@@ -17,7 +17,7 @@ func (s *Server) TextDocumentDocumentHighlight(ctx *glsp.Context, params *protoc
 	defer doc.Close()
 	if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		return hcl.DocumentHighlight(doc.(document.BakeHCLDocument), params.Position)
-	} else if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+	} else if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.DocumentHighlight(doc.(document.ComposeDocument), params.Position)
 	}
 	return nil, nil

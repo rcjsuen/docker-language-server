@@ -34,8 +34,11 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 		}
 
 		if settings, ok := clientConfig["dockercomposeExperimental"].(map[string]any); ok {
+			if composeSupport, ok := settings["composeSupport"].(bool); ok {
+				s.composeSupport = composeSupport
+			}
 			if composeCompletion, ok := settings["composeCompletion"].(bool); ok {
-				s.composeCompletion = composeCompletion
+				s.composeCompletion = s.composeSupport && composeCompletion
 			}
 		}
 

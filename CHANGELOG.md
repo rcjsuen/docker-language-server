@@ -4,6 +4,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+## Added
+
+- global initialization option to disable all Compose features ([#230](https://github.com/docker/docker-language-server/issues/230))
+
 ### Changed
 
 - Dockerfile

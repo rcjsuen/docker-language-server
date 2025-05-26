@@ -3,6 +3,7 @@ package server_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -12,6 +13,11 @@ import (
 )
 
 func TestPrepareRename(t *testing.T) {
+	testPrepareRename(t, true)
+	testPrepareRename(t, false)
+}
+
+func testPrepareRename(t *testing.T, composeSupport bool) {
 	s := startServer()
 
 	client := bytes.NewBuffer(make([]byte, 0, 1024))
@@ -23,7 +29,11 @@ func TestPrepareRename(t *testing.T) {
 	clientStream := jsonrpc2.NewBufferedStream(&TestStream{incoming: client, outgoing: server, closed: false}, jsonrpc2.VSCodeObjectCodec{})
 	defer clientStream.Close()
 	conn := jsonrpc2.NewConn(context.Background(), clientStream, &ConfigurationHandler{t: t})
-	initialize(t, conn, protocol.InitializeParams{})
+	initialize(t, conn, protocol.InitializeParams{
+		InitializationOptions: map[string]any{
+			"dockercomposeExperimental": map[string]bool{"composeSupport": composeSupport},
+		},
+	})
 
 	homedir, err := os.UserHomeDir()
 	require.NoError(t, err)
@@ -51,8 +61,8 @@ services:
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			didOpen := createDidOpenTextDocumentParams(homedir, t.Name()+".yaml", tc.content, "dockercompose")
+		t.Run(fmt.Sprintf("%v (composeSupport=%v)", tc.name, composeSupport), func(t *testing.T) {
+			didOpen := createDidOpenTextDocumentParams(homedir, t.Name()+".yaml", tc.content, protocol.DockerComposeLanguage)
 			err := conn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
 			require.NoError(t, err)
 
@@ -64,7 +74,11 @@ services:
 				},
 			}, &result)
 			require.NoError(t, err)
-			require.Equal(t, tc.result, result)
+			if composeSupport {
+				require.Equal(t, tc.result, result)
+			} else {
+				require.Nil(t, result)
+			}
 		})
 	}
 }

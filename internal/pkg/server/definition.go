@@ -18,7 +18,7 @@ func (s *Server) TextDocumentDefinition(ctx *glsp.Context, params *protocol.Defi
 
 	if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		return hcl.Definition(ctx.Context, s.definitionLinkSupport, s.docs, uri.URI(params.TextDocument.URI), doc.(document.BakeHCLDocument), params.Position)
-	} else if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+	} else if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.Definition(ctx.Context, s.definitionLinkSupport, doc.(document.ComposeDocument), params)
 	}
 	return nil, nil
