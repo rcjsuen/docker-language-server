@@ -18,16 +18,16 @@ func (s *Server) TextDocumentHover(ctx *glsp.Context, params *protocol.HoverPara
 		return nil, err
 	}
 	defer doc.Close()
-	language := doc.LanguageIdentifier()
-	if language == protocol.DockerBakeLanguage {
+	switch doc.LanguageIdentifier() {
+	case protocol.DockerBakeLanguage:
 		return hcl.Hover(ctx.Context, params, doc.(document.BakeHCLDocument))
-	} else if language == protocol.DockerComposeLanguage {
-		return compose.Hover(ctx.Context, params, doc.(document.ComposeDocument))
-	}
-
-	dockerfileDocument, ok := doc.(document.DockerfileDocument)
-	if ok {
-		instruction := dockerfileDocument.Instruction(params.Position)
+	case protocol.DockerComposeLanguage:
+		if s.composeSupport {
+			return compose.Hover(ctx.Context, params, doc.(document.ComposeDocument))
+		}
+		return nil, nil
+	case protocol.DockerfileLanguage:
+		instruction := doc.(document.DockerfileDocument).Instruction(params.Position)
 		if instruction != nil && strings.EqualFold(instruction.Value, "FROM") && instruction.Next != nil {
 			return s.scoutService.Hover(ctx.Context, params.TextDocument.URI, instruction.Next.Value)
 		}

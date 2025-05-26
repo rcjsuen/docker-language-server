@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -91,19 +92,6 @@ func TestHover(t *testing.T) {
 				},
 			},
 		},
-		{
-			languageID:          protocol.DockerComposeLanguage,
-			fileExtensionSuffix: ".yaml",
-			name:                "version description",
-			content:             "version: 1.2.3",
-			position:            protocol.Position{Line: 0, Character: 4},
-			result: &protocol.Hover{
-				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: "declared for backward compatibility, ignored. Please remove it.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
-				},
-			},
-		},
 	}
 
 	for _, tc := range testCases {
@@ -123,5 +111,72 @@ func TestHover(t *testing.T) {
 			require.Equal(t, tc.result, hover)
 		})
 	}
+}
 
+func TestHover_Compose(t *testing.T) {
+	testHover_Compose(t, true)
+	testHover_Compose(t, false)
+}
+
+func testHover_Compose(t *testing.T, composeSupport bool) {
+	s := startServer()
+
+	client := bytes.NewBuffer(make([]byte, 0, 1024))
+	server := bytes.NewBuffer(make([]byte, 0, 1024))
+	serverStream := &TestStream{incoming: server, outgoing: client, closed: false}
+	defer serverStream.Close()
+	go s.ServeStream(serverStream)
+
+	clientStream := jsonrpc2.NewBufferedStream(&TestStream{incoming: client, outgoing: server, closed: false}, jsonrpc2.VSCodeObjectCodec{})
+	defer clientStream.Close()
+	conn := jsonrpc2.NewConn(context.Background(), clientStream, &ConfigurationHandler{t: t})
+	initialize(t, conn, protocol.InitializeParams{
+		InitializationOptions: map[string]any{
+			"dockercomposeExperimental": map[string]bool{"composeSupport": composeSupport},
+		},
+	})
+
+	homedir, err := os.UserHomeDir()
+	require.NoError(t, err)
+
+	testCases := []struct {
+		name     string
+		content  string
+		position protocol.Position
+		result   *protocol.Hover
+	}{
+		{
+			name:     "version description",
+			content:  "version: 1.2.3",
+			position: protocol.Position{Line: 0, Character: 4},
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "declared for backward compatibility, ignored. Please remove it.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/version-and-name/)",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("%v (composeSupport=%v)", tc.name, composeSupport), func(t *testing.T) {
+			didOpen := createDidOpenTextDocumentParams(homedir, t.Name()+".yaml", tc.content, protocol.DockerComposeLanguage)
+			err := conn.Notify(context.Background(), protocol.MethodTextDocumentDidOpen, didOpen)
+			require.NoError(t, err)
+
+			var hover *protocol.Hover
+			err = conn.Call(context.Background(), protocol.MethodTextDocumentHover, protocol.HoverParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: didOpen.TextDocument.URI},
+					Position:     protocol.Position{Line: 0, Character: 3},
+				},
+			}, &hover)
+			require.NoError(t, err)
+			if composeSupport {
+				require.Equal(t, tc.result, hover)
+			} else {
+				require.Nil(t, hover)
+			}
+		})
+	}
 }

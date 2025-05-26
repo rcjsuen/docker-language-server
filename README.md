@@ -86,10 +86,14 @@ Use "docker-language-server [command] --help" for more information about a comma
 On startup, the client can include initialization options on the initial `initialize` request.
 1. If the client is also using [rcjsuen/dockerfile-language-server](https://github.com/rcjsuen/dockerfile-language-server), then some results in `textDocument/publishDiagnostics` will be duplicated across the two language servers. By setting the _experimental_ `dockerfileExperimental.removeOverlappingIssues` to `true`, the Docker Language Server will suppress the duplicated results. Note that this setting may be renamed or removed at any time.
 2. Telemetry can be configured on server startup with the `telemetry` field. You can read more about this in [TELEMETRY.md](./TELEMETRY.md).
+3. Compose support can be disabled on server initialization by setting the _experimental_ `dockercomposeExperimental.composeSupport` attribute to `false`. The default value is `true`.
 
 ```JSONC
 {
   "initializationOptions": {
+    "dockercomposeExperimental": {
+      "composeSupport:": true | false
+    },
     "dockerfileExperimental": {
       "removeOverlappingIssues:": true | false
     },

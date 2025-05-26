@@ -18,7 +18,7 @@ func (s *Server) TextDocumentDocumentSymbol(ctx *glsp.Context, params *protocol.
 	language := doc.LanguageIdentifier()
 	if language == protocol.DockerBakeLanguage {
 		return hcl.DocumentSymbol(ctx.Context, string(params.TextDocument.URI), doc.(document.BakeHCLDocument))
-	} else if language == protocol.DockerComposeLanguage {
+	} else if language == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.DocumentSymbol(ctx.Context, doc.(document.ComposeDocument))
 	}
 

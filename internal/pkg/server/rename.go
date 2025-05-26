@@ -14,7 +14,7 @@ func (s *Server) TextDocumentRename(ctx *glsp.Context, params *protocol.RenamePa
 		return nil, err
 	}
 	defer doc.Close()
-	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.Rename(doc.(document.ComposeDocument), params)
 	}
 	return nil, nil

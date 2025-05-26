@@ -72,6 +72,10 @@ func (s *Server) computeDiagnostics(ctx context.Context, documentURI protocol.Do
 		}
 	}
 
+	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && !s.composeSupport {
+		return
+	}
+
 	s.docs.Queue(ctx, uri.URI(documentURI), func() {
 		defer s.handlePanic("computeDiagnostics")
 		if !s.docs.LockDocument(uri.URI(documentURI)) {

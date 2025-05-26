@@ -15,7 +15,7 @@ func (s *Server) TextDocumentFormatting(ctx *glsp.Context, params *protocol.Docu
 		return nil, err
 	}
 	defer doc.Close()
-	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage {
+	if doc.LanguageIdentifier() == protocol.DockerComposeLanguage && s.composeSupport {
 		return compose.Formatting(doc.(document.ComposeDocument), params.Options)
 	} else if doc.LanguageIdentifier() == protocol.DockerBakeLanguage {
 		return hcl.Formatting(doc.(document.BakeHCLDocument), params.Options)
