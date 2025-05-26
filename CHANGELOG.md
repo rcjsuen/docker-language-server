@@ -7,6 +7,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 ## Added
 
 - global initialization option to disable all Compose features ([#230](https://github.com/docker/docker-language-server/issues/230))
+- Compose
+  - textDocument/completion
+    - include the attribute's schema description when providing enum suggestions ([#235](https://github.com/docker/docker-language-server/issues/235))
 
 ### Changed
 

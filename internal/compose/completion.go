@@ -213,8 +213,9 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			for _, value := range schema.Enum.Values {
 				enumValue := value.(string)
 				item := protocol.CompletionItem{
-					Detail: extractDetail(schema),
-					Label:  enumValue,
+					Label:         enumValue,
+					Documentation: schema.Description,
+					Detail:        extractDetail(schema),
 					TextEdit: protocol.TextEdit{
 						NewText: enumValue,
 						Range: protocol.Range{
