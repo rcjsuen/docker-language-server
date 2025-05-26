@@ -154,6 +154,9 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 		}
 
 		if property, ok := schema.Properties[match.GetToken().Value]; ok {
+			if property.Ref != nil {
+				property = property.Ref
+			}
 			if property.Enum != nil {
 				if match.GetToken().Position.Column <= column && column <= lineLength {
 					var builder strings.Builder
