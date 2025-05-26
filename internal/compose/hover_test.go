@@ -490,6 +490,21 @@ services:
 				},
 			},
 		},
+		{
+			name: "develop attribute attribute from the services object",
+			content: `
+services:
+  testService:
+    develop:`,
+			line:      3,
+			character: 8,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Development configuration for the service, used for development workflows.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#develop)",
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
