@@ -266,24 +266,25 @@ func (s *Server) updateTelemetrySetting(value string) {
 func (s *Server) registerFormattingCapability() {
 	dockerbakeLanguage := string(protocol.DockerBakeLanguage)
 	dockercomposeLanguage := string(protocol.DockerComposeLanguage)
-	s.registerCapability(
-		[]protocol.Registration{
-			{
-				ID:     "docker.lsp.dockerbake.textDocument.formatting",
-				Method: "textDocument/formatting",
-				RegisterOptions: protocol.TextDocumentRegistrationOptions{
-					DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}},
-				},
-			},
-			{
-				ID:     "docker.lsp.dockercompose.textDocument.formatting",
-				Method: "textDocument/formatting",
-				RegisterOptions: protocol.TextDocumentRegistrationOptions{
-					DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockercomposeLanguage}},
-				},
+	capabilities := []protocol.Registration{
+		{
+			ID:     "docker.lsp.dockerbake.textDocument.formatting",
+			Method: "textDocument/formatting",
+			RegisterOptions: protocol.TextDocumentRegistrationOptions{
+				DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockerbakeLanguage}},
 			},
 		},
-	)
+	}
+	if s.composeSupport {
+		capabilities = append(capabilities, protocol.Registration{
+			ID:     "docker.lsp.dockercompose.textDocument.formatting",
+			Method: "textDocument/formatting",
+			RegisterOptions: protocol.TextDocumentRegistrationOptions{
+				DocumentSelector: &protocol.DocumentSelector{protocol.DocumentFilter{Language: &dockercomposeLanguage}},
+			},
+		})
+	}
+	s.registerCapability(capabilities)
 }
 
 func (s *Server) registerRenameCapability() {
