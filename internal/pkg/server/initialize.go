@@ -133,19 +133,28 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 			Version: &metadata.Version,
 		},
 	}
+	dynamicFormatting := false
+	dynamicRename := false
 	if params.Capabilities.TextDocument != nil {
 		if params.Capabilities.TextDocument.Formatting != nil &&
 			params.Capabilities.TextDocument.Formatting.DynamicRegistration != nil &&
 			*params.Capabilities.TextDocument.Formatting.DynamicRegistration {
+			dynamicFormatting = true
 			s.registerFormattingCapability()
 		}
+	}
+	if params.Capabilities.TextDocument != nil {
 		if params.Capabilities.TextDocument.Rename != nil &&
 			params.Capabilities.TextDocument.Rename.DynamicRegistration != nil &&
 			*params.Capabilities.TextDocument.Rename.DynamicRegistration {
+			dynamicRename = true
 			s.registerRenameCapability()
 		}
-	} else {
+	}
+	if !dynamicFormatting {
 		result.Capabilities.DocumentFormattingProvider = protocol.DocumentFormattingOptions{}
+	}
+	if !dynamicRename {
 		result.Capabilities.RenameProvider = protocol.RenameOptions{
 			PrepareProvider: types.CreateBoolPointer(true),
 		}

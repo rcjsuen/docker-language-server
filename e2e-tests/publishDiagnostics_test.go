@@ -8,10 +8,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/docker/docker-language-server/internal/bake/hcl"
 	"github.com/docker/docker-language-server/internal/configuration"
 	"github.com/docker/docker-language-server/internal/pkg/buildkit"
-	"github.com/docker/docker-language-server/internal/pkg/cli/metadata"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/sourcegraph/jsonrpc2"
@@ -65,56 +63,6 @@ func TestPublishDiagnostics(t *testing.T) {
 	testPublishDiagnostics(t, protocol.InitializeParams{
 		WorkspaceFolders: []protocol.WorkspaceFolder{{Name: "home", URI: homedir}},
 	})
-}
-
-func initialize(t *testing.T, conn *jsonrpc2.Conn, initializeParams protocol.InitializeParams) {
-	if options, ok := initializeParams.InitializationOptions.(map[string]any); ok {
-		options["telemetry"] = "off"
-	} else {
-		initializeParams.InitializationOptions = map[string]string{"telemetry": "off"}
-	}
-	var initializeResult *protocol.InitializeResult
-	err := conn.Call(context.Background(), protocol.MethodInitialize, initializeParams, &initializeResult)
-	require.NoError(t, err)
-
-	syncKind := protocol.TextDocumentSyncKindFull
-	expected := protocol.InitializeResult{
-		Capabilities: protocol.ServerCapabilities{
-			CodeActionProvider:         protocol.CodeActionOptions{},
-			CompletionProvider:         &protocol.CompletionOptions{},
-			DefinitionProvider:         protocol.DefinitionOptions{},
-			DocumentFormattingProvider: protocol.DocumentFormattingOptions{},
-			DocumentHighlightProvider:  &protocol.DocumentHighlightOptions{},
-			DocumentLinkProvider:       &protocol.DocumentLinkOptions{},
-			DocumentSymbolProvider:     protocol.DocumentSymbolOptions{},
-			ExecuteCommandProvider: &protocol.ExecuteCommandOptions{
-				Commands: []string{types.TelemetryCallbackCommandId},
-			},
-			HoverProvider:            protocol.HoverOptions{},
-			InlayHintProvider:        protocol.InlayHintOptions{},
-			InlineCompletionProvider: protocol.InlineCompletionOptions{},
-			RenameProvider: protocol.RenameOptions{
-				PrepareProvider: types.CreateBoolPointer(true),
-			},
-			SemanticTokensProvider: protocol.SemanticTokensOptions{
-				Legend: protocol.SemanticTokensLegend{
-					TokenModifiers: []string{},
-					TokenTypes:     hcl.SemanticTokenTypes,
-				},
-				Full:  true,
-				Range: false,
-			},
-			TextDocumentSync: protocol.TextDocumentSyncOptions{
-				OpenClose: &protocol.True,
-				Change:    &syncKind,
-			},
-		},
-		ServerInfo: &protocol.InitializeResultServerInfo{
-			Name:    "docker-language-server",
-			Version: &metadata.Version,
-		},
-	}
-	requireJsonEqual(t, expected, initializeResult)
 }
 
 func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializeParams) {

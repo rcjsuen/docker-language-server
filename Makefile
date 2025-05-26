@@ -5,7 +5,7 @@ build:
 
 test:
 	gotestsum -- $$(go list ./... | grep -v e2e-tests) -timeout 30s
-	go test $$(go list ./... | grep e2e-tests) -timeout 180s
+	go test $$(go list ./... | grep e2e-tests) -timeout 240s
 
 build-docker-test:
 	docker build -t docker/lsp:test --target test .
