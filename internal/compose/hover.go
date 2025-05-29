@@ -42,6 +42,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 
 func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
 	split := strings.Split(node.String(), "\n")
+	// remove leading empty line inserted by goccy/go-yaml if present
+	if strings.TrimSpace(split[0]) == "" {
+		split = split[1:]
+	}
 	skip := -1
 	for i := range len(split) {
 		if skip == -1 {
