@@ -198,6 +198,23 @@ services:
 			},
 		},
 		{
+			name: "quoted string",
+			content: `
+services:
+  test:
+    image: "alpine"`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 18},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
 			name: "two services",
 			content: `
 services:
