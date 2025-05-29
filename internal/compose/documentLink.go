@@ -39,7 +39,42 @@ func createIncludeLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
 	}
 }
 
-func createImageLinks(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+	if serviceNode.Key.GetToken().Value == "build" {
+		if mappingNode, ok := serviceNode.Value.(*ast.MappingNode); ok {
+			for _, buildAttribute := range mappingNode.Values {
+				if buildAttribute.Key.GetToken().Value == "dockerfile" {
+					dockerfile := buildAttribute.Value.GetToken().Value
+					absolutePath, err := types.AbsolutePath(u, dockerfile)
+					if err == nil {
+						absolutePath = filepath.ToSlash(absolutePath)
+						offset := 0
+						if buildAttribute.Value.GetToken().Type == token.DoubleQuoteType {
+							offset = 1
+						}
+						return &protocol.DocumentLink{
+							Range: protocol.Range{
+								Start: protocol.Position{
+									Line:      protocol.UInteger(buildAttribute.Value.GetToken().Position.Line) - 1,
+									Character: protocol.UInteger(buildAttribute.Value.GetToken().Position.Column - 1 + offset),
+								},
+								End: protocol.Position{
+									Line:      protocol.UInteger(buildAttribute.Value.GetToken().Position.Line) - 1,
+									Character: protocol.UInteger(buildAttribute.Value.GetToken().Position.Column - 1 + offset + len(dockerfile)),
+								},
+							},
+							Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
+							Tooltip: types.CreateStringPointer(absolutePath),
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "image" {
 		value := serviceNode.Value.GetToken().Value
 		linkedText, link := extractImageLink(value)
@@ -112,7 +147,12 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 				for _, node := range mappingNode.Values {
 					if serviceAttributes, ok := node.Value.(*ast.MappingNode); ok {
 						for _, serviceAttribute := range serviceAttributes.Values {
-							link := createImageLinks(serviceAttribute)
+							link := createImageLink(serviceAttribute)
+							if link != nil {
+								links = append(links, *link)
+							}
+
+							link = createDockerfileLink(u, serviceAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}

@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Compose
+  - textDocument/documentLink
+    - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))
+
 ## [0.9.0] - 2025-05-26
 
 ## Added

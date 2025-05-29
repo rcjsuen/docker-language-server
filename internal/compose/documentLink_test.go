@@ -427,3 +427,57 @@ services:
 		})
 	}
 }
+
+func TestDocumentLink_DockerfileLinks(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), t.Name())
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
+
+	testCases := []struct {
+		name      string
+		content   string
+		path      string
+		linkRange protocol.Range
+	}{
+		{
+			name: "./Dockerfile2",
+			content: `
+services:
+  test:
+    build:
+      dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
+		{
+			name: `"./Dockerfile2"`,
+			content: `
+services:
+  test:
+    build:
+      dockerfile: "./Dockerfile2"`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 19},
+				End:   protocol.Position{Line: 4, Character: 32},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			link := protocol.DocumentLink{
+				Range:   tc.linkRange,
+				Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+				Tooltip: types.CreateStringPointer(tc.path),
+			}
+			require.Equal(t, []protocol.DocumentLink{link}, links)
+		})
+	}
+}
