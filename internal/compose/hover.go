@@ -31,6 +31,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+			result = networkHover(doc, mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
 			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
 			if result != nil {
 				return result, nil
@@ -119,6 +123,34 @@ func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 			if result != nil {
 				return result
 			}
+		}
+	}
+	return nil
+}
+
+func createNetworkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
+	for _, node := range mappingNode.Values {
+		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "networks" {
+			for _, service := range node.Value.(*ast.MappingNode).Values {
+				if service.Key.GetToken().Value == serviceName {
+					return createYamlHover(service)
+				}
+			}
+		}
+	}
+
+	node, _ := dependencyLookup(doc, "networks", serviceName)
+	if node != nil {
+		return createYamlHover(node)
+	}
+	return nil
+}
+
+func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
+		if nodePath[2].GetToken().Value == "networks" {
+			networkName := nodePath[3].GetToken().Value
+			return createNetworkHover(doc, mappingNode, networkName)
 		}
 	}
 	return nil

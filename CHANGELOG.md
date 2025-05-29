@@ -9,6 +9,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/documentLink
     - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))
+  - textDocument/hover
+    - render the referenced network's YAML content as a hover result ([#246](https://github.com/docker/docker-language-server/issues/246))
 
 ### Fixed
 - Compose

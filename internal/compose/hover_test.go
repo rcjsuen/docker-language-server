@@ -14,7 +14,7 @@ import (
 	"go.lsp.dev/uri"
 )
 
-func TestHover(t *testing.T) {
+func TestHover_SchemaDocumentation(t *testing.T) {
 	testCases := []struct {
 		name      string
 		content   string
@@ -283,6 +283,128 @@ services:
 			},
 		},
 		{
+			name: "hovering over an invalid extends object with invalid attribute",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends:
+      test:`,
+			line:      7,
+			character: 8,
+			result:    nil,
+		},
+		{
+			name: "hovering over an invalid extends object with a service attribute",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    image: alpine:3.21
+    extends:
+      service:
+        test:`,
+			line:      8,
+			character: 10,
+			result:    nil,
+		},
+		{
+			name: "hovering over a depends_on array item that is not a string",
+			content: `
+services:
+  test:
+    image: alpine:3.21
+  test2:
+    depends_on:
+      - test:`,
+			line:      6,
+			character: 10,
+			result:    nil,
+		},
+		{
+			name: "container_name attribute on services",
+			content: `
+services:
+  test:
+    container_name: abc`,
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
+		{
+			name:      "container_name attribute with a comment before it",
+			content:   "services:\n  test:\n#\n    container_name: abc",
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
+		{
+			name:      "container_name attribute with a comment before it (CRLF)",
+			content:   "services:\r\n  test:\r\n#\r\n    container_name: abc",
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
+				},
+			},
+		},
+		{
+			name: "develop attribute attribute from the services object",
+			content: `
+services:
+  testService:
+    develop:`,
+			line:      3,
+			character: 8,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Development configuration for the service, used for development workflows.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#develop)",
+				},
+			},
+		},
+	}
+
+	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(composeFile), 1, []byte(tc.content))
+			result, err := Hover(context.Background(), &protocol.HoverParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFile},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
+func TestHover_ReferenceHovers(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		result    *protocol.Hover
+	}{
+		{
 			name: "hovering over an extends service as a string",
 			content: `
 services:
@@ -346,35 +468,6 @@ services:
 			},
 		},
 		{
-			name: "hovering over an invalid extends object with invalid attribute",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-  test2:
-    image: alpine:3.21
-    extends:
-      test:`,
-			line:      7,
-			character: 8,
-			result:    nil,
-		},
-		{
-			name: "hovering over an invalid extends object with a service attribute",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-  test2:
-    image: alpine:3.21
-    extends:
-      service:
-        test:`,
-			line:      8,
-			character: 10,
-			result:    nil,
-		},
-		{
 			name: "hovering over an extends service with whitespace",
 			content: `
 services:
@@ -419,19 +512,6 @@ services:
 			},
 		},
 		{
-			name: "hovering over a depends_on array item that is not a string",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-  test2:
-    depends_on:
-      - test:`,
-			line:      6,
-			character: 10,
-			result:    nil,
-		},
-		{
 			name: "hovering over a depends_on object item",
 			content: `
 services:
@@ -448,60 +528,6 @@ services:
 					Value: "```YAML\n" + `test:
   image: alpine:3.21` +
 						"\n```",
-				},
-			},
-		},
-		{
-			name: "container_name attribute on services",
-			content: `
-services:
-  test:
-    container_name: abc`,
-			line:      3,
-			character: 7,
-			result: &protocol.Hover{
-				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
-				},
-			},
-		},
-		{
-			name:      "container_name attribute with a comment before it",
-			content:   "services:\n  test:\n#\n    container_name: abc",
-			line:      3,
-			character: 7,
-			result: &protocol.Hover{
-				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
-				},
-			},
-		},
-		{
-			name:      "container_name attribute with a comment before it (CRLF)",
-			content:   "services:\r\n  test:\r\n#\r\n    container_name: abc",
-			line:      3,
-			character: 7,
-			result: &protocol.Hover{
-				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Specify a custom container name, rather than a generated default name.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#container_name)",
-				},
-			},
-		},
-		{
-			name: "develop attribute attribute from the services object",
-			content: `
-services:
-  testService:
-    develop:`,
-			line:      3,
-			character: 8,
-			result: &protocol.Hover{
-				Contents: protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: "Development configuration for the service, used for development workflows.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#develop)",
 				},
 			},
 		},
@@ -547,6 +573,77 @@ services:
 					Kind: protocol.MarkupKindMarkdown,
 					Value: "```YAML\n" + `backend:
   image: hello` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "networks hover with a single item",
+			content: `
+services:
+  app:
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `backend:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "networks hover with multiple items",
+			content: `
+services:
+  app:
+    networks:
+      - backend
+      - backend2
+
+networks:
+  backend:
+    driver: custom
+  backend2:
+    driver: custom`,
+			line:      5,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `backend2:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "networks hover on an object reference",
+			content: `
+services:
+  test:
+    networks:
+      networkA:
+        aliases:
+          - alias1
+
+networks:
+  networkA:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `networkA:
+  driver: custom` +
 						"\n```",
 				},
 			},
@@ -598,6 +695,33 @@ services:
 					Kind: protocol.MarkupKindMarkdown,
 					Value: "```YAML\n" + `test:
   image: alpine:3.20` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a network defined in another file",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  serviceA:
+    image: alpine:3.21
+    networks:
+      networkA:
+        aliases:
+          - alias1`,
+			otherContent: `
+networks:
+  networkA:
+    driver: custom`,
+			line:      7,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `networkA:
+  driver: custom` +
 						"\n```",
 				},
 			},
