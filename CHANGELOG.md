@@ -14,6 +14,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/documentLink
     - consider quotes when calculating the link's range ([#242](https://github.com/docker/docker-language-server/issues/242))
+  - textDocument/hover
+    - prevent YAML hover issues caused by whitespace ([#244](https://github.com/docker/docker-language-server/issues/244))
 
 ## [0.9.0] - 2025-05-26
 

@@ -42,6 +42,15 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 
 func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
 	split := strings.Split(node.String(), "\n")
+	// remove leading empty lines
+	for i := range len(split) {
+		if strings.TrimSpace(split[i]) == "" {
+			split = split[i+1:]
+			i--
+		} else {
+			break
+		}
+	}
 	skip := -1
 	for i := range len(split) {
 		if skip == -1 {
