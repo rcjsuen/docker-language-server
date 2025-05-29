@@ -10,6 +10,11 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/documentLink
     - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))
 
+### Fixed
+- Compose
+  - textDocument/documentLink
+    - consider quotes when calculating the link's range ([#242](https://github.com/docker/docker-language-server/issues/242))
+
 ## [0.9.0] - 2025-05-26
 
 ## Added

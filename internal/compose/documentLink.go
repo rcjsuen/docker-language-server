@@ -14,26 +14,30 @@ import (
 	"github.com/goccy/go-yaml/token"
 )
 
+func createRange(t *token.Token, length int) protocol.Range {
+	offset := 0
+	if t.Type == token.DoubleQuoteType {
+		offset = 1
+	}
+	return protocol.Range{
+		Start: protocol.Position{
+			Line:      protocol.UInteger(t.Position.Line - 1),
+			Character: protocol.UInteger(t.Position.Column + offset - 1),
+		},
+		End: protocol.Position{
+			Line:      protocol.UInteger(t.Position.Line - 1),
+			Character: protocol.UInteger(t.Position.Column + offset + length - 1),
+		},
+	}
+}
+
 func createIncludeLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
 	abs, err := types.AbsolutePath(u, node.Value)
 	if err != nil {
 		return nil
 	}
-	offset := 0
-	if node.Type == token.DoubleQuoteType {
-		offset = 1
-	}
 	return &protocol.DocumentLink{
-		Range: protocol.Range{
-			Start: protocol.Position{
-				Line:      protocol.UInteger(node.Position.Line - 1),
-				Character: protocol.UInteger(node.Position.Column + offset - 1),
-			},
-			End: protocol.Position{
-				Line:      protocol.UInteger(node.Position.Line - 1),
-				Character: protocol.UInteger(node.Position.Column + offset + len(node.Value) - 1),
-			},
-		},
+		Range:   createRange(node, len(node.Value)),
 		Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(abs), "/")))),
 		Tooltip: types.CreateStringPointer(abs),
 	}
@@ -48,21 +52,8 @@ func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protoc
 					absolutePath, err := types.AbsolutePath(u, dockerfile)
 					if err == nil {
 						absolutePath = filepath.ToSlash(absolutePath)
-						offset := 0
-						if buildAttribute.Value.GetToken().Type == token.DoubleQuoteType {
-							offset = 1
-						}
 						return &protocol.DocumentLink{
-							Range: protocol.Range{
-								Start: protocol.Position{
-									Line:      protocol.UInteger(buildAttribute.Value.GetToken().Position.Line) - 1,
-									Character: protocol.UInteger(buildAttribute.Value.GetToken().Position.Column - 1 + offset),
-								},
-								End: protocol.Position{
-									Line:      protocol.UInteger(buildAttribute.Value.GetToken().Position.Line) - 1,
-									Character: protocol.UInteger(buildAttribute.Value.GetToken().Position.Column - 1 + offset + len(dockerfile)),
-								},
-							},
+							Range:   createRange(buildAttribute.Value.GetToken(), len(dockerfile)),
 							Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
 							Tooltip: types.CreateStringPointer(absolutePath),
 						}
@@ -79,16 +70,7 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 		value := serviceNode.Value.GetToken().Value
 		linkedText, link := extractImageLink(value)
 		return &protocol.DocumentLink{
-			Range: protocol.Range{
-				Start: protocol.Position{
-					Line:      protocol.UInteger(serviceNode.Value.GetToken().Position.Line) - 1,
-					Character: protocol.UInteger(serviceNode.Value.GetToken().Position.Column) - 1,
-				},
-				End: protocol.Position{
-					Line:      protocol.UInteger(serviceNode.Value.GetToken().Position.Line) - 1,
-					Character: protocol.UInteger(serviceNode.Value.GetToken().Position.Column - 1 + len(linkedText)),
-				},
-			},
+			Range:   createRange(serviceNode.Value.GetToken(), len(linkedText)),
 			Target:  types.CreateStringPointer(link),
 			Tooltip: types.CreateStringPointer(link),
 		}
