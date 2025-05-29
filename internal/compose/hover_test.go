@@ -527,6 +527,30 @@ services:
 				},
 			},
 		},
+		{
+			name: "service hover with multiple lines of whitespace around it",
+			content: `
+services:
+
+
+
+  backend:
+    image: hello
+
+  frontend:
+    depends_on:
+      - backend`,
+			line:      10,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `backend:
+  image: hello` +
+						"\n```",
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
