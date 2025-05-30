@@ -215,7 +215,7 @@ func (s *Server) handleRecovered(method string, recovered interface{}) bool {
 			}
 			metadata.Add("session", "arch", runtime.GOARCH)
 			metadata.Add("session", "os", runtime.GOOS)
-			bugsnag.Notify(err, metadata)
+			_ = bugsnag.Notify(err, metadata)
 		}
 		s.Enqueue(telemetry.EventServerHeartbeat, properties)
 		return true
