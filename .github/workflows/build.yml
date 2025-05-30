@@ -118,7 +118,7 @@ jobs:
 
       - name: Build for ${{ matrix.os }}-${{ matrix.arch }}
         run: |
-          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} make build
+          GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }} BUGSNAG_API_KEY=${{ secrets.BUGSNAG_API_KEY }} make build
 
       - name: actions/upload-artifact@v4 (refs/heads)
         uses: actions/upload-artifact@v4

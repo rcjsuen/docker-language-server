@@ -4,6 +4,7 @@ go 1.24.3
 
 require (
 	github.com/bep/debounce v1.2.1
+	github.com/bugsnag/bugsnag-go v2.5.1+incompatible
 	github.com/docker/buildx v0.24.0
 	github.com/go-git/go-git/v5 v5.14.0
 	github.com/goccy/go-yaml v1.17.1
@@ -42,6 +43,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
 	github.com/aws/smithy-go v1.20.3 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/bitly/go-simplejson v0.5.1 // indirect
+	github.com/bugsnag/panicwrap v1.3.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cloudflare/circl v1.6.0 // indirect
 	github.com/compose-spec/compose-go/v2 v2.6.3 // indirect
@@ -89,6 +92,7 @@ require (
 	github.com/in-toto/in-toto-golang v0.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect

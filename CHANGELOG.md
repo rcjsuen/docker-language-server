@@ -6,6 +6,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Added
 
+- errors will now be reported to BugSnag if telemetry is not disabled
 - Compose
   - textDocument/documentLink
     - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))

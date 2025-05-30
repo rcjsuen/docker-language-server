@@ -16,6 +16,6 @@ fi
 echo "Building for ${GOOS}-${GOARCH}: ${OUTPUT}"
 
 CGO_ENABLED=0 go build \
-    -ldflags="-X 'github.com/docker/docker-language-server/internal/pkg/cli/metadata.Version=$VERSION'" \
+    -ldflags="-X 'github.com/docker/docker-language-server/internal/pkg/cli/metadata.Version=$VERSION' -X 'github.com/docker/docker-language-server/internal/pkg/cli/metadata.BugSnagAPIKey=$BUGSNAG_API_KEY'" \
     -o $OUTPUT \
     ./cmd/docker-language-server
