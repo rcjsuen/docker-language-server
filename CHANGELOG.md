@@ -14,6 +14,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - render the referenced network's YAML content as a hover result ([#246](https://github.com/docker/docker-language-server/issues/246))
     - render the referenced config's YAML content as a hover result ([#249](https://github.com/docker/docker-language-server/issues/249))
     - render the referenced secret's YAML content as a hover result ([#250](https://github.com/docker/docker-language-server/issues/250))
+    - render the referenced volume's YAML content as a hover result ([#251](https://github.com/docker/docker-language-server/issues/251))
 
 ### Fixed
 - Compose
