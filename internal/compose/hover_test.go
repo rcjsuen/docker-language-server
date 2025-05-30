@@ -694,6 +694,103 @@ configs:
 				},
 			},
 		},
+		{
+			name: "secrets hover as an array string",
+			content: `
+services:
+  backend:
+    secrets:
+      - my_secret
+secrets:
+  my_secret:
+    file: ./my_secret.txt`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_secret:
+  file: ./my_secret.txt` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "secrets hover as an array object",
+			content: `
+services:
+  backend:
+    secrets:
+      - source: my_secret
+        target: /config
+        uid: "103"
+        gid: "103"
+        mode: 0440
+secrets:
+  my_secret:
+    external: true`,
+			line:      4,
+			character: 21,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_secret:
+  external: true` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "secrets hover under the build object as an array string",
+			content: `
+services:
+  frontend:
+    build:
+      context: .
+      secrets:
+        - server-certificate
+secrets:
+  server-certificate:
+    file: ./server.cert`,
+			line:      6,
+			character: 20,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `server-certificate:
+  file: ./server.cert` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "secrets hover under the build object as an array object",
+			content: `
+services:
+  frontend:
+    command: hello
+    build:
+      context: .
+      secrets:
+        - source: server-certificate
+          target: cert # secret ID in Dockerfile
+          uid: "103"
+          gid: "103"
+          mode: 0440
+secrets:
+  server-certificate:
+    file: ./server.cert`,
+			line:      7,
+			character: 22,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `server-certificate:
+  file: ./server.cert` +
+						"\n```",
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
@@ -773,7 +870,7 @@ networks:
 			},
 		},
 		{
-			name: "hovering over a network defined in another file",
+			name: "hovering over a config defined in another file",
 			content: `
 include:
   - compose.other.yaml
@@ -792,6 +889,30 @@ configs:
 					Kind: protocol.MarkupKindMarkdown,
 					Value: "```YAML\n" + `my_config:
   file: ./my_config.txt` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a network secret in another file",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  backend:
+    secrets:
+      - my_secret`,
+			otherContent: `
+secrets:
+  my_secret:
+    file: ./my_secret.txt`,
+			line:      6,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_secret:
+  file: ./my_secret.txt` +
 						"\n```",
 				},
 			},
