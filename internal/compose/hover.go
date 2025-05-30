@@ -35,6 +35,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+			result = configHover(doc, mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
 			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
 			if result != nil {
 				return result, nil
@@ -73,24 +77,6 @@ func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
 	}
 }
 
-func createServiceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
-	for _, node := range mappingNode.Values {
-		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "services" {
-			for _, service := range node.Value.(*ast.MappingNode).Values {
-				if service.Key.GetToken().Value == serviceName {
-					return createYamlHover(service)
-				}
-			}
-		}
-	}
-
-	node, _ := dependencyLookup(doc, "services", serviceName)
-	if node != nil {
-		return createYamlHover(node)
-	}
-	return nil
-}
-
 func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
 	if (len(nodePath) == 4 || len(nodePath) == 5) && nodePath[0].GetToken().Value == "services" {
 		if nodePath[2].GetToken().Value == "extends" {
@@ -106,7 +92,7 @@ func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 			} else if nodePath[3].GetToken().Next != nil && nodePath[3].GetToken().Next.Type == token.MappingValueType {
 				return nil
 			}
-			result := createServiceHover(doc, mappingNode, serviceName)
+			result := createDependencyHover(doc, mappingNode, "services", serviceName)
 			if result != nil {
 				return result
 			}
@@ -119,7 +105,7 @@ func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 				return nil
 			}
 			serviceName := nodePath[3].GetToken().Value
-			result := createServiceHover(doc, mappingNode, serviceName)
+			result := createDependencyHover(doc, mappingNode, "services", serviceName)
 			if result != nil {
 				return result
 			}
@@ -128,29 +114,48 @@ func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 	return nil
 }
 
-func createNetworkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, serviceName string) *protocol.Hover {
+func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
+		if nodePath[2].GetToken().Value == "networks" {
+			networkName := nodePath[3].GetToken().Value
+			return createDependencyHover(doc, mappingNode, "networks", networkName)
+		}
+	}
+	return nil
+}
+
+func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, dependencyType, dependencyName string) *protocol.Hover {
 	for _, node := range mappingNode.Values {
-		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == "networks" {
+		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
 			for _, service := range node.Value.(*ast.MappingNode).Values {
-				if service.Key.GetToken().Value == serviceName {
+				if service.Key.GetToken().Value == dependencyName {
 					return createYamlHover(service)
 				}
 			}
 		}
 	}
 
-	node, _ := dependencyLookup(doc, "networks", serviceName)
+	node, _ := dependencyLookup(doc, dependencyType, dependencyName)
 	if node != nil {
 		return createYamlHover(node)
 	}
 	return nil
 }
 
-func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
-	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
-		if nodePath[2].GetToken().Value == "networks" {
-			networkName := nodePath[3].GetToken().Value
-			return createNetworkHover(doc, mappingNode, networkName)
+func configHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if nodePath[0].GetToken().Value == "services" {
+		if len(nodePath) == 4 {
+			// array string
+			if nodePath[2].GetToken().Value == "configs" {
+				configName := nodePath[3].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "configs", configName)
+			}
+		} else if len(nodePath) == 5 {
+			// array object
+			if nodePath[2].GetToken().Value == "configs" && nodePath[3].GetToken().Value == "source" {
+				configName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "configs", configName)
+			}
 		}
 	}
 	return nil
