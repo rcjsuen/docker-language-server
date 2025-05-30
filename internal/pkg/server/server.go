@@ -3,10 +3,12 @@ package server
 import (
 	"context"
 	"io"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
 
+	"github.com/bugsnag/bugsnag-go"
 	"github.com/docker/docker-language-server/internal/bake/hcl"
 	"github.com/docker/docker-language-server/internal/compose"
 	"github.com/docker/docker-language-server/internal/configuration"
@@ -206,6 +208,14 @@ func (s *Server) handleRecovered(method string, recovered interface{}) bool {
 		}
 		if err, ok := recovered.(error); ok {
 			properties["recover"] = err.Error()
+			metadata := bugsnag.MetaData{}
+			metadata.Add("session", "method", method)
+			for property, value := range s.sessionTelemetryProperties {
+				metadata.Add("session", property, value)
+			}
+			metadata.Add("session", "arch", runtime.GOARCH)
+			metadata.Add("session", "os", runtime.GOOS)
+			_ = bugsnag.Notify(err, metadata)
 		}
 		s.Enqueue(telemetry.EventServerHeartbeat, properties)
 		return true

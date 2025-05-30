@@ -50,6 +50,10 @@ client->>server: workspace/configuration response
 - hash of the path of modified files
 - language identifier of modified files
 
+## BugSnag
+
+Errors will be captured and sent to BugSnag. This can be turned off by disabling telemetry.
+
 ## Privacy Policy
 
 Read our [privacy policy](https://www.docker.com/legal/docker-privacy-policy/) to learn more about how the information is collected and used.

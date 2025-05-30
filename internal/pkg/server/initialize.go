@@ -16,6 +16,28 @@ import (
 )
 
 func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
+	bytes, err := json.Marshal(params.Capabilities.Experimental)
+	if err == nil {
+		_ = json.Unmarshal(bytes, &s.capabilities)
+	}
+	if params.ClientInfo != nil {
+		s.sessionTelemetryProperties["lsp_client_info_name"] = params.ClientInfo.Name
+		if params.ClientInfo.Version != nil {
+			s.sessionTelemetryProperties["lsp_client_info_version"] = *params.ClientInfo.Version
+		}
+		if s.capabilities != nil {
+			if s.capabilities.Capabilities.ClientInfoExtras.ClientName != "" {
+				s.sessionTelemetryProperties["client_name"] = s.capabilities.Capabilities.ClientInfoExtras.ClientName
+			}
+			if s.capabilities.Capabilities.ClientInfoExtras.ClientSession != "" {
+				s.sessionTelemetryProperties["client_session"] = s.capabilities.Capabilities.ClientInfoExtras.ClientSession
+			}
+		}
+	}
+	s.Enqueue(telemetry.EventServerHeartbeat, map[string]any{
+		"type": telemetry.ServerHeartbeatTypeInitialized,
+	})
+
 	s.client = &LanguageClient{call: ctx.Call, notify: ctx.Notify}
 
 	workspaceFolders := []string{}
@@ -72,32 +94,11 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	}
 
 	var codeLensProvider *protocol.CodeLensOptions
-	bytes, err := json.Marshal(params.Capabilities.Experimental)
-	if err == nil {
-		_ = json.Unmarshal(bytes, &s.capabilities)
-		if s.capabilities != nil && slices.Contains(s.capabilities.Capabilities.Commands, types.BakeBuildCommandId) {
-			codeLensProvider = &protocol.CodeLensOptions{}
-		}
+	if s.capabilities != nil && slices.Contains(s.capabilities.Capabilities.Commands, types.BakeBuildCommandId) {
+		codeLensProvider = &protocol.CodeLensOptions{}
 	}
 
 	s.toggleSupportedFeatures(params)
-	if params.ClientInfo != nil {
-		s.sessionTelemetryProperties["lsp_client_info_name"] = params.ClientInfo.Name
-		if params.ClientInfo.Version != nil {
-			s.sessionTelemetryProperties["lsp_client_info_version"] = *params.ClientInfo.Version
-		}
-		if s.capabilities != nil {
-			if s.capabilities.Capabilities.ClientInfoExtras.ClientName != "" {
-				s.sessionTelemetryProperties["client_name"] = s.capabilities.Capabilities.ClientInfoExtras.ClientName
-			}
-			if s.capabilities.Capabilities.ClientInfoExtras.ClientSession != "" {
-				s.sessionTelemetryProperties["client_session"] = s.capabilities.Capabilities.ClientInfoExtras.ClientSession
-			}
-		}
-	}
-	s.Enqueue(telemetry.EventServerHeartbeat, map[string]any{
-		"type": telemetry.ServerHeartbeatTypeInitialized,
-	})
 
 	syncKind := protocol.TextDocumentSyncKindFull
 	result := protocol.InitializeResult{
