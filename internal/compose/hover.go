@@ -43,6 +43,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+			result = volumeHover(doc, params, mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
 			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
 			if result != nil {
 				return result, nil
@@ -170,24 +174,52 @@ func secretHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nod
 		if len(nodePath) == 4 {
 			// array string
 			if nodePath[2].GetToken().Value == "secrets" {
-				configName := nodePath[3].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", configName)
+				secretName := nodePath[3].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", secretName)
 			}
 		} else if len(nodePath) == 5 {
 			// array object
 			if nodePath[2].GetToken().Value == "secrets" && nodePath[3].GetToken().Value == "source" {
-				configName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", configName)
+				secretName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", secretName)
 			} else if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" {
 				// array string in the build object
-				configName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", configName)
+				secretName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", secretName)
 			}
 		} else if len(nodePath) == 6 {
 			// array object in the build object
 			if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" && nodePath[4].GetToken().Value == "source" {
-				configName := nodePath[5].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", configName)
+				secretName := nodePath[5].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", secretName)
+			}
+		}
+	}
+	return nil
+}
+
+func volumeHover(doc document.ComposeDocument, params *protocol.HoverParams, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if nodePath[0].GetToken().Value == "services" {
+		if len(nodePath) == 4 {
+			// array string
+			if nodePath[2].GetToken().Value == "volumes" {
+				volumeName := nodePath[3].GetToken().Value
+				idx := strings.Index(volumeName, ":")
+				if idx >= 0 {
+					ch := int(params.Position.Character)
+					col := nodePath[3].GetToken().Position.Column - 1
+					if col > ch || ch >= col+idx {
+						return nil
+					}
+					volumeName = volumeName[0:idx]
+				}
+				return createDependencyHover(doc, mappingNode, "volumes", volumeName)
+			}
+		} else if len(nodePath) == 5 {
+			// array object
+			if nodePath[2].GetToken().Value == "volumes" && nodePath[3].GetToken().Value == "source" {
+				volumeName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "volumes", volumeName)
 			}
 		}
 	}

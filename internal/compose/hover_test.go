@@ -791,6 +791,138 @@ secrets:
 				},
 			},
 		},
+		{
+			name: "volumes hover as an array string",
+			content: `
+services:
+  backend:
+    volumes:
+      - db-data
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "volumes hover as an array string with a container path",
+			content: `
+services:
+  backend:
+    volumes:
+      - db-data:/var/lib/backup/data
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "volumes hover on the container path shows nothing",
+			content: `
+services:
+  backend:
+    volumes:
+      - db-data:/var/lib/backup/data
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 26,
+			result:    nil,
+		},
+		{
+			name: "volumes hover as an array string with a container path and access mode",
+			content: `
+services:
+  backend:
+    volumes:
+      - db-data:/var/lib/backup/data:rw
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "volumes hover on the access mode shows nothing",
+			content: `
+services:
+  backend:
+    volumes:
+      - db-data:/var/lib/backup/data:rw
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 38,
+			result:    nil,
+		},
+		{
+			name: "volumes hover with no volume shows nothing",
+			content: `
+services:
+  backend:
+    volumes:
+      - :/var/lib/backup/data:rw
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 8,
+			result:    nil,
+		},
+		{
+			name: "volumes hover as an array object",
+			content: `
+services:
+  backend:
+    image: example/backend
+    volumes:
+      - type: volume
+        source: db-data
+        target: /data
+        volume:
+          nocopy: true
+          subpath: sub
+volumes:
+  db-data:
+    driver: custom`,
+			line:      6,
+			character: 20,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
