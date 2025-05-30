@@ -39,6 +39,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+			result = secretHover(doc, mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
 			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
 			if result != nil {
 				return result, nil
@@ -155,6 +159,35 @@ func configHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nod
 			if nodePath[2].GetToken().Value == "configs" && nodePath[3].GetToken().Value == "source" {
 				configName := nodePath[4].GetToken().Value
 				return createDependencyHover(doc, mappingNode, "configs", configName)
+			}
+		}
+	}
+	return nil
+}
+
+func secretHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if nodePath[0].GetToken().Value == "services" {
+		if len(nodePath) == 4 {
+			// array string
+			if nodePath[2].GetToken().Value == "secrets" {
+				configName := nodePath[3].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", configName)
+			}
+		} else if len(nodePath) == 5 {
+			// array object
+			if nodePath[2].GetToken().Value == "secrets" && nodePath[3].GetToken().Value == "source" {
+				configName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", configName)
+			} else if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" {
+				// array string in the build object
+				configName := nodePath[4].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", configName)
+			}
+		} else if len(nodePath) == 6 {
+			// array object in the build object
+			if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" && nodePath[4].GetToken().Value == "source" {
+				configName := nodePath[5].GetToken().Value
+				return createDependencyHover(doc, mappingNode, "secrets", configName)
 			}
 		}
 	}
