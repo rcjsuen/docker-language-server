@@ -648,6 +648,52 @@ networks:
 				},
 			},
 		},
+		{
+			name: "configs hover as an array string",
+			content: `
+services:
+  backend:
+    configs:
+      - my_config
+configs:
+  my_config:
+    file: ./my_config.txt`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_config:
+  file: ./my_config.txt` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "configs hover as an array string",
+			content: `
+services:
+  backend:
+    configs:
+      - source: my_config
+        target: /config
+        uid: "103"
+        gid: "103"
+        mode: 0440
+configs:
+  my_config:
+    external: true`,
+			line:      4,
+			character: 21,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_config:
+  external: true` +
+						"\n```",
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
@@ -722,6 +768,30 @@ networks:
 					Kind: protocol.MarkupKindMarkdown,
 					Value: "```YAML\n" + `networkA:
   driver: custom` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a network defined in another file",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  backend:
+    configs:
+      - my_config`,
+			otherContent: `
+configs:
+  my_config:
+    file: ./my_config.txt`,
+			line:      6,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_config:
+  file: ./my_config.txt` +
 						"\n```",
 				},
 			},
