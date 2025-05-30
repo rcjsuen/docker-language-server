@@ -1026,7 +1026,7 @@ configs:
 			},
 		},
 		{
-			name: "hovering over a network secret in another file",
+			name: "hovering over a secret defined in another file",
 			content: `
 include:
   - compose.other.yaml
@@ -1045,6 +1045,30 @@ secrets:
 					Kind: protocol.MarkupKindMarkdown,
 					Value: "```YAML\n" + `my_secret:
   file: ./my_secret.txt` +
+						"\n```",
+				},
+			},
+		},
+		{
+			name: "hovering over a volume defined in another file",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  backend:
+    volumes:
+      - db-data:/var/lib/backup`,
+			otherContent: `
+volumes:
+  db-data:
+    driver: custom`,
+			line:      6,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
 						"\n```",
 				},
 			},
