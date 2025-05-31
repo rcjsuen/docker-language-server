@@ -56,7 +56,7 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 	return nil, nil
 }
 
-func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
+func createYamlHover(node *ast.MappingValueNode, hovered *token.Token) *protocol.Hover {
 	split := strings.Split(node.String(), "\n")
 	// remove leading empty line inserted by goccy/go-yaml if present
 	if strings.TrimSpace(split[0]) == "" {
@@ -77,43 +77,43 @@ func createYamlHover(node *ast.MappingValueNode) *protocol.Hover {
 			split[i] = split[i][skip:]
 		}
 	}
+	r := createRange(hovered, len(hovered.Value))
 	return &protocol.Hover{
 		Contents: protocol.MarkupContent{
 			Kind:  protocol.MarkupKindMarkdown,
 			Value: fmt.Sprintf("```YAML\n%v\n```", strings.Join(split, "\n")),
 		},
+		Range: &r,
 	}
 }
 
 func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
 	if (len(nodePath) == 4 || len(nodePath) == 5) && nodePath[0].GetToken().Value == "services" {
+		t := nodePath[3].GetToken()
 		if nodePath[2].GetToken().Value == "extends" {
-			serviceName := nodePath[3].GetToken().Value
-			if len(nodePath) == 5 && nodePath[3].GetToken().Value == "service" {
+			if len(nodePath) == 5 && t.Value == "service" {
 				if _, ok := nodePath[4].(*ast.StringNode); ok {
-					if nodePath[4].GetToken().Next == nil || nodePath[4].GetToken().Next.Type != token.MappingValueType {
-						serviceName = nodePath[4].GetToken().Value
+					t = nodePath[4].GetToken()
+					if t.Next != nil && t.Next.Type == token.MappingValueType {
+						return nil
 					}
 				} else {
 					return nil
 				}
-			} else if nodePath[3].GetToken().Next != nil && nodePath[3].GetToken().Next.Type == token.MappingValueType {
+			} else if t.Next != nil && t.Next.Type == token.MappingValueType {
 				return nil
 			}
-			result := createDependencyHover(doc, mappingNode, "services", serviceName)
+			result := createDependencyHover(doc, mappingNode, t, "services", t.Value)
 			if result != nil {
 				return result
 			}
 		}
 
 		if nodePath[2].GetToken().Value == "depends_on" {
-			if nodePath[3].GetToken().Next != nil &&
-				nodePath[3].GetToken().Next.Type == token.MappingValueType &&
-				nodePath[3].GetToken().Prev.Type == token.SequenceEntryType {
+			if t.Next != nil && t.Next.Type == token.MappingValueType && t.Prev.Type == token.SequenceEntryType {
 				return nil
 			}
-			serviceName := nodePath[3].GetToken().Value
-			result := createDependencyHover(doc, mappingNode, "services", serviceName)
+			result := createDependencyHover(doc, mappingNode, t, "services", t.Value)
 			if result != nil {
 				return result
 			}
@@ -125,19 +125,19 @@ func serviceHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
 	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
 		if nodePath[2].GetToken().Value == "networks" {
-			networkName := nodePath[3].GetToken().Value
-			return createDependencyHover(doc, mappingNode, "networks", networkName)
+			t := nodePath[3].GetToken()
+			return createDependencyHover(doc, mappingNode, t, "networks", t.Value)
 		}
 	}
 	return nil
 }
 
-func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, dependencyType, dependencyName string) *protocol.Hover {
+func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, hovered *token.Token, dependencyType, dependencyName string) *protocol.Hover {
 	for _, node := range mappingNode.Values {
 		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
 			for _, service := range node.Value.(*ast.MappingNode).Values {
 				if service.Key.GetToken().Value == dependencyName {
-					return createYamlHover(service)
+					return createYamlHover(service, hovered)
 				}
 			}
 		}
@@ -145,7 +145,7 @@ func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.Mappin
 
 	node, _ := dependencyLookup(doc, dependencyType, dependencyName)
 	if node != nil {
-		return createYamlHover(node)
+		return createYamlHover(node, hovered)
 	}
 	return nil
 }
@@ -155,14 +155,14 @@ func configHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nod
 		if len(nodePath) == 4 {
 			// array string
 			if nodePath[2].GetToken().Value == "configs" {
-				configName := nodePath[3].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "configs", configName)
+				t := nodePath[3].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
 			}
 		} else if len(nodePath) == 5 {
 			// array object
 			if nodePath[2].GetToken().Value == "configs" && nodePath[3].GetToken().Value == "source" {
-				configName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "configs", configName)
+				t := nodePath[4].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
 			}
 		}
 	}
@@ -174,24 +174,24 @@ func secretHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nod
 		if len(nodePath) == 4 {
 			// array string
 			if nodePath[2].GetToken().Value == "secrets" {
-				secretName := nodePath[3].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", secretName)
+				t := nodePath[3].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "secrets", t.Value)
 			}
 		} else if len(nodePath) == 5 {
 			// array object
 			if nodePath[2].GetToken().Value == "secrets" && nodePath[3].GetToken().Value == "source" {
-				secretName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", secretName)
+				t := nodePath[4].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "secrets", t.Value)
 			} else if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" {
 				// array string in the build object
-				secretName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", secretName)
+				t := nodePath[4].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "secrets", t.Value)
 			}
 		} else if len(nodePath) == 6 {
 			// array object in the build object
 			if nodePath[2].GetToken().Value == "build" && nodePath[3].GetToken().Value == "secrets" && nodePath[4].GetToken().Value == "source" {
-				secretName := nodePath[5].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "secrets", secretName)
+				t := nodePath[5].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "secrets", t.Value)
 			}
 		}
 	}
@@ -205,21 +205,27 @@ func volumeHover(doc document.ComposeDocument, params *protocol.HoverParams, map
 			if nodePath[2].GetToken().Value == "volumes" {
 				volumeName := nodePath[3].GetToken().Value
 				idx := strings.Index(volumeName, ":")
+				t := nodePath[3].GetToken()
 				if idx >= 0 {
 					ch := int(params.Position.Character)
-					col := nodePath[3].GetToken().Position.Column - 1
+					col := t.Position.Column - 1
 					if col > ch || ch >= col+idx {
 						return nil
 					}
 					volumeName = volumeName[0:idx]
+					t = &token.Token{
+						Type:     t.Type,
+						Value:    t.Value[0:idx],
+						Position: t.Position,
+					}
 				}
-				return createDependencyHover(doc, mappingNode, "volumes", volumeName)
+				return createDependencyHover(doc, mappingNode, t, "volumes", volumeName)
 			}
 		} else if len(nodePath) == 5 {
 			// array object
 			if nodePath[2].GetToken().Value == "volumes" && nodePath[3].GetToken().Value == "source" {
-				volumeName := nodePath[4].GetToken().Value
-				return createDependencyHover(doc, mappingNode, "volumes", volumeName)
+				t := nodePath[4].GetToken()
+				return createDependencyHover(doc, mappingNode, t, "volumes", t.Value)
 			}
 		}
 	}
