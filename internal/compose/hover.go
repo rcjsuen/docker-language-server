@@ -151,26 +151,24 @@ func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.Mappin
 }
 
 func configHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
-	if nodePath[0].GetToken().Value == "services" {
-		if len(nodePath) == 4 {
-			// array string
-			if nodePath[2].GetToken().Value == "configs" {
-				t := nodePath[3].GetToken()
-				return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
-			}
-		} else if len(nodePath) == 5 {
-			// array object
-			if nodePath[2].GetToken().Value == "configs" && nodePath[3].GetToken().Value == "source" {
-				t := nodePath[4].GetToken()
-				return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
-			}
+	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
+		// array string
+		if nodePath[2].GetToken().Value == "configs" {
+			t := nodePath[3].GetToken()
+			return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
+		}
+	} else if len(nodePath) == 5 && nodePath[0].GetToken().Value == "services" {
+		// array object
+		if nodePath[2].GetToken().Value == "configs" && nodePath[3].GetToken().Value == "source" {
+			t := nodePath[4].GetToken()
+			return createDependencyHover(doc, mappingNode, t, "configs", t.Value)
 		}
 	}
 	return nil
 }
 
 func secretHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
-	if nodePath[0].GetToken().Value == "services" {
+	if len(nodePath) >= 4 && nodePath[0].GetToken().Value == "services" {
 		if len(nodePath) == 4 {
 			// array string
 			if nodePath[2].GetToken().Value == "secrets" {
@@ -199,7 +197,7 @@ func secretHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nod
 }
 
 func volumeHover(doc document.ComposeDocument, params *protocol.HoverParams, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
-	if nodePath[0].GetToken().Value == "services" {
+	if len(nodePath) >= 4 && nodePath[0].GetToken().Value == "services" {
 		if len(nodePath) == 4 {
 			// array string
 			if nodePath[2].GetToken().Value == "volumes" {
