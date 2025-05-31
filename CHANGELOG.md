@@ -18,10 +18,18 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 - Compose
+  - textDocument/definition
+    - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
+  - textDocument/documentHighlight
+    - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
   - textDocument/documentLink
     - consider quotes when calculating the link's range ([#242](https://github.com/docker/docker-language-server/issues/242))
   - textDocument/hover
     - prevent YAML hover issues caused by whitespace ([#244](https://github.com/docker/docker-language-server/issues/244))
+  - textDocument/prepareRename
+    - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
+  - textDocument/rename
+    - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
 
 ## [0.9.0] - 2025-05-26
 

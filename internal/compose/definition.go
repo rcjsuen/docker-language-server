@@ -35,7 +35,8 @@ func Definition(ctx context.Context, definitionLinkSupport bool, doc document.Co
 	if definitionRange == nil {
 		node, u := dependencyLookup(doc, dependency.dependencyType, name)
 		if node != nil {
-			definitionRange = rangeFromToken(node.Key.GetToken())
+			r := createRange(node.Key.GetToken(), len(node.Key.GetToken().Value))
+			definitionRange = &r
 			targetURI = u
 		}
 	}

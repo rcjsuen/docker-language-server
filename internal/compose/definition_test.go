@@ -65,6 +65,45 @@ services:
 			},
 		},
 		{
+			name: "short syntax quoted form of depends_on in services",
+			content: `
+services:
+  web:
+    build: .
+    depends_on:
+      - "redis"
+  redis:
+    image: redis`,
+			line:      5,
+			character: 11,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 9},
+						End:   protocol.Position{Line: 5, Character: 14},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 6, Character: 2},
+						End:   protocol.Position{Line: 6, Character: 7},
+					},
+				},
+			},
+		},
+		{
 			name: "short syntax form of depends_on in services finding the right match",
 			content: `
 services:
