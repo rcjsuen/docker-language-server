@@ -1007,6 +1007,16 @@ volumes:
 				},
 			},
 		},
+		{
+			name: "hover over a reference that cannot be found",
+			content: `services:
+  backend:
+    networks:
+      - "testNetwork"`,
+			line:      3,
+			character: 14,
+			result:    nil,
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
