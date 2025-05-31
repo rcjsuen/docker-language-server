@@ -80,6 +80,7 @@ func volumeToken(t *token.Token) *token.Token {
 	idx := strings.Index(t.Value, ":")
 	if idx != -1 {
 		return &token.Token{
+			Type:     t.Type,
 			Value:    t.Value[0:idx],
 			Position: t.Position,
 		}
@@ -238,23 +239,10 @@ func highlightReferences(dependencyType string, refs, decls []*token.Token, line
 	return "", dependencyReference{documentHighlights: nil}
 }
 
-func rangeFromToken(t *token.Token) *protocol.Range {
-	return &protocol.Range{
-		Start: protocol.Position{
-			Line:      protocol.UInteger(t.Position.Line) - 1,
-			Character: protocol.UInteger(t.Position.Column) - 1,
-		},
-		End: protocol.Position{
-			Line:      protocol.UInteger(t.Position.Line) - 1,
-			Character: protocol.UInteger(t.Position.Column+len(t.Value)) - 1,
-		},
-	}
-}
-
 func documentHighlightFromToken(t *token.Token, kind protocol.DocumentHighlightKind) protocol.DocumentHighlight {
 	return protocol.DocumentHighlight{
 		Kind:  &kind,
-		Range: *rangeFromToken(t),
+		Range: createRange(t, len(t.Value)),
 	}
 }
 

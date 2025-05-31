@@ -102,6 +102,38 @@ services:
 		},
 	},
 	{
+		name: "read highlight on an undefined quoted service array item",
+		content: `
+services:
+  test:
+    depends_on:
+      - "test2"`,
+		line:      4,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 9, 4, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 9},
+								End:   protocol.Position{Line: 4, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 9},
+			End:   protocol.Position{Line: 4, Character: 14},
+		},
+	},
+	{
 		name: "read highlight on an undefined service object with no properties",
 		content: `
 services:
@@ -303,6 +335,47 @@ services:
 		prepareRename: &protocol.Range{
 			Start: protocol.Position{Line: 5, Character: 13},
 			End:   protocol.Position{Line: 5, Character: 17},
+		},
+	},
+	{
+		name: "extends as a quoted string attribute",
+		content: `
+services:
+  test:
+    image: alpine
+  test2:
+    extends: "test"`,
+		line:      5,
+		character: 15,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 2, 2, 6, protocol.DocumentHighlightKindWrite),
+			documentHighlight(5, 14, 5, 18, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 2},
+								End:   protocol.Position{Line: 2, Character: 6},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 5, Character: 14},
+								End:   protocol.Position{Line: 5, Character: 18},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 5, Character: 14},
+			End:   protocol.Position{Line: 5, Character: 18},
 		},
 	},
 	{
@@ -846,6 +919,38 @@ services:
 		prepareRename: &protocol.Range{
 			Start: protocol.Position{Line: 4, Character: 8},
 			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read highlight on an undefined volume array item with a mount path that is quoted",
+		content: `
+services:
+  test:
+    volumes:
+      - "test2:/mount/path"`,
+		line:      4,
+		character: 11,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 9, 4, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 9},
+								End:   protocol.Position{Line: 4, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 9},
+			End:   protocol.Position{Line: 4, Character: 14},
 		},
 	},
 	{
