@@ -378,6 +378,13 @@ services:
 				},
 			},
 		},
+		{
+			name:      "hovering outside the file",
+			content:   "version: 1.2.3",
+			line:      1,
+			character: 4,
+			result:    nil,
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
