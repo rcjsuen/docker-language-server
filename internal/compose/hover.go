@@ -23,6 +23,9 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 	line := int(params.Position.Line) + 1
 	character := int(params.Position.Character) + 1
 	lines := strings.Split(string(doc.Input()), "\n")
+	if line > len(lines) {
+		return nil, nil
+	}
 
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {

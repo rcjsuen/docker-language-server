@@ -156,6 +156,12 @@ func testHover_Compose(t *testing.T, composeSupport bool) {
 				},
 			},
 		},
+		{
+			name:     "hovering outside the file",
+			content:  "version: 1.2.3",
+			position: protocol.Position{Line: 1, Character: 4},
+			result:   nil,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -168,7 +174,7 @@ func testHover_Compose(t *testing.T, composeSupport bool) {
 			err = conn.Call(context.Background(), protocol.MethodTextDocumentHover, protocol.HoverParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: didOpen.TextDocument.URI},
-					Position:     protocol.Position{Line: 0, Character: 3},
+					Position:     tc.position,
 				},
 			}, &hover)
 			require.NoError(t, err)
