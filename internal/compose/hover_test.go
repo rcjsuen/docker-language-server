@@ -422,6 +422,10 @@ services:
   image: alpine:3.21` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 13},
+					End:   protocol.Position{Line: 6, Character: 17},
+				},
 			},
 		},
 		{
@@ -444,6 +448,10 @@ services:
   image: alpine:3.21` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 7, Character: 13},
+					End:   protocol.Position{Line: 7, Character: 17},
+				},
 			},
 		},
 		{
@@ -464,6 +472,10 @@ services:
 					Value: "```YAML\n" + `test:
   image: alpine:3.21` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 15},
+					End:   protocol.Position{Line: 6, Character: 19},
 				},
 			},
 		},
@@ -489,6 +501,10 @@ services:
   attach: true` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 8, Character: 13},
+					End:   protocol.Position{Line: 8, Character: 17},
+				},
 			},
 		},
 		{
@@ -509,6 +525,10 @@ services:
   image: alpine:3.21` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 8},
+					End:   protocol.Position{Line: 6, Character: 12},
+				},
 			},
 		},
 		{
@@ -528,6 +548,10 @@ services:
 					Value: "```YAML\n" + `test:
   image: alpine:3.21` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 6},
+					End:   protocol.Position{Line: 6, Character: 10},
 				},
 			},
 		},
@@ -550,6 +574,10 @@ services:
 					Value: "```YAML\n" + `backend:
   image: hello` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 8, Character: 8},
+					End:   protocol.Position{Line: 8, Character: 15},
 				},
 			},
 		},
@@ -575,6 +603,10 @@ services:
   image: hello` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 10, Character: 8},
+					End:   protocol.Position{Line: 10, Character: 15},
+				},
 			},
 		},
 		{
@@ -596,6 +628,10 @@ networks:
 					Value: "```YAML\n" + `backend:
   driver: custom` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 15},
 				},
 			},
 		},
@@ -622,6 +658,10 @@ networks:
   driver: custom` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 5, Character: 8},
+					End:   protocol.Position{Line: 5, Character: 16},
+				},
 			},
 		},
 		{
@@ -646,6 +686,10 @@ networks:
   driver: custom` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 6},
+					End:   protocol.Position{Line: 4, Character: 14},
+				},
 			},
 		},
 		{
@@ -666,6 +710,10 @@ configs:
 					Value: "```YAML\n" + `my_config:
   file: ./my_config.txt` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 17},
 				},
 			},
 		},
@@ -692,6 +740,10 @@ configs:
   external: true` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 16},
+					End:   protocol.Position{Line: 4, Character: 25},
+				},
 			},
 		},
 		{
@@ -712,6 +764,10 @@ secrets:
 					Value: "```YAML\n" + `my_secret:
   file: ./my_secret.txt` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 17},
 				},
 			},
 		},
@@ -738,6 +794,10 @@ secrets:
   external: true` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 16},
+					End:   protocol.Position{Line: 4, Character: 25},
+				},
 			},
 		},
 		{
@@ -760,6 +820,10 @@ secrets:
 					Value: "```YAML\n" + `server-certificate:
   file: ./server.cert` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 10},
+					End:   protocol.Position{Line: 6, Character: 28},
 				},
 			},
 		},
@@ -789,6 +853,10 @@ secrets:
   file: ./server.cert` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 7, Character: 18},
+					End:   protocol.Position{Line: 7, Character: 36},
+				},
 			},
 		},
 		{
@@ -810,6 +878,10 @@ volumes:
   driver: custom` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 15},
+				},
 			},
 		},
 		{
@@ -830,6 +902,10 @@ volumes:
 					Value: "```YAML\n" + `db-data:
   driver: custom` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 15},
 				},
 			},
 		},
@@ -865,6 +941,10 @@ volumes:
 					Value: "```YAML\n" + `db-data:
   driver: custom` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 15},
 				},
 			},
 		},
@@ -921,6 +1001,10 @@ volumes:
   driver: custom` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 16},
+					End:   protocol.Position{Line: 6, Character: 23},
+				},
 			},
 		},
 	}
@@ -972,6 +1056,10 @@ services:
   image: alpine:3.20` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 13},
+					End:   protocol.Position{Line: 6, Character: 17},
+				},
 			},
 		},
 		{
@@ -999,6 +1087,10 @@ networks:
   driver: custom` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 7, Character: 6},
+					End:   protocol.Position{Line: 7, Character: 14},
+				},
 			},
 		},
 		{
@@ -1022,6 +1114,10 @@ configs:
 					Value: "```YAML\n" + `my_config:
   file: ./my_config.txt` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 8},
+					End:   protocol.Position{Line: 6, Character: 17},
 				},
 			},
 		},
@@ -1047,6 +1143,10 @@ secrets:
   file: ./my_secret.txt` +
 						"\n```",
 				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 8},
+					End:   protocol.Position{Line: 6, Character: 17},
+				},
 			},
 		},
 		{
@@ -1070,6 +1170,10 @@ volumes:
 					Value: "```YAML\n" + `db-data:
   driver: custom` +
 						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 8},
+					End:   protocol.Position{Line: 6, Character: 15},
 				},
 			},
 		},
