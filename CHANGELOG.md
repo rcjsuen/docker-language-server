@@ -33,6 +33,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
   - textDocument/documentLink
     - consider quotes when calculating the link's range ([#242](https://github.com/docker/docker-language-server/issues/242))
+    - consider anchors and aliases instead of assuming everything are strings ([#266](https://github.com/docker/docker-language-server/issues/266))
   - textDocument/hover
     - prevent YAML hover issues caused by whitespace ([#244](https://github.com/docker/docker-language-server/issues/244))
     - ignore hover requests that are outside the file to prevent panics ([#261](https://github.com/docker/docker-language-server/issues/261))

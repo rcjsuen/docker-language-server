@@ -162,6 +162,14 @@ include:
 				},
 			},
 		},
+		{
+			name: "anchors and aliases",
+			content: `
+include:
+  - &link compose.other.yaml
+  - *link`,
+			links: []protocol.DocumentLink{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -395,6 +403,33 @@ services:
 			},
 		},
 		{
+			name: "anchors and aliases to nothing",
+			content: `
+services:
+  backend:
+    image: &alpine
+  backend2:
+    image: *alpine`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "anchor has string content",
+			content: `
+services:
+  backend:
+    image: &alpine alpine:3.21`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 19},
+						End:   protocol.Position{Line: 3, Character: 25},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
 			name: "invalid services",
 			content: `
 services:
@@ -481,6 +516,33 @@ services:
 				End:   protocol.Position{Line: 4, Character: 32},
 			},
 		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+services:
+  test:
+    build:
+      dockerfile: &file
+  test2:
+    build:
+      dockerfile: *file`,
+		},
+		{
+			name: "anchor has string content",
+			content: `
+services:
+  test:
+    build:
+      dockerfile: &file ./Dockerfile2
+  test2:
+    build:
+      dockerfile: *file`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 24},
+				End:   protocol.Position{Line: 4, Character: 37},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -489,12 +551,16 @@ services:
 			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
-			link := protocol.DocumentLink{
-				Range:   tc.linkRange,
-				Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-				Tooltip: types.CreateStringPointer(tc.path),
+			if tc.path == "" {
+				require.Equal(t, []protocol.DocumentLink{}, links)
+			} else {
+				link := protocol.DocumentLink{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				}
+				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
-			require.Equal(t, []protocol.DocumentLink{link}, links)
 		})
 	}
 }
