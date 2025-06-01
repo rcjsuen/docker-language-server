@@ -8,6 +8,10 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 - errors will now be reported to BugSnag if telemetry is not disabled
 - Compose
+  - textDocument/definition
+    - support navigating to the defined YAML anchor from an alias reference ([#264](https://github.com/docker/docker-language-server/issues/264))
+  - textDocument/documentHighlight
+    - support highlighting YAML anchor and alias references ([#264](https://github.com/docker/docker-language-server/issues/264))
   - textDocument/documentLink
     - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))
   - textDocument/hover
@@ -16,6 +20,10 @@ All notable changes to the Docker Language Server will be documented in this fil
     - render the referenced secret's YAML content as a hover result ([#250](https://github.com/docker/docker-language-server/issues/250))
     - render the referenced volume's YAML content as a hover result ([#251](https://github.com/docker/docker-language-server/issues/251))
     - include the range of the hovered element to clearly identify what is being hovered over for the client ([#256](https://github.com/docker/docker-language-server/issues/256))
+  - textDocument/prepareRename
+    - support renaming YAML anchor and alias references ([#264](https://github.com/docker/docker-language-server/issues/264))
+  - textDocument/rename
+    - preparing rename operations for YAML anchor and alias references ([#264](https://github.com/docker/docker-language-server/issues/264))
 
 ### Fixed
 - Compose

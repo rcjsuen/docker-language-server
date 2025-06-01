@@ -481,6 +481,277 @@ services:
 				},
 			},
 		},
+		{
+			name: "anchor",
+			content: `
+volumes:
+  db-data: &default-volume
+    driver: custom`,
+			line:      2,
+			character: 17,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+		},
+		{
+			name: "alias to an anchor pointing at the anchor",
+			content: `
+volumes:
+  db-data: &default-volume
+    driver: default
+  metrics: *default-volume`,
+			line:      2,
+			character: 17,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+		},
+		{
+			name: "alias to an anchor pointing at the alias",
+			content: `
+volumes:
+  db-data: &default-volume
+    driver: default
+  metrics: *default-volume`,
+			line:      4,
+			character: 17,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 12},
+						End:   protocol.Position{Line: 4, Character: 26},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 12},
+						End:   protocol.Position{Line: 2, Character: 26},
+					},
+				},
+			},
+		},
+		{
+			name: "write reference on the first duplicated anchor",
+			content: `
+services:
+  serviceA:
+    image: &redis redis:8-alpine
+  serviceB:
+    image: *redis
+  serviceC:
+    image: &redis redis:7-alpine
+  serviceD:
+    image: *redis`,
+			line:      3,
+			character: 14,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+				},
+			},
+		},
+		{
+			name: "read reference on the first duplicated alias",
+			content: `
+services:
+  serviceA:
+    image: &redis redis:8-alpine
+  serviceB:
+    image: *redis
+  serviceC:
+    image: &redis redis:7-alpine
+  serviceD:
+    image: *redis`,
+			line:      5,
+			character: 14,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 12},
+						End:   protocol.Position{Line: 5, Character: 17},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+				},
+			},
+		},
+		{
+			name: "write reference on the second duplicated anchor",
+			content: `
+services:
+  serviceA:
+    image: &redis redis:8-alpine
+  serviceB:
+    image: *redis
+  serviceC:
+    image: &redis redis:7-alpine
+  serviceD:
+    image: *redis`,
+			line:      7,
+			character: 14,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+				},
+			},
+		},
+		{
+			name: "read reference on the second duplicated alias",
+			content: `
+services:
+  serviceA:
+    image: &redis redis:8-alpine
+  serviceB:
+    image: *redis
+  serviceC:
+    image: &redis redis:7-alpine
+  serviceD:
+    image: *redis`,
+			line:      9,
+			character: 14,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 9, Character: 12},
+						End:   protocol.Position{Line: 9, Character: 17},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 12},
+						End:   protocol.Position{Line: 7, Character: 17},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
