@@ -20,6 +20,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - render the referenced secret's YAML content as a hover result ([#250](https://github.com/docker/docker-language-server/issues/250))
     - render the referenced volume's YAML content as a hover result ([#251](https://github.com/docker/docker-language-server/issues/251))
     - include the range of the hovered element to clearly identify what is being hovered over for the client ([#256](https://github.com/docker/docker-language-server/issues/256))
+    - render the referenced anchor's YAML content as a hover result ([#268](https://github.com/docker/docker-language-server/issues/268))
   - textDocument/prepareRename
     - support renaming YAML anchor and alias references ([#264](https://github.com/docker/docker-language-server/issues/264))
   - textDocument/rename

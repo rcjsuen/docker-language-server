@@ -54,12 +54,26 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+
+			anchor, aliases := fragmentReference(mappingNode, line, character)
+			if anchor != nil {
+				t := anchor.Name.GetToken()
+				if t.Position.Line == line {
+					return createYamlHover(anchor.Value, t), nil
+				}
+				for i := range aliases {
+					if aliases[i].GetToken().Position.Line == line {
+						t = aliases[i].Value.GetToken()
+						return createYamlHover(anchor.Value, t), nil
+					}
+				}
+			}
 		}
 	}
 	return nil, nil
 }
 
-func createYamlHover(node *ast.MappingValueNode, hovered *token.Token) *protocol.Hover {
+func createYamlHover(node ast.Node, hovered *token.Token) *protocol.Hover {
 	split := strings.Split(node.String(), "\n")
 	// remove leading empty line inserted by goccy/go-yaml if present
 	if strings.TrimSpace(split[0]) == "" {
