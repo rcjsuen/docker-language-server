@@ -102,3 +102,21 @@ func TestPrepareRename_Secrets(t *testing.T) {
 		})
 	}
 }
+
+func TestPrepareRename_Fragments(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range fragmentTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+			result, err := PrepareRename(doc, &protocol.PrepareRenameParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			})
+			require.NoError(t, err)
+			require.Equal(t, tc.prepareRename, result)
+		})
+	}
+}

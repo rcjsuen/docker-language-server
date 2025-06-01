@@ -134,8 +134,56 @@ func declarations(node *ast.MappingValueNode, dependencyType string) []*token.To
 	return nil
 }
 
+func findFragments(mappingNode *ast.MappingNode, anchors []*ast.AnchorNode, aliases []*ast.AliasNode) ([]*ast.AnchorNode, []*ast.AliasNode) {
+	for _, node := range mappingNode.Values {
+		if anchor, ok := node.Value.(*ast.AnchorNode); ok {
+			anchors = append(anchors, anchor)
+		} else if alias, ok := node.Value.(*ast.AliasNode); ok {
+			aliases = append(aliases, alias)
+		} else if m, ok := node.Value.(*ast.MappingNode); ok {
+			otherAnchors, otherAliases := findFragments(m, []*ast.AnchorNode{}, []*ast.AliasNode{})
+			anchors = append(anchors, otherAnchors...)
+			aliases = append(aliases, otherAliases...)
+		}
+	}
+	return anchors, aliases
+}
+
+func fragmentName(anchors []*ast.AnchorNode, aliases []*ast.AliasNode, line, character int) *string {
+	for i := range anchors {
+		if inToken(anchors[i].Name.GetToken(), line, character) {
+			return &anchors[i].Name.GetToken().Value
+		}
+	}
+	for i := range aliases {
+		if inToken(aliases[i].Value.GetToken(), line, character) {
+			return &aliases[i].Value.GetToken().Value
+		}
+	}
+	return nil
+}
+
+func fragmentRange(anchors []*ast.AnchorNode, anchorName string, line int) (int, int) {
+	start := -1
+	for i := range anchors {
+		if anchors[i].Name.GetToken().Value == anchorName {
+			if anchors[i].GetToken().Position.Line <= line {
+				start = anchors[i].GetToken().Position.Line
+			} else {
+				return start, anchors[i].GetToken().Position.Line
+			}
+		} else if anchors[i].GetToken().Position.Line > line {
+			return start, anchors[i].GetToken().Position.Line - 1
+		}
+	}
+	return start, -1
+}
+
 func DocumentHighlight(doc document.ComposeDocument, position protocol.Position) ([]protocol.DocumentHighlight, error) {
 	_, references := DocumentHighlights(doc, position)
+	if len(references.documentHighlights) == 0 {
+		return nil, nil
+	}
 	return references.documentHighlights, nil
 }
 
@@ -198,7 +246,43 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 		if len(highlights.documentHighlights) > 0 {
 			return name, highlights
 		}
-		return "", dependencyReference{documentHighlights: nil}
+
+		fragments := []protocol.DocumentHighlight{}
+		anchors, aliases := findFragments(mappingNode, []*ast.AnchorNode{}, []*ast.AliasNode{})
+		anchorName := fragmentName(anchors, aliases, line, character)
+		if anchorName != nil {
+			startLine, endLine := fragmentRange(anchors, *anchorName, line)
+			if startLine != -1 {
+				for i := range anchors {
+					if anchors[i].GetToken().Position.Line == startLine {
+						fragments = append(fragments, documentHighlightFromToken(anchors[i].Name.GetToken(), protocol.DocumentHighlightKindWrite))
+						break
+					}
+				}
+				for i := range aliases {
+					if endLine == -1 {
+						if startLine < aliases[i].GetToken().Position.Line {
+							fragments = append(fragments, documentHighlightFromToken(aliases[i].Value.GetToken(), protocol.DocumentHighlightKindRead))
+						}
+					} else {
+						if startLine < aliases[i].GetToken().Position.Line {
+							if aliases[i].Value.GetToken().Position.Line < endLine {
+								fragments = append(fragments, documentHighlightFromToken(aliases[i].Value.GetToken(), protocol.DocumentHighlightKindRead))
+							} else {
+								break
+							}
+						}
+					}
+				}
+			} else {
+				for i := range aliases {
+					if aliases[i].Value.GetToken().Value == *anchorName {
+						fragments = append(fragments, documentHighlightFromToken(aliases[i].Value.GetToken(), protocol.DocumentHighlightKindRead))
+					}
+				}
+			}
+			return "", dependencyReference{documentHighlights: fragments}
+		}
 	}
 	return "", dependencyReference{documentHighlights: nil}
 }
