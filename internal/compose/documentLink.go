@@ -43,19 +43,33 @@ func createIncludeLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
 	}
 }
 
+func stringNode(node *ast.MappingValueNode) *ast.StringNode {
+	value := node.Value
+	if anchor, ok := value.(*ast.AnchorNode); ok {
+		value = anchor.Value
+	}
+	if s, ok := value.(*ast.StringNode); ok {
+		return s
+	}
+	return nil
+}
+
 func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "build" {
 		if mappingNode, ok := serviceNode.Value.(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
 				if buildAttribute.Key.GetToken().Value == "dockerfile" {
-					dockerfile := buildAttribute.Value.GetToken().Value
-					absolutePath, err := types.AbsolutePath(u, dockerfile)
-					if err == nil {
-						absolutePath = filepath.ToSlash(absolutePath)
-						return &protocol.DocumentLink{
-							Range:   createRange(buildAttribute.Value.GetToken(), len(dockerfile)),
-							Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
-							Tooltip: types.CreateStringPointer(absolutePath),
+					dockerfileValue := stringNode(buildAttribute)
+					if dockerfileValue != nil {
+						dockerfile := dockerfileValue.GetToken().Value
+						absolutePath, err := types.AbsolutePath(u, dockerfile)
+						if err == nil {
+							absolutePath = filepath.ToSlash(absolutePath)
+							return &protocol.DocumentLink{
+								Range:   createRange(dockerfileValue.GetToken(), len(dockerfile)),
+								Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
+								Tooltip: types.CreateStringPointer(absolutePath),
+							}
 						}
 					}
 				}
@@ -67,12 +81,14 @@ func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protoc
 
 func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "image" {
-		value := serviceNode.Value.GetToken().Value
-		linkedText, link := extractImageLink(value)
-		return &protocol.DocumentLink{
-			Range:   createRange(serviceNode.Value.GetToken(), len(linkedText)),
-			Target:  types.CreateStringPointer(link),
-			Tooltip: types.CreateStringPointer(link),
+		service := stringNode(serviceNode)
+		if service != nil {
+			linkedText, link := extractImageLink(service.Value)
+			return &protocol.DocumentLink{
+				Range:   createRange(service.GetToken(), len(linkedText)),
+				Target:  types.CreateStringPointer(link),
+				Tooltip: types.CreateStringPointer(link),
+			}
 		}
 	}
 	return nil
