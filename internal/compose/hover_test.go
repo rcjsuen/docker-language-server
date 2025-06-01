@@ -1042,6 +1042,115 @@ volumes:
 	}
 }
 
+func TestHover_AnchorAliasHovers(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		result    *protocol.Hover
+	}{
+		{
+			name: "anchor single line",
+			content: `
+services:
+  test:
+    image: &alpine alpine:3.21`,
+			line:      3,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `alpine:3.21` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 3, Character: 12},
+					End:   protocol.Position{Line: 3, Character: 18},
+				},
+			},
+		},
+		{
+			name: "anchor multiple lines",
+			content: `
+services:
+  test: &service
+    image: alpine:3.21`,
+			line:      2,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `image: alpine:3.21` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 2, Character: 9},
+					End:   protocol.Position{Line: 2, Character: 16},
+				},
+			},
+		},
+		{
+			name: "alias",
+			content: `
+services:
+  test:
+    image: &alpine alpine:3.21
+  test2:
+    image: *alpine`,
+			line:      5,
+			character: 15,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `alpine:3.21` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 5, Character: 12},
+					End:   protocol.Position{Line: 5, Character: 18},
+				},
+			},
+		},
+		{
+			name: "alias to an anchor with multiple lines",
+			content: `
+services:
+  test: &service
+    image: alpine:3.21
+  test2: *service`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `image: alpine:3.21` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 10},
+					End:   protocol.Position{Line: 4, Character: 17},
+				},
+			},
+		},
+	}
+
+	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(composeFile), 1, []byte(tc.content))
+			result, err := Hover(context.Background(), &protocol.HoverParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFile},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.result, result)
+		})
+	}
+}
+
 func TestHover_InterFileSupport(t *testing.T) {
 	testCases := []struct {
 		name         string
