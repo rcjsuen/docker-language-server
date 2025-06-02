@@ -59,19 +59,7 @@ func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protoc
 		if mappingNode, ok := serviceNode.Value.(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
 				if buildAttribute.Key.GetToken().Value == "dockerfile" {
-					dockerfileValue := stringNode(buildAttribute)
-					if dockerfileValue != nil {
-						dockerfile := dockerfileValue.GetToken().Value
-						absolutePath, err := types.AbsolutePath(u, dockerfile)
-						if err == nil {
-							absolutePath = filepath.ToSlash(absolutePath)
-							return &protocol.DocumentLink{
-								Range:   createRange(dockerfileValue.GetToken(), len(dockerfile)),
-								Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
-								Tooltip: types.CreateStringPointer(absolutePath),
-							}
-						}
-					}
+					return createFileLink(u, buildAttribute)
 				}
 			}
 		}
@@ -88,6 +76,30 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 				Range:   createRange(service.GetToken(), len(linkedText)),
 				Target:  types.CreateStringPointer(link),
 				Tooltip: types.CreateStringPointer(link),
+			}
+		}
+	}
+	return nil
+}
+
+func createConfigFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+	if serviceNode.Key.GetToken().Value == "file" {
+		return createFileLink(u, serviceNode)
+	}
+	return nil
+}
+
+func createFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+	attributeValue := stringNode(serviceNode)
+	if attributeValue != nil {
+		file := attributeValue.GetToken().Value
+		absolutePath, err := types.AbsolutePath(u, file)
+		if err == nil {
+			absolutePath = filepath.ToSlash(absolutePath)
+			return &protocol.DocumentLink{
+				Range:   createRange(attributeValue.GetToken(), len(file)),
+				Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
+				Tooltip: types.CreateStringPointer(absolutePath),
 			}
 		}
 	}
@@ -151,6 +163,19 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 							}
 
 							link = createDockerfileLink(u, serviceAttribute)
+							if link != nil {
+								links = append(links, *link)
+							}
+						}
+					}
+				}
+			}
+		case "configs":
+			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
+				for _, node := range mappingNode.Values {
+					if configAttributes, ok := node.Value.(*ast.MappingNode); ok {
+						for _, configAttribute := range configAttributes.Values {
+							link := createConfigFileLink(u, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
