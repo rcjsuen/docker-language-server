@@ -643,3 +643,82 @@ configs:
 		})
 	}
 }
+
+func TestDocumentLink_SecretFileLinks(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), t.Name())
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
+
+	testCases := []struct {
+		name      string
+		content   string
+		path      string
+		linkRange protocol.Range
+	}{
+		{
+			name: "./server.cert",
+			content: `
+secrets:
+  test:
+    file: ./server.cert`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 23},
+			},
+		},
+		{
+			name: `"./server.cert"`,
+			content: `
+secrets:
+  test:
+    file: "./server.cert"`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 11},
+				End:   protocol.Position{Line: 3, Character: 24},
+			},
+		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+secrets:
+  test:
+    file: &configFile
+  test2:
+    file: *configFile`,
+		},
+		{
+			name: "anchor has string content",
+			content: `
+secrets:
+  test:
+    file: &configFile ./server.cert
+  test2:
+    file: *configFile`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 22},
+				End:   protocol.Position{Line: 3, Character: 35},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			if tc.path == "" {
+				require.Equal(t, []protocol.DocumentLink{}, links)
+			} else {
+				link := protocol.DocumentLink{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				}
+				require.Equal(t, []protocol.DocumentLink{link}, links)
+			}
+		})
+	}
+}
