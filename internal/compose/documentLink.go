@@ -82,7 +82,7 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	return nil
 }
 
-func createConfigFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createObjectFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "file" {
 		return createFileLink(u, serviceNode)
 	}
@@ -175,7 +175,20 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 				for _, node := range mappingNode.Values {
 					if configAttributes, ok := node.Value.(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
-							link := createConfigFileLink(u, configAttribute)
+							link := createObjectFileLink(u, configAttribute)
+							if link != nil {
+								links = append(links, *link)
+							}
+						}
+					}
+				}
+			}
+		case "secrets":
+			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
+				for _, node := range mappingNode.Values {
+					if configAttributes, ok := node.Value.(*ast.MappingNode); ok {
+						for _, configAttribute := range configAttributes.Values {
+							link := createObjectFileLink(u, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
