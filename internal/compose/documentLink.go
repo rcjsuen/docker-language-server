@@ -31,20 +31,29 @@ func createRange(t *token.Token, length int) protocol.Range {
 	}
 }
 
-func createIncludeLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
-	abs, err := types.AbsolutePath(u, node.Value)
-	if err != nil {
-		return nil
+func createLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
+	file := node.Value
+	abs, err := types.AbsolutePath(u, file)
+	if err == nil {
+		abs = filepath.ToSlash(abs)
+		return &protocol.DocumentLink{
+			Range:   createRange(node, len(file)),
+			Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")))),
+			Tooltip: types.CreateStringPointer(abs),
+		}
 	}
-	return &protocol.DocumentLink{
-		Range:   createRange(node, len(node.Value)),
-		Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(abs), "/")))),
-		Tooltip: types.CreateStringPointer(abs),
-	}
+	return nil
 }
 
-func stringNode(node *ast.MappingValueNode) *ast.StringNode {
-	value := node.Value
+func createFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+	attributeValue := stringNode(serviceNode.Value)
+	if attributeValue != nil {
+		return createLink(u, attributeValue.GetToken())
+	}
+	return nil
+}
+
+func stringNode(value ast.Node) *ast.StringNode {
 	if anchor, ok := value.(*ast.AnchorNode); ok {
 		value = anchor.Value
 	}
@@ -69,7 +78,7 @@ func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protoc
 
 func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "image" {
-		service := stringNode(serviceNode)
+		service := stringNode(serviceNode.Value)
 		if service != nil {
 			linkedText, link := extractImageLink(service.Value)
 			return &protocol.DocumentLink{
@@ -85,23 +94,6 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 func createObjectFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "file" {
 		return createFileLink(u, serviceNode)
-	}
-	return nil
-}
-
-func createFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
-	attributeValue := stringNode(serviceNode)
-	if attributeValue != nil {
-		file := attributeValue.GetToken().Value
-		absolutePath, err := types.AbsolutePath(u, file)
-		if err == nil {
-			absolutePath = filepath.ToSlash(absolutePath)
-			return &protocol.DocumentLink{
-				Range:   createRange(attributeValue.GetToken(), len(file)),
-				Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(absolutePath, "/")))),
-				Tooltip: types.CreateStringPointer(absolutePath),
-			}
-		}
 	}
 	return nil
 }
@@ -129,11 +121,15 @@ func includedFiles(nodes []ast.Node) []*token.Token {
 					}
 				}
 			}
-		} else if stringNode, ok := entry.(*ast.StringNode); ok {
+		} else {
 			// include:
 			//   - abc.yml
 			//   - def.yml
-			tokens = append(tokens, stringNode.GetToken())
+			stringNode := stringNode(entry)
+			if stringNode != nil {
+				tokens = append(tokens, stringNode.GetToken())
+			}
+
 		}
 	}
 	return tokens
@@ -146,7 +142,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 		case "include":
 			if sequence, ok := n.Value.(*ast.SequenceNode); ok {
 				for _, token := range includedFiles(sequence.Values) {
-					link := createIncludeLink(u, token)
+					link := createLink(u, token)
 					if link != nil {
 						links = append(links, *link)
 					}

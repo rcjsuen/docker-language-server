@@ -168,7 +168,16 @@ include:
 include:
   - &link compose.other.yaml
   - *link`,
-			links: []protocol.DocumentLink{},
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 10},
+						End:   protocol.Position{Line: 2, Character: 28},
+					},
+					Target:  documentLinkTarget(testsFolder, "compose.other.yaml"),
+					Tooltip: documentLinkTooltip(testsFolder, "compose.other.yaml"),
+				},
+			},
 		},
 	}
 

@@ -16,6 +16,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - support opening a referenced Dockerfile from the `build` object's `dockerfile` attribute ([#69](https://github.com/docker/docker-language-server/issues/69))
     - support opening a referenced file from a config's `file` attribute ([#271](https://github.com/docker/docker-language-server/issues/271))
     - support opening a referenced file from a secret's `file` attribute ([#272](https://github.com/docker/docker-language-server/issues/272))
+    - provide document links when an included file is also a YAML anchor ([#275](https://github.com/docker/docker-language-server/issues/275))
   - textDocument/hover
     - render the referenced network's YAML content as a hover result ([#246](https://github.com/docker/docker-language-server/issues/246))
     - render the referenced config's YAML content as a hover result ([#249](https://github.com/docker/docker-language-server/issues/249))
