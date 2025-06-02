@@ -1133,6 +1133,48 @@ services:
 				},
 			},
 		},
+		{
+			name: "duplicated anchors and aliases on the same line",
+			content: `
+services:
+  test:
+    build:
+      tags: [&tag t1, *tag, &tag t2, *tag, &tag t3, *tag]`,
+			line:      4,
+			character: 39,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `t2` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 38},
+					End:   protocol.Position{Line: 4, Character: 41},
+				},
+			},
+		},
+		{
+			name: "multiple aliases on the same line",
+			content: `
+services:
+  test:
+    build:
+      tags: [&tag t1, *tag, *tag, *tag]`,
+			line:      4,
+			character: 30,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `t1` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 29},
+					End:   protocol.Position{Line: 4, Character: 32},
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

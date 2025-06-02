@@ -58,12 +58,12 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			anchor, aliases := fragmentReference(mappingNode, line, character)
 			if anchor != nil {
 				t := anchor.Name.GetToken()
-				if t.Position.Line == line {
+				if t.Position.Line == line && t.Position.Column <= character && character <= t.Position.Column+len(t.Value) {
 					return createYamlHover(anchor.Value, t), nil
 				}
 				for i := range aliases {
-					if aliases[i].GetToken().Position.Line == line {
-						t = aliases[i].Value.GetToken()
+					t := aliases[i].Value.GetToken()
+					if t.Position.Line == line && t.Position.Column <= character && character <= t.Position.Column+len(t.Value) {
 						return createYamlHover(anchor.Value, t), nil
 					}
 				}

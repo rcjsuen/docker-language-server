@@ -144,6 +144,18 @@ func findFragments(mappingNode *ast.MappingNode, anchors []*ast.AnchorNode, alia
 			otherAnchors, otherAliases := findFragments(m, []*ast.AnchorNode{}, []*ast.AliasNode{})
 			anchors = append(anchors, otherAnchors...)
 			aliases = append(aliases, otherAliases...)
+		} else if s, ok := node.Value.(*ast.SequenceNode); ok {
+			for _, item := range s.Values {
+				if anchor, ok := item.(*ast.AnchorNode); ok {
+					anchors = append(anchors, anchor)
+				} else if alias, ok := item.(*ast.AliasNode); ok {
+					aliases = append(aliases, alias)
+				} else if m, ok := item.(*ast.MappingNode); ok {
+					otherAnchors, otherAliases := findFragments(m, []*ast.AnchorNode{}, []*ast.AliasNode{})
+					anchors = append(anchors, otherAnchors...)
+					aliases = append(aliases, otherAliases...)
+				}
+			}
 		}
 	}
 	return anchors, aliases
@@ -163,20 +175,22 @@ func fragmentName(anchors []*ast.AnchorNode, aliases []*ast.AliasNode, line, cha
 	return nil
 }
 
-func fragmentRange(anchors []*ast.AnchorNode, anchorName string, line int) (int, int) {
-	start := -1
+func fragmentRange(anchors []*ast.AnchorNode, anchorName string, line, character int) (*token.Position, *token.Position) {
+	var start *token.Position
 	for i := range anchors {
 		if anchors[i].Name.GetToken().Value == anchorName {
-			if anchors[i].GetToken().Position.Line <= line {
-				start = anchors[i].GetToken().Position.Line
+			p := anchors[i].GetToken().Position
+			if p.Line < line || (p.Line == line && p.Column < character) {
+				start = p
 			} else {
-				return start, anchors[i].GetToken().Position.Line
+				return start, &token.Position{
+					Line:   p.Line,
+					Column: p.Column - 1,
+				}
 			}
-		} else if anchors[i].GetToken().Position.Line > line {
-			return start, anchors[i].GetToken().Position.Line - 1
 		}
 	}
-	return start, -1
+	return start, nil
 }
 
 func fragmentReference(mappingNode *ast.MappingNode, line, character int) (*ast.AnchorNode, []*ast.AliasNode) {
@@ -185,32 +199,60 @@ func fragmentReference(mappingNode *ast.MappingNode, line, character int) (*ast.
 	if anchorName != nil {
 		var anchor *ast.AnchorNode
 		matchingAliases := []*ast.AliasNode{}
-		startLine, endLine := fragmentRange(anchors, *anchorName, line)
-		if startLine != -1 {
+		startLine, endLine := fragmentRange(anchors, *anchorName, line, character)
+		if startLine != nil {
 			for i := range anchors {
-				if anchors[i].GetToken().Position.Line == startLine {
+				p := anchors[i].GetToken().Position
+				if p.Line == startLine.Line && p.Column <= startLine.Column {
+					// keep iterating so the closest match is always being updated and assigned
 					anchor = anchors[i]
 				}
 			}
 			for i := range aliases {
-				if endLine == -1 {
-					if startLine < aliases[i].GetToken().Position.Line {
+				if aliases[i].Value.GetToken().Value != *anchorName {
+					continue
+				}
+				if endLine == nil {
+					p := aliases[i].GetToken().Position
+					if (startLine.Line == p.Line && startLine.Column < p.Column) || startLine.Line < p.Line {
 						matchingAliases = append(matchingAliases, aliases[i])
 					}
 				} else {
-					if startLine < aliases[i].GetToken().Position.Line {
-						if aliases[i].Value.GetToken().Position.Line < endLine {
+					p := aliases[i].GetToken().Position
+					if startLine.Line < p.Line {
+						if p.Line < endLine.Line {
 							matchingAliases = append(matchingAliases, aliases[i])
-						} else {
-							break
+						} else if p.Line == endLine.Line && p.Column < endLine.Column {
+							matchingAliases = append(matchingAliases, aliases[i])
+						}
+					} else if startLine.Line == p.Line {
+						if startLine.Column < p.Column {
+							if p.Line == endLine.Line && p.Column < endLine.Column {
+								matchingAliases = append(matchingAliases, aliases[i])
+							} else if p.Line < endLine.Line {
+								matchingAliases = append(matchingAliases, aliases[i])
+							}
 						}
 					}
 				}
 			}
-		} else {
+		} else if endLine == nil {
+			// anchor not defined anywhere, add all the aliases with the matching name
 			for i := range aliases {
 				if aliases[i].Value.GetToken().Value == *anchorName {
 					matchingAliases = append(matchingAliases, aliases[i])
+				}
+			}
+		} else {
+			// valid anchor found but defined after the alias that the cursor is on
+			for i := range aliases {
+				t := aliases[i].Value.GetToken()
+				if t.Value == *anchorName {
+					if t.Position.Line < endLine.Line {
+						matchingAliases = append(matchingAliases, aliases[i])
+					} else if t.Position.Line == endLine.Line && t.Position.Column < endLine.Column {
+						matchingAliases = append(matchingAliases, aliases[i])
+					}
 				}
 			}
 		}

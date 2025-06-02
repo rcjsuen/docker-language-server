@@ -752,6 +752,239 @@ services:
 				},
 			},
 		},
+		{
+			name: "anchor in an array, write reference",
+			content: `
+services:
+  serviceA:
+    labels:
+      - &label a.b.c=value
+  serviceB:
+    labels:
+      - *label`,
+			line:      4,
+			character: 11,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+				},
+			},
+		},
+		{
+			name: "anchor in an array, read reference",
+			content: `
+services:
+  serviceA:
+    labels:
+      - &label a.b.c=value
+  serviceB:
+    labels:
+      - *label`,
+			line:      7,
+			character: 11,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 9},
+						End:   protocol.Position{Line: 7, Character: 14},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 9},
+						End:   protocol.Position{Line: 4, Character: 14},
+					},
+				},
+			},
+		},
+		{
+			name: "anchor in an object inside an array, read reference",
+			content: `
+services:
+  backend:
+    volumes:
+      - type: &volumeType bind
+        source: vol
+        target: /data
+      - type: *volumeType
+        source: vol
+        target: /data2`,
+			line:      7,
+			character: 20,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 15},
+						End:   protocol.Position{Line: 4, Character: 25},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 15},
+						End:   protocol.Position{Line: 7, Character: 25},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 15},
+						End:   protocol.Position{Line: 4, Character: 25},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 15},
+						End:   protocol.Position{Line: 4, Character: 25},
+					},
+				},
+			},
+		},
+		{
+			name: "anchor/alias references all on the same line",
+			content: `
+services:
+  frontend:
+    build:
+      tags: [&keys aa, *keys, &keys bb, *keys, &keys cc, *keys]`,
+			line:      4,
+			character: 43,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 31},
+						End:   protocol.Position{Line: 4, Character: 35},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 41},
+						End:   protocol.Position{Line: 4, Character: 45},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 31},
+						End:   protocol.Position{Line: 4, Character: 35},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 31},
+						End:   protocol.Position{Line: 4, Character: 35},
+					},
+				},
+			},
+		},
+		{
+			name: "anchor/alias references are staggered",
+			content: `
+services:
+  frontend:
+    build:
+      tags: [&keys aa]
+  backend:
+    build:
+      tags: [*keys, &keys bb, *keys]`,
+			line:      7,
+			character: 16,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 7, Character: 14},
+						End:   protocol.Position{Line: 7, Character: 18},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+				},
+			},
+		},
+		{
+			name: "duplicated anchor/array references all on the same line",
+			content: `
+services:
+  frontend:
+    build:
+      tags: [&keys ab, *keys]
+  backend:
+    build:
+      tags: [&keys ab, *keys]`,
+			line:      4,
+			character: 26,
+			locations: []protocol.Location{
+				{
+					URI: composeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 24},
+						End:   protocol.Position{Line: 4, Character: 28},
+					},
+					TargetURI: composeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 14},
+						End:   protocol.Position{Line: 4, Character: 18},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
