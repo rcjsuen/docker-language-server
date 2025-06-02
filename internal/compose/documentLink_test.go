@@ -182,7 +182,7 @@ include:
 	}
 }
 
-func TestDocumentLink_ImageLinks(t *testing.T) {
+func TestDocumentLink_ServiceImageLinks(t *testing.T) {
 	testCases := []struct {
 		name    string
 		content string
@@ -480,7 +480,7 @@ services:
 	}
 }
 
-func TestDocumentLink_DockerfileLinks(t *testing.T) {
+func TestDocumentLink_ServiceDockerfileLinks(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), t.Name())
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
 
@@ -541,6 +541,85 @@ services:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 4, Character: 24},
 				End:   protocol.Position{Line: 4, Character: 37},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			if tc.path == "" {
+				require.Equal(t, []protocol.DocumentLink{}, links)
+			} else {
+				link := protocol.DocumentLink{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				}
+				require.Equal(t, []protocol.DocumentLink{link}, links)
+			}
+		})
+	}
+}
+
+func TestDocumentLink_ConfigFileLinks(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), t.Name())
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
+
+	testCases := []struct {
+		name      string
+		content   string
+		path      string
+		linkRange protocol.Range
+	}{
+		{
+			name: "./httpd.conf",
+			content: `
+configs:
+  test:
+    file: ./httpd.conf`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 22},
+			},
+		},
+		{
+			name: `"./httpd.conf"`,
+			content: `
+configs:
+  test:
+    file: "./httpd.conf"`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 11},
+				End:   protocol.Position{Line: 3, Character: 23},
+			},
+		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+configs:
+  test:
+    file: &configFile
+  test2:
+    file: *configFile`,
+		},
+		{
+			name: "anchor has string content",
+			content: `
+configs:
+  test:
+    file: &configFile ./httpd.conf
+  test2:
+    file: *configFile`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 22},
+				End:   protocol.Position{Line: 3, Character: 34},
 			},
 		},
 	}
