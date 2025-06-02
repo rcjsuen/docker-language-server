@@ -237,12 +237,14 @@ func fragmentReference(mappingNode *ast.MappingNode, line, character int) (*ast.
 				}
 			}
 		} else if endLine == nil {
+			// anchor not defined anywhere, add all the aliases with the matching name
 			for i := range aliases {
 				if aliases[i].Value.GetToken().Value == *anchorName {
 					matchingAliases = append(matchingAliases, aliases[i])
 				}
 			}
 		} else {
+			// valid anchor found but defined after the alias that the cursor is on
 			for i := range aliases {
 				t := aliases[i].Value.GetToken()
 				if t.Value == *anchorName {
