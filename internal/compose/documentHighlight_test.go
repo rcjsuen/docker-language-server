@@ -1933,6 +1933,547 @@ services:
 			End:   protocol.Position{Line: 3, Character: 18},
 		},
 	},
+	{
+		name: "anchor in an array, write reference",
+		content: `
+services:
+  serviceA:
+    labels:
+      - &label a.b.c=value
+  serviceB:
+    labels:
+      - *label`,
+		line:      4,
+		character: 11,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 9, 4, 14, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 9, 7, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 9},
+								End:   protocol.Position{Line: 4, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 9},
+								End:   protocol.Position{Line: 7, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 9},
+			End:   protocol.Position{Line: 4, Character: 14},
+		},
+	},
+	{
+		name: "anchor in an array, read reference",
+		content: `
+services:
+  serviceA:
+    labels:
+      - &label a.b.c=value
+  serviceB:
+    labels:
+      - *label`,
+		line:      7,
+		character: 11,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 9, 4, 14, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 9, 7, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 9},
+								End:   protocol.Position{Line: 4, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 9},
+								End:   protocol.Position{Line: 7, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 9},
+			End:   protocol.Position{Line: 7, Character: 14},
+		},
+	},
+	{
+		name: "anchor in an object inside an array, read reference",
+		content: `
+services:
+  backend:
+    volumes:
+      - type: &volumeType bind
+        source: vol
+        target: /data
+      - type: *volumeType
+        source: vol
+        target: /data2`,
+		line:      7,
+		character: 20,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 15, 4, 25, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 15, 7, 25, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 15},
+								End:   protocol.Position{Line: 4, Character: 25},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 15},
+								End:   protocol.Position{Line: 7, Character: 25},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 15},
+			End:   protocol.Position{Line: 7, Character: 25},
+		},
+	},
+	{
+		name: "anchor/alias references all on the same line",
+		content: `
+services:
+  frontend:
+    build:
+      tags: [&keys aa, *keys, &keys bb, *keys, &keys cc, *keys]`,
+		line:      4,
+		character: 43,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 31, 4, 35, protocol.DocumentHighlightKindWrite),
+			documentHighlight(4, 41, 4, 45, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 31},
+								End:   protocol.Position{Line: 4, Character: 35},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 41},
+								End:   protocol.Position{Line: 4, Character: 45},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 41},
+			End:   protocol.Position{Line: 4, Character: 45},
+		},
+	},
+	{
+		name: "anchor/alias references are staggered",
+		content: `
+services:
+  frontend:
+    build:
+      tags: [&keys aa]
+  backend:
+    build:
+      tags: [*keys, &keys bb, *keys]`,
+		line:      7,
+		character: 16,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 14, 4, 18, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 14, 7, 18, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 14},
+								End:   protocol.Position{Line: 4, Character: 18},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 14},
+								End:   protocol.Position{Line: 7, Character: 18},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 14},
+			End:   protocol.Position{Line: 7, Character: 18},
+		},
+	},
+	{
+		name: "duplicated anchor/alias references all on the same line",
+		content: `
+services:
+  frontend:
+    build:
+      tags: [&keys ab, *keys]
+  backend:
+    build:
+      tags: [&keys ab, *keys]`,
+		line:      4,
+		character: 16,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 14, 4, 18, protocol.DocumentHighlightKindWrite),
+			documentHighlight(4, 24, 4, 28, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 14},
+								End:   protocol.Position{Line: 4, Character: 18},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 24},
+								End:   protocol.Position{Line: 4, Character: 28},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 14},
+			End:   protocol.Position{Line: 4, Character: 18},
+		},
+	},
+	{
+		name: "interweaving fragments on the first anchor",
+		content: `
+services:
+  test: &test
+    image: alpine:3.22
+  test2: &testAgain
+    image: alpine:3.21
+  test3: *test
+  test4: *testAgain`,
+		line:      2,
+		character: 11,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 9, 2, 13, protocol.DocumentHighlightKindWrite),
+			documentHighlight(6, 10, 6, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 9},
+								End:   protocol.Position{Line: 2, Character: 13},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 10},
+								End:   protocol.Position{Line: 6, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 9},
+			End:   protocol.Position{Line: 2, Character: 13},
+		},
+	},
+	{
+		name: "interweaving fragments on the first alias",
+		content: `
+services:
+  test: &test
+    image: alpine:3.22
+  test2: &testAgain
+    image: alpine:3.21
+  test3: *test
+  test4: *testAgain`,
+		line:      6,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 9, 2, 13, protocol.DocumentHighlightKindWrite),
+			documentHighlight(6, 10, 6, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 9},
+								End:   protocol.Position{Line: 2, Character: 13},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 10},
+								End:   protocol.Position{Line: 6, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 10},
+			End:   protocol.Position{Line: 6, Character: 14},
+		},
+	},
+	{
+		name: "interweaving fragments on the second anchor",
+		content: `
+services:
+  test: &test
+    image: alpine:3.22
+  test2: &testAgain
+    image: alpine:3.21
+  test3: *test
+  test4: *testAgain`,
+		line:      4,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 10, 4, 19, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 10, 7, 19, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 10},
+								End:   protocol.Position{Line: 4, Character: 19},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 10},
+								End:   protocol.Position{Line: 7, Character: 19},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 10},
+			End:   protocol.Position{Line: 4, Character: 19},
+		},
+	},
+	{
+		name: "interweaving fragments on the second alias",
+		content: `
+services:
+  test: &test
+    image: alpine:3.22
+  test2: &testAgain
+    image: alpine:3.21
+  test3: *test
+  test4: *testAgain`,
+		line:      7,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 10, 4, 19, protocol.DocumentHighlightKindWrite),
+			documentHighlight(7, 10, 7, 19, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 10},
+								End:   protocol.Position{Line: 4, Character: 19},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 10},
+								End:   protocol.Position{Line: 7, Character: 19},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 10},
+			End:   protocol.Position{Line: 7, Character: 19},
+		},
+	},
+	{
+		name: "aliases with no matching anchor",
+		content: `
+services:
+  test1: *test
+  test2: *test
+  test3: *test`,
+		line:      2,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 10, 2, 14, protocol.DocumentHighlightKindRead),
+			documentHighlight(3, 10, 3, 14, protocol.DocumentHighlightKindRead),
+			documentHighlight(4, 10, 4, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 10},
+								End:   protocol.Position{Line: 2, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 3, Character: 10},
+								End:   protocol.Position{Line: 3, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 10},
+								End:   protocol.Position{Line: 4, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 10},
+			End:   protocol.Position{Line: 2, Character: 14},
+		},
+	},
+	{
+		name: "alias before the actual anchor",
+		content: `
+services:
+  test1: *test
+  test2: &test
+  test3: *test`,
+		line:      2,
+		character: 12,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 10, 2, 14, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 10},
+								End:   protocol.Position{Line: 2, Character: 14},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 10},
+			End:   protocol.Position{Line: 2, Character: 14},
+		},
+	},
+	{
+		name: "alias before the actual anchor on the same line",
+		content: `
+services:
+  test:
+    build:
+      tags: [*test, &test t1, *test]`,
+		line:      4,
+		character: 16,
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 14, 4, 18, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 14},
+								End:   protocol.Position{Line: 4, Character: 18},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 14},
+			End:   protocol.Position{Line: 4, Character: 18},
+		},
+	},
 }
 
 func TestDocumentHighlight_Fragments(t *testing.T) {
