@@ -208,16 +208,58 @@ func (d *bakeHCLDocument) extractBakeOutput() {
 	d.bakePrintOutput = &BakePrintOutput{Group: checkedGroups, Target: checkedTargets}
 }
 
+type DockerfileDefinition int
+
+const (
+	Undefined DockerfileDefinition = iota
+	Unresolvable
+	Resolvable
+)
+
+func resolvableDockerfile(block *hclsyntax.Block) DockerfileDefinition {
+	state := Undefined
+	// if the context or dockerfile attributes are not simple strings, do not try to resolve
+	if contextAttribute, ok := block.Body.Attributes["context"]; ok {
+		if expr, ok := contextAttribute.Expr.(*hclsyntax.TemplateExpr); ok {
+			if len(expr.Parts) != 1 {
+				return Unresolvable
+			}
+			state = Resolvable
+		} else {
+			return Unresolvable
+		}
+	}
+
+	if dockerfileAttribute, ok := block.Body.Attributes["dockerfile"]; ok {
+		if expr, ok := dockerfileAttribute.Expr.(*hclsyntax.TemplateExpr); ok {
+			if len(expr.Parts) != 1 {
+				return Unresolvable
+			}
+			return Resolvable
+		}
+		return Unresolvable
+	}
+	return state
+}
+
 func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (string, error) {
 	if d.bakePrintOutput == nil || len(block.Labels) != 1 {
 		return "", errors.New("cannot parse Bake file")
 	}
 
-	if dockerfileAttribute, ok := block.Body.Attributes["dockerfile"]; ok {
-		// if the dockerfile attribute is not a simple string, do not try to resolve it
-		if expr, ok := dockerfileAttribute.Expr.(*hclsyntax.TemplateExpr); !ok || len(expr.Parts) != 1 {
-			return "", nil
+	switch resolvableDockerfile(block) {
+	case Undefined:
+		targets, _ := d.ParentTargets(block.Labels[0])
+		for _, target := range targets {
+			body := d.file.Body.(*hclsyntax.Body)
+			for _, b := range body.Blocks {
+				if len(b.Labels) == 1 && b.Labels[0] == target && resolvableDockerfile(b) == Unresolvable {
+					return "", nil
+				}
+			}
 		}
+	case Unresolvable:
+		return "", nil
 	}
 
 	url, err := url.Parse(string(d.URI()))
