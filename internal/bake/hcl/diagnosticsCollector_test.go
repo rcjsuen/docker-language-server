@@ -215,6 +215,71 @@ target "lint2" {
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
+			name: "context has a variable",
+			content: `
+variable "GITHUB_WORKSPACE" {
+  default = "."
+}
+
+target "build" {
+  context = "${GITHUB_WORKSPACE}/folder/subfolder"
+  dockerfile = "Dockerfile"
+  args = {
+    VAR = "value"
+  }
+}`,
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name: "context has a variable and the target is inherited",
+			content: `
+variable "GITHUB_WORKSPACE" {
+  default = "."
+}
+
+target "common-base" {
+  context = "${GITHUB_WORKSPACE}/folder/subfolder"
+  dockerfile = "Dockerfile"
+}
+
+target "build" {
+  inherits = ["common-base"]
+  args = {
+    VAR = "value"
+  }
+}`,
+			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name: "parent target cannot be resolved but local target is resolvable",
+			content: `
+variable "GITHUB_WORKSPACE" {
+  default = "."
+}
+
+target "common-base" {
+  dockerfile = "${GITHUB_WORKSPACE}/folder/subfolder/Dockerfile"
+}
+
+target "build" {
+  inherits = ["common-base"]
+  dockerfile = "Dockerfile.non-existent-file"
+  args = {
+    VAR = "value"
+  }
+}`,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "'VAR' not defined as an ARG in your Dockerfile",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 13, Character: 4},
+						End:   protocol.Position{Line: 13, Character: 7},
+					},
+				}},
+		},
+		{
 			name: "malformed variable interpolation has the right line numbers",
 			content: `target x {
   tags = ["${var"]

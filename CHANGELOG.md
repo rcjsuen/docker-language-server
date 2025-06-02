@@ -45,6 +45,9 @@ All notable changes to the Docker Language Server will be documented in this fil
     - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
   - textDocument/rename
     - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
+- Bake
+  - textDocument/publishDiagnostics
+    - filter out variables when resolving Dockerfile paths to prevent false positives from being reported ([#263](https://github.com/docker/docker-language-server/issues/263))
 
 ## [0.9.0] - 2025-05-26
 
