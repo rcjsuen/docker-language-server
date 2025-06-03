@@ -170,10 +170,12 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	}
 
 	lines := strings.Split(string(doc.Input()), "\n")
-	if strings.HasPrefix(strings.TrimSpace(lines[lspLine]), "#") {
+	currentLineTrimmed := strings.TrimSpace(lines[lspLine])
+	if strings.HasPrefix(currentLineTrimmed, "#") {
 		return nil, nil
 	}
 
+	whitespaceLine := currentLineTrimmed == ""
 	line := int(lspLine) + 1
 	character := int(params.Position.Character) + 1
 	path := constructCompletionNodePath(file, line)
@@ -196,7 +198,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return &protocol.CompletionList{Items: items}, nil
 	}
 
-	items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+	items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)), whitespaceLine)
 	if len(items) > 0 {
 		return &protocol.CompletionList{Items: items}, nil
 	}
@@ -452,12 +454,22 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, nod
 	return nil
 }
 
-func volumeDependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func volumeDependencyCompletionItems(
+	file *ast.File,
+	path []*ast.MappingValueNode,
+	params *protocol.CompletionParams,
+	prefixLength protocol.UInteger,
+	whitespaceLine bool,
+) []protocol.CompletionItem {
 	items := namedDependencyCompletionItems(file, path, "volumes", "volumes", params, prefixLength)
+	arrayItemPrefix := ""
+	if whitespaceLine {
+		arrayItemPrefix = "- "
+	}
 	for i := range items {
 		edit := items[i].TextEdit.(protocol.TextEdit)
 		items[i].TextEdit = protocol.TextEdit{
-			NewText: fmt.Sprintf("%v:${1:/container/path}", edit.NewText),
+			NewText: fmt.Sprintf("%v%v:${1:/container/path}", arrayItemPrefix, edit.NewText),
 			Range:   edit.Range,
 		}
 		items[i].InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
