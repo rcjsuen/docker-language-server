@@ -14,981 +14,10 @@ import (
 	"go.lsp.dev/uri"
 )
 
-func TestDefinition(t *testing.T) {
+func TestDefinition_Services(t *testing.T) {
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
-
-	testCases := []struct {
-		name      string
-		content   string
-		line      uint32
-		character uint32
-		locations any
-		links     any
-	}{
-		{
-			name: "short syntax form of depends_on in services",
-			content: `
-services:
-  web:
-    build: .
-    depends_on:
-      - redis
-  redis:
-    image: redis`,
-			line:      5,
-			character: 11,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 8},
-						End:   protocol.Position{Line: 5, Character: 13},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "short syntax quoted form of depends_on in services",
-			content: `
-services:
-  web:
-    build: .
-    depends_on:
-      - "redis"
-  redis:
-    image: redis`,
-			line:      5,
-			character: 11,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 9},
-						End:   protocol.Position{Line: 5, Character: 14},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "short syntax form of depends_on in services finding the right match",
-			content: `
-services:
-  web:
-    build: .
-    depends_on:
-      - postgres
-      - redis
-  postgres:
-    image: postgres
-  redis:
-    image: redis`,
-			line:      6,
-			character: 11,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 9, Character: 2},
-						End:   protocol.Position{Line: 9, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 8},
-						End:   protocol.Position{Line: 6, Character: 13},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 9, Character: 2},
-						End:   protocol.Position{Line: 9, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 9, Character: 2},
-						End:   protocol.Position{Line: 9, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "long syntax form of depends_on in services",
-			content: `
-services:
-  web:
-    build: .
-    depends_on:
-      db:
-        condition: service_healthy
-        restart: true
-      redis:
-        condition: service_started
-  db:
-    image: postgres
-  redis:
-    image: redis`,
-			line:      8,
-			character: 9,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 6},
-						End:   protocol.Position{Line: 8, Character: 11},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "configs reference",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-    depends_on:
-      - redis
-    configs:
-      - def
-  redis:
-    image: redis
-
-configs:
-  def:
-    file: ./httpd.conf`,
-			line:      7,
-			character: 10,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 5},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 8},
-						End:   protocol.Position{Line: 7, Character: 11},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 5},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 12, Character: 2},
-						End:   protocol.Position{Line: 12, Character: 5},
-					},
-				},
-			},
-		},
-		{
-			name: "networks reference",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-    networks:
-    - abc
-
-networks:
-  abc:`,
-			line:      5,
-			character: 8,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 6},
-						End:   protocol.Position{Line: 5, Character: 9},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 5},
-					},
-				},
-			},
-		},
-		{
-			name: "secrets reference",
-			content: `
-services:
-  test:
-    image: alpine:3.21
-    secrets:
-    - abcd
-
-secrets:
-  abcd:
-    environment: "PATH"`,
-			line:      5,
-			character: 8,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 6},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 6},
-						End:   protocol.Position{Line: 5, Character: 10},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 6},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 8, Character: 2},
-						End:   protocol.Position{Line: 8, Character: 6},
-					},
-				},
-			},
-		},
-		{
-			name: "volumes array item reference without a mount path",
-			content: `
-services:
-  test:
-    volumes:
-      - test2
-volumes:
-  test2:`,
-			line:      4,
-			character: 10,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 8},
-						End:   protocol.Position{Line: 4, Character: 13},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "volumes array item reference with a mount path",
-			content: `
-services:
-  test:
-    volumes:
-      - test2:/mount/path
-volumes:
-  test2:`,
-			line:      4,
-			character: 10,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 8},
-						End:   protocol.Position{Line: 4, Character: 13},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "volumes array item reference on the mount path itself",
-			content: `
-services:
-  test:
-    volumes:
-      - test2:/mount/path
-volumes:
-  test2:`,
-			line:      4,
-			character: 18,
-			locations: nil,
-			links:     nil,
-		},
-		{
-			name: "volume array item object's with the source attribute",
-			content: `
-services:
-  test:
-    volumes:
-      - source: test2
-volumes:
-  test2:`,
-			line:      4,
-			character: 18,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 16},
-						End:   protocol.Position{Line: 4, Character: 21},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 6, Character: 2},
-						End:   protocol.Position{Line: 6, Character: 7},
-					},
-				},
-			},
-		},
-		{
-			name: "extends as a string attribute",
-			content: `
-services:
-  test:
-    image: alpine
-  test2:
-    extends: test`,
-			line:      5,
-			character: 15,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 2},
-						End:   protocol.Position{Line: 2, Character: 6},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 13},
-						End:   protocol.Position{Line: 5, Character: 17},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 2},
-						End:   protocol.Position{Line: 2, Character: 6},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 2},
-						End:   protocol.Position{Line: 2, Character: 6},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor",
-			content: `
-volumes:
-  db-data: &default-volume
-    driver: custom`,
-			line:      2,
-			character: 17,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-		},
-		{
-			name: "alias to an anchor pointing at the anchor",
-			content: `
-volumes:
-  db-data: &default-volume
-    driver: default
-  metrics: *default-volume`,
-			line:      2,
-			character: 17,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-		},
-		{
-			name: "alias to an anchor pointing at the alias",
-			content: `
-volumes:
-  db-data: &default-volume
-    driver: default
-  metrics: *default-volume`,
-			line:      4,
-			character: 17,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 12},
-						End:   protocol.Position{Line: 4, Character: 26},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 2, Character: 12},
-						End:   protocol.Position{Line: 2, Character: 26},
-					},
-				},
-			},
-		},
-		{
-			name: "write reference on the first duplicated anchor",
-			content: `
-services:
-  serviceA:
-    image: &redis redis:8-alpine
-  serviceB:
-    image: *redis
-  serviceC:
-    image: &redis redis:7-alpine
-  serviceD:
-    image: *redis`,
-			line:      3,
-			character: 14,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-				},
-			},
-		},
-		{
-			name: "read reference on the first duplicated alias",
-			content: `
-services:
-  serviceA:
-    image: &redis redis:8-alpine
-  serviceB:
-    image: *redis
-  serviceC:
-    image: &redis redis:7-alpine
-  serviceD:
-    image: *redis`,
-			line:      5,
-			character: 14,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 5, Character: 12},
-						End:   protocol.Position{Line: 5, Character: 17},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 3, Character: 12},
-						End:   protocol.Position{Line: 3, Character: 17},
-					},
-				},
-			},
-		},
-		{
-			name: "write reference on the second duplicated anchor",
-			content: `
-services:
-  serviceA:
-    image: &redis redis:8-alpine
-  serviceB:
-    image: *redis
-  serviceC:
-    image: &redis redis:7-alpine
-  serviceD:
-    image: *redis`,
-			line:      7,
-			character: 14,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-				},
-			},
-		},
-		{
-			name: "read reference on the second duplicated alias",
-			content: `
-services:
-  serviceA:
-    image: &redis redis:8-alpine
-  serviceB:
-    image: *redis
-  serviceC:
-    image: &redis redis:7-alpine
-  serviceD:
-    image: *redis`,
-			line:      9,
-			character: 14,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 9, Character: 12},
-						End:   protocol.Position{Line: 9, Character: 17},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 12},
-						End:   protocol.Position{Line: 7, Character: 17},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor in an array, write reference",
-			content: `
-services:
-  serviceA:
-    labels:
-      - &label a.b.c=value
-  serviceB:
-    labels:
-      - *label`,
-			line:      4,
-			character: 11,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor in an array, read reference",
-			content: `
-services:
-  serviceA:
-    labels:
-      - &label a.b.c=value
-  serviceB:
-    labels:
-      - *label`,
-			line:      7,
-			character: 11,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 9},
-						End:   protocol.Position{Line: 7, Character: 14},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 9},
-						End:   protocol.Position{Line: 4, Character: 14},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor in an object inside an array, read reference",
-			content: `
-services:
-  backend:
-    volumes:
-      - type: &volumeType bind
-        source: vol
-        target: /data
-      - type: *volumeType
-        source: vol
-        target: /data2`,
-			line:      7,
-			character: 20,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 15},
-						End:   protocol.Position{Line: 4, Character: 25},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 15},
-						End:   protocol.Position{Line: 7, Character: 25},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 15},
-						End:   protocol.Position{Line: 4, Character: 25},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 15},
-						End:   protocol.Position{Line: 4, Character: 25},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor/alias references all on the same line",
-			content: `
-services:
-  frontend:
-    build:
-      tags: [&keys aa, *keys, &keys bb, *keys, &keys cc, *keys]`,
-			line:      4,
-			character: 43,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 31},
-						End:   protocol.Position{Line: 4, Character: 35},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 41},
-						End:   protocol.Position{Line: 4, Character: 45},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 31},
-						End:   protocol.Position{Line: 4, Character: 35},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 31},
-						End:   protocol.Position{Line: 4, Character: 35},
-					},
-				},
-			},
-		},
-		{
-			name: "anchor/alias references are staggered",
-			content: `
-services:
-  frontend:
-    build:
-      tags: [&keys aa]
-  backend:
-    build:
-      tags: [*keys, &keys bb, *keys]`,
-			line:      7,
-			character: 16,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 7, Character: 14},
-						End:   protocol.Position{Line: 7, Character: 18},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-				},
-			},
-		},
-		{
-			name: "duplicated anchor/array references all on the same line",
-			content: `
-services:
-  frontend:
-    build:
-      tags: [&keys ab, *keys]
-  backend:
-    build:
-      tags: [&keys ab, *keys]`,
-			line:      4,
-			character: 26,
-			locations: []protocol.Location{
-				{
-					URI: composeFileURI,
-					Range: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-				},
-			},
-			links: []protocol.LocationLink{
-				{
-					OriginSelectionRange: &protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 24},
-						End:   protocol.Position{Line: 4, Character: 28},
-					},
-					TargetURI: composeFileURI,
-					TargetRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-					TargetSelectionRange: protocol.Range{
-						Start: protocol.Position{Line: 4, Character: 14},
-						End:   protocol.Position{Line: 4, Character: 18},
-					},
-				},
-			},
-		},
-	}
-
-	for _, tc := range testCases {
-		u := uri.URI(composeFileURI)
+	u := uri.URI(composeFileURI)
+	for _, tc := range serviceReferenceTestCases {
 		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
 		params := protocol.DefinitionParams{
 			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
@@ -1000,16 +29,147 @@ services:
 		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
 			locations, err := Definition(context.Background(), false, doc, &params)
 			require.NoError(t, err)
-			require.Equal(t, tc.locations, locations)
+			require.Equal(t, tc.locations(composeFileURI), locations)
 		})
 
 		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
 			links, err := Definition(context.Background(), true, doc, &params)
 			require.NoError(t, err)
-			require.Equal(t, tc.links, links)
+			require.Equal(t, tc.links(composeFileURI), links)
 		})
 	}
 }
+
+func TestDefinition_Networks(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range networkReferenceTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
+func TestDefinition_Volumes(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range volumeReferenceTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
+func TestDefinition_Configs(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range configReferenceTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
+func TestDefinition_Secrets(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range secretReferenceTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
+func TestDefinition_Fragments(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range fragmentTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
 func TestDefinition_ExternalReference(t *testing.T) {
 	folder := os.TempDir()
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(folder, "compose.yaml")), "/"))
