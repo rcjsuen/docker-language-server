@@ -2,7 +2,7 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
-## [Unreleased]
+## [0.10.0] - 2025-06-03
 
 ### Added
 
@@ -30,6 +30,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - preparing rename operations for YAML anchor and alias references ([#264](https://github.com/docker/docker-language-server/issues/264))
 
 ### Fixed
+
 - Compose
   - textDocument/completion
     - include the array definition in the inserted text so we do not make the YAML content malformed ([#278](https://github.com/docker/docker-language-server/issues/278))
@@ -377,7 +378,8 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/semanticTokens/full
     - provide syntax highlighting for Bake files
 
-[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.9.0...main
+[Unreleased]: https://github.com/docker/docker-language-server/compare/v0.10.0...main
+[0.10.0]: https://github.com/docker/docker-language-server/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/docker/docker-language-server/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/docker/docker-language-server/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/docker/docker-language-server/compare/v0.6.0...v0.7.0
