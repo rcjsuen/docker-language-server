@@ -31,6 +31,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 - Compose
+  - textDocument/completion
+    - include the array definition in the inserted text so we do not make the YAML content malformed ([#278](https://github.com/docker/docker-language-server/issues/278))
   - textDocument/definition
     - fix range calculation when the element is quoted ([#255](https://github.com/docker/docker-language-server/issues/255))
   - textDocument/documentHighlight

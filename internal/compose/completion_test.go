@@ -2847,7 +2847,7 @@ volumes:
 				Items: []protocol.CompletionItem{
 					{
 						Label:            "test2",
-						TextEdit:         textEdit("test2:${1:/container/path}", 5, 6, 0),
+						TextEdit:         textEdit("- test2:${1:/container/path}", 5, 6, 0),
 						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 					},
 				},
