@@ -2644,7 +2644,38 @@ services:
 			},
 		},
 		{
-			name: "extends object attributes",
+			name: "extends object attributes with no other services found",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      `,
+			line:      5,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "file",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The file path where the service to extend is defined.",
+						TextEdit:         textEdit("file: ", 5, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "service",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The name of the service to extend.",
+						TextEdit:         textEdit("service: ", 5, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
+			name: "extends object attributes with a service defined",
 			content: `
 services:
   test:
