@@ -10,6 +10,14 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/completion
     - fix incorrect snippet item that was generated even if there were no choices to suggest ([#283](https://github.com/docker/docker-language-server/issues/283))
     - stop local service name suggestions if another file has been explicitly specified ([#285](https://github.com/docker/docker-language-server/issues/285))
+  - textDocument/definition
+    - recurse into YAML anchors if they are defined on a service object ([#287](https://github.com/docker/docker-language-server/issues/287))
+  - textDocument/documentHighlight
+    - recurse into YAML anchors if they are defined on a service object ([#287](https://github.com/docker/docker-language-server/issues/287))
+  - textDocument/prepareRename
+    - recurse into YAML anchors if they are defined on a service object ([#287](https://github.com/docker/docker-language-server/issues/287))
+  - textDocument/rename
+    - recurse into YAML anchors if they are defined on a service object ([#287](https://github.com/docker/docker-language-server/issues/287))
 
 ## [0.10.0] - 2025-06-03
 

@@ -18,7 +18,11 @@ func serviceDependencyReferences(node *ast.MappingValueNode, dependencyAttribute
 	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
 		tokens := []*token.Token{}
 		for _, serviceNode := range servicesNode.Values {
-			if serviceAttributes, ok := serviceNode.Value.(*ast.MappingNode); ok {
+			serviceNodeValue := serviceNode.Value
+			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
+				serviceNodeValue = anchor.Value
+			}
+			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
 				for _, attributeNode := range serviceAttributes.Values {
 					if attributeNode.Key.GetToken().Value == dependencyAttributeName {
 						if sequenceNode, ok := attributeNode.Value.(*ast.SequenceNode); ok {
@@ -45,7 +49,11 @@ func extendedServiceReferences(node *ast.MappingValueNode) []*token.Token {
 	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
 		tokens := []*token.Token{}
 		for _, serviceNode := range servicesNode.Values {
-			if serviceAttributes, ok := serviceNode.Value.(*ast.MappingNode); ok {
+			serviceNodeValue := serviceNode.Value
+			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
+				serviceNodeValue = anchor.Value
+			}
+			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
 				for _, attributeNode := range serviceAttributes.Values {
 					if attributeNode.Key.GetToken().Value == "extends" {
 						if extendedValue, ok := attributeNode.Value.(*ast.StringNode); ok {
@@ -92,7 +100,11 @@ func volumeReferences(node *ast.MappingValueNode) []*token.Token {
 	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
 		tokens := []*token.Token{}
 		for _, serviceNode := range servicesNode.Values {
-			if serviceAttributes, ok := serviceNode.Value.(*ast.MappingNode); ok {
+			serviceNodeValue := serviceNode.Value
+			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
+				serviceNodeValue = anchor.Value
+			}
+			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
 				for _, attributeNode := range serviceAttributes.Values {
 					if attributeNode.Key.GetToken().Value == "volumes" {
 						if sequenceNode, ok := attributeNode.Value.(*ast.SequenceNode); ok {
