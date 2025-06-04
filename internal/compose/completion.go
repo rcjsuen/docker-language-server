@@ -75,7 +75,9 @@ var serviceSuggestionModifier = textEditModifier{
 				services = append(services, completionItemText{newText: service})
 			}
 		}
-		edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(services))
+		if len(services) > 0 {
+			edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(services))
+		}
 		return edit
 	},
 }
