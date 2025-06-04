@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"slices"
 	"strings"
 	"unicode"
@@ -24,6 +25,23 @@ type completionItemText struct {
 type textEditModifier struct {
 	isInterested func(attributeName string, path []*ast.MappingValueNode) bool
 	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit
+}
+
+// extendingCurrentFile checks if the extends object's file attribute is
+// pointing to the current file.
+func extendingCurrentFile(u *url.URL, extendsNode *ast.MappingValueNode) bool {
+	if extends, ok := extendsNode.Value.(*ast.MappingNode); ok {
+		for _, extendsAttribute := range extends.Values {
+			if extendsAttribute.Key.GetToken().Value == "file" {
+				path, err := types.AbsolutePath(u, extendsAttribute.Value.GetToken().Value)
+				if err != nil || filepath.ToSlash(u.Path) != filepath.ToSlash(path) {
+					return false
+				}
+				break
+			}
+		}
+	}
+	return true
 }
 
 var buildTargetModifier = textEditModifier{
@@ -69,14 +87,16 @@ var serviceSuggestionModifier = textEditModifier{
 		return attributeName == "service" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "extends"
 	},
 	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
-		services := []completionItemText{}
-		for _, service := range findDependencies(file, "services") {
-			if service != path[1].Key.GetToken().Value {
-				services = append(services, completionItemText{newText: service})
+		if extendingCurrentFile(u, path[2]) {
+			services := []completionItemText{}
+			for _, service := range findDependencies(file, "services") {
+				if service != path[1].Key.GetToken().Value {
+					services = append(services, completionItemText{newText: service})
+				}
 			}
-		}
-		if len(services) > 0 {
-			edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(services))
+			if len(services) > 0 {
+				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(services))
+			}
 		}
 		return edit
 	},
@@ -191,7 +211,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 
 	wordPrefix := prefix(lines[lspLine], character-1)
 	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
-	dependencies := dependencyCompletionItems(file, path, nodeProps, params, protocol.UInteger(len(wordPrefix)))
+	dependencies := dependencyCompletionItems(file, u, path, params, protocol.UInteger(len(wordPrefix)))
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
@@ -418,7 +438,7 @@ func createBuildStageItems(params *protocol.CompletionParams, manager *document.
 	return items
 }
 
-func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, nodeProps any, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func dependencyCompletionItems(file *ast.File, u *url.URL, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	dependency := map[string]string{
 		"depends_on": "services",
 		"networks":   "networks",
@@ -431,6 +451,10 @@ func dependencyCompletionItems(file *ast.File, path []*ast.MappingValueNode, nod
 	}
 	if len(path) >= 3 && path[2].Key.GetToken().Value == "extends" && path[0].Key.GetToken().Value == "services" {
 		if (len(path) == 4 && path[3].Key.GetToken().Value == "service") || params.Position.Line == protocol.UInteger(path[2].Key.GetToken().Position.Line)-1 {
+			if !extendingCurrentFile(u, path[2]) {
+				return nil
+			}
+
 			items := []protocol.CompletionItem{}
 			for _, service := range findDependencies(file, "services") {
 				if service != path[1].Key.GetToken().Value {

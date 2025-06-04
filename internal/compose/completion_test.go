@@ -2708,6 +2708,89 @@ services:
 			},
 		},
 		{
+			name: "extends object attributes with a file pointing at itself",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      file: compose.yaml
+      
+  test2:
+    image: alpine`,
+			line:      6,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "file",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The file path where the service to extend is defined.",
+						TextEdit:         textEdit("file: ", 6, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "service",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The name of the service to extend.",
+						TextEdit:         textEdit("service: ${1|test2|}", 6, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
+			name: "extends object attributes with a file pointing somewhere else",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      file: non-existent-compose.yaml
+      
+  test2:
+    image: alpine`,
+			line:      6,
+			character: 6,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "file",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The file path where the service to extend is defined.",
+						TextEdit:         textEdit("file: ", 6, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "service",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "The name of the service to extend.",
+						TextEdit:         textEdit("service: ", 6, 6, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
+			name: "extends' service attribute with a file pointing somewhere else",
+			content: `
+services:
+  test:
+    image: alpine
+    extends:
+      file: non-existent-compose.yaml
+      service: 
+  test2:
+    image: alpine`,
+			line:      6,
+			character: 15,
+			list:      nil,
+		},
+		{
 			name: "networks array items",
 			content: `
 services:
