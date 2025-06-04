@@ -9,6 +9,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/completion
     - fix incorrect snippet item that was generated even if there were no choices to suggest ([#283](https://github.com/docker/docker-language-server/issues/283))
+    - stop local service name suggestions if another file has been explicitly specified ([#285](https://github.com/docker/docker-language-server/issues/285))
 
 ## [0.10.0] - 2025-06-03
 
