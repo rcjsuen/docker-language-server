@@ -152,6 +152,7 @@ func TestInitializeFunctionIsolatedCall(t *testing.T) {
 		name             string
 		params           protocol.InitializeParams
 		workspaceFolders []string
+		err              error
 	}{
 		{
 			name: "one workspace folder",
@@ -180,20 +181,26 @@ func TestInitializeFunctionIsolatedCall(t *testing.T) {
 			params:           protocol.InitializeParams{RootPath: types.CreateStringPointer("/a/b/c")},
 			workspaceFolders: []string{"/a/b/c"},
 		},
+		{
+			name:             "invalid rootUri",
+			params:           protocol.InitializeParams{RootURI: types.CreateStringPointer(":/no/scheme")},
+			workspaceFolders: nil,
+			err:              &jsonrpc2.Error{Code: -32602, Message: "invalid rootUri specified in the initialize request (:/no/scheme): parse \":/no/scheme\": missing protocol scheme"},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			s := testInitialize(t, tc.params)
+			s := testInitialize(t, tc.params, tc.err)
 			require.Equal(t, tc.workspaceFolders, s.WorkspaceFolders())
 		})
 	}
 }
 
-func testInitialize(t *testing.T, initializeParams protocol.InitializeParams) *server.Server {
+func testInitialize(t *testing.T, initializeParams protocol.InitializeParams, expectedErr error) *server.Server {
 	s := startServer()
 	_, err := s.Initialize(&glsp.Context{}, &initializeParams)
-	require.NoError(t, err)
+	require.Equal(t, expectedErr, err)
 	return s
 }
 

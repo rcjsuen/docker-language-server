@@ -9,6 +9,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/hover
     - fix error caused by casting a node without checking its type first ([#290](https://github.com/docker/docker-language-server/issues/290))
+  - initialize
+    - return JSON-RPC error if an invalid URI was sent with the request ([#292](https://github.com/docker/docker-language-server/issues/292))
 
 ## [0.10.1] - 2025-06-04
 
