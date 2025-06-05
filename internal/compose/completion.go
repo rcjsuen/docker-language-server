@@ -408,7 +408,10 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 				} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
 					if int(params.Position.Line) == path[3].Value.GetToken().Position.Line-1 {
 						offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
-						return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+						// offset can be greater than the length if there's just empty whitespace after the string value
+						if offset <= len(prefix.Value) {
+							return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+						}
 					}
 				}
 			}

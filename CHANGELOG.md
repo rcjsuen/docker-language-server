@@ -9,6 +9,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - initialize
   - return JSON-RPC error if an invalid URI was sent with the request ([#292](https://github.com/docker/docker-language-server/issues/292))
 - Compose
+  - textDocument/completion
+    - check for whitespace when performing prefix calculations for build target suggestions ([#294](https://github.com/docker/docker-language-server/issues/294))
   - textDocument/hover
     - fix error caused by casting a node without checking its type first ([#290](https://github.com/docker/docker-language-server/issues/290))
 
