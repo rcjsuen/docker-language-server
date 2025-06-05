@@ -3511,7 +3511,7 @@ services:
 			},
 		},
 		{
-			name:              "invalid prefix with a space is ignored",
+			name:              "invalid prefix with a space inside the string is ignored",
 			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
 			content: `
 services:
@@ -3523,6 +3523,18 @@ services:
 			list: func() *protocol.CompletionList {
 				return &protocol.CompletionList{Items: []protocol.CompletionItem{}}
 			},
+		},
+		{
+			name:              "invalid prefix with a space at the end of the string is ignored",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      target: a `,
+			line:      4,
+			character: 16,
+			list:      func() *protocol.CompletionList { return nil },
 		},
 		{
 			name:              "completion in the middle with a valid prefix",
