@@ -1807,6 +1807,18 @@ services:
 			},
 		},
 		{
+			name: "patternProperties triggered which should return nothing",
+			content: `
+services:
+  test:
+    build:
+      ulimits:
+        `,
+			line:      5,
+			character: 8,
+			list:      nil,
+		},
+		{
 			name: "inner attributes of the ulimits object under service",
 			content: `
 services:

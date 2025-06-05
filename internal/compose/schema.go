@@ -64,12 +64,15 @@ func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffs
 			if len(prop.Ref.Properties) > 0 {
 				return recurseNodeProperties(nodes, line, column, nodeOffset+1, prop.Ref.Properties, false)
 			}
-			for regexp, property := range prop.Ref.PatternProperties {
-				nextValue := nodes[nodeOffset+1].Key.GetToken().Value
-				if regexp.MatchString(nextValue) {
-					for _, nested := range property.OneOf {
-						if slices.Contains(nested.Types.ToStrings(), "object") {
-							return recurseNodeProperties(nodes, line, column, nodeOffset+2, nested.Properties, false)
+			// try to match the child node to patternProperties
+			if len(nodes) > nodeOffset+1 {
+				for regexp, property := range prop.Ref.PatternProperties {
+					nextValue := nodes[nodeOffset+1].Key.GetToken().Value
+					if regexp.MatchString(nextValue) {
+						for _, nested := range property.OneOf {
+							if slices.Contains(nested.Types.ToStrings(), "object") {
+								return recurseNodeProperties(nodes, line, column, nodeOffset+2, nested.Properties, false)
+							}
 						}
 					}
 				}
