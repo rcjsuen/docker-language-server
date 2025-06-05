@@ -43,10 +43,11 @@ func (c *CacheManagerImpl[T]) Get(key Key) (T, error) {
 	if err == nil {
 		c.cache[cacheKey] = fetched
 		// auto-expire after one hour
-		go func() {
-			time.Sleep(1 * time.Hour)
+		time.AfterFunc(1*time.Hour, func() {
+			c.mutex.Lock()
+			defer c.mutex.Unlock()
 			delete(c.cache, cacheKey)
-		}()
+		})
 	}
 	return fetched, err
 }
