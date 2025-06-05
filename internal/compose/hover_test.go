@@ -1024,6 +1024,20 @@ volumes:
 			character: 14,
 			result:    nil,
 		},
+		{
+			name: "volumes that is not a mapping should not crash",
+			content: `
+services:
+  first:
+    image: scratch
+    volumes:
+      - second
+volumes:
+  - second`,
+			line:      5,
+			character: 13,
+			result:    nil,
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
