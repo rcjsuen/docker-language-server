@@ -2487,6 +2487,23 @@ services:
 				},
 			},
 		},
+		{
+			name: "param character is outside document range",
+			content: `
+services:
+  test:
+    `,
+			line:      3,
+			character: 5,
+			list:      nil,
+		},
+		{
+			name:      "param line is outside document range",
+			content:   "",
+			line:      1,
+			character: 0,
+			list:      nil,
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

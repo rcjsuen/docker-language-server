@@ -192,6 +192,9 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	}
 
 	lines := strings.Split(string(doc.Input()), "\n")
+	if len(lines) <= lspLine {
+		return nil, nil
+	}
 	currentLineTrimmed := strings.TrimSpace(lines[lspLine])
 	if strings.HasPrefix(currentLineTrimmed, "#") {
 		return nil, nil
@@ -206,6 +209,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	} else if len(path) == 1 {
 		return nil, nil
 	} else if path[1].Key.GetToken().Position.Column >= character {
+		return nil, nil
+	} else if len(lines[lspLine]) < character-1 {
 		return nil, nil
 	}
 
