@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Compose
+  - textDocument/hover
+    - fix error caused by casting a node without checking its type first ([#290](https://github.com/docker/docker-language-server/issues/290))
+
 ## [0.10.1] - 2025-06-04
 
 ### Fixed

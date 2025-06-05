@@ -152,9 +152,11 @@ func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, hovered *token.Token, dependencyType, dependencyName string) *protocol.Hover {
 	for _, node := range mappingNode.Values {
 		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
-			for _, service := range node.Value.(*ast.MappingNode).Values {
-				if service.Key.GetToken().Value == dependencyName {
-					return createYamlHover(service, hovered)
+			if mappingNode, ok := node.Value.(*ast.MappingNode); ok {
+				for _, service := range mappingNode.Values {
+					if service.Key.GetToken().Value == dependencyName {
+						return createYamlHover(service, hovered)
+					}
 				}
 			}
 		}
