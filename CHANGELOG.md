@@ -13,6 +13,7 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/completion
     - check for whitespace when performing prefix calculations for build target suggestions ([#294](https://github.com/docker/docker-language-server/issues/294))
     - return an empty result instead of an internal server error if the request's parameters are outside the document's bounds ([#296](https://github.com/docker/docker-language-server/issues/296))
+    - check the node path's length before recursing deeper for pattern properties matches ([#300](https://github.com/docker/docker-language-server/issues/300))
   - textDocument/hover
     - fix error caused by casting a node without checking its type first ([#290](https://github.com/docker/docker-language-server/issues/290))
 
