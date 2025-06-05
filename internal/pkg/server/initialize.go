@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"slices"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/go-git/go-git/v5"
+	"github.com/sourcegraph/jsonrpc2"
 )
 
 func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
@@ -72,7 +74,13 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	if len(workspaceFolders) > 0 {
 		s.workspaceFolders = workspaceFolders
 	} else if params.RootURI != nil {
-		parsed, _ := url.Parse(*params.RootURI)
+		parsed, err := url.Parse(*params.RootURI)
+		if err != nil {
+			return nil, &jsonrpc2.Error{
+				Code:    -32602,
+				Message: fmt.Sprintf("invalid rootUri specified in the initialize request (%v): %v", *params.RootURI, err.Error()),
+			}
+		}
 		s.workspaceFolders = []string{parsed.Path}
 	} else if params.RootPath != nil {
 		s.workspaceFolders = []string{*params.RootPath}
