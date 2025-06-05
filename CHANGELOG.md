@@ -6,6 +6,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 
+- lock cache manager when deleting to prevent concurrent map writes ([#298](https://github.com/docker/docker-language-server/issues/298))
 - initialize
   - return JSON-RPC error if an invalid URI was sent with the request ([#292](https://github.com/docker/docker-language-server/issues/292))
 - Compose
