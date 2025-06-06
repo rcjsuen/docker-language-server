@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- Compose
+  - textDocument/hover
+    - resolve anchors when constructing the path of the hovered item ([#303](https://github.com/docker/docker-language-server/issues/303))
+
 ## [0.10.2] - 2025-06-06
 
 ### Fixed
