@@ -344,6 +344,30 @@ services:
 			},
 		},
 		{
+			name: "image: ghcr.io",
+			content: `
+services:
+  test:
+    image: ghcr.io`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: ghcr.io/",
+			content: `
+services:
+  test:
+    image: ghcr.io/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: ghcr.io:",
+			content: `
+services:
+  test:
+    image: ghcr.io:`,
+			links: nil,
+		},
+		{
 			name: "image: mcr.microsoft.com/powershell",
 			content: `
 services:
@@ -410,6 +434,88 @@ services:
 					Tooltip: types.CreateStringPointer("https://mcr.microsoft.com/artifact/mar/windows/servercore"),
 				},
 			},
+		},
+		{
+			name: "image: mcr.microsoft.com",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: mcr.microsoft.com/",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: mcr.microsoft.com:",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com:`,
+			links: nil,
+		},
+		{
+			name: "image: quay.io/prometheus/node-exporter",
+			content: `
+services:
+  test:
+    image: quay.io/prometheus/node-exporter`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 43},
+					},
+					Target:  types.CreateStringPointer("https://quay.io/repository/prometheus/node-exporter"),
+					Tooltip: types.CreateStringPointer("https://quay.io/repository/prometheus/node-exporter"),
+				},
+			},
+		},
+		{
+			name: "image: quay.io/prometheus/node-exporter:v1.9.1",
+			content: `
+services:
+  test:
+    image: quay.io/prometheus/node-exporter:v1.9.1`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 43},
+					},
+					Target:  types.CreateStringPointer("https://quay.io/repository/prometheus/node-exporter"),
+					Tooltip: types.CreateStringPointer("https://quay.io/repository/prometheus/node-exporter"),
+				},
+			},
+		},
+		{
+			name: "image: quay.io",
+			content: `
+services:
+  test:
+    image: quay.io`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: quay.io/",
+			content: `
+services:
+  test:
+    image: quay.io/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: quay.io:",
+			content: `
+services:
+  test:
+    image: quay.io:`,
+			links: nil,
 		},
 		{
 			name: "anchors and aliases to nothing",

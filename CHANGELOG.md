@@ -7,6 +7,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Added
 
 - Compose
+  - textDocument/documentLink
+    - ensure the image attribute is valid before trying to process it for document links ([#306](https://github.com/docker/docker-language-server/issues/306))
   - textDocument/hover
     - resolve anchors when constructing the path of the hovered item ([#303](https://github.com/docker/docker-language-server/issues/303))
 
