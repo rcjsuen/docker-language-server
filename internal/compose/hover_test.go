@@ -181,6 +181,24 @@ services:
 			},
 		},
 		{
+			name: "recursive enum values when hovering over the attribute's value with an anchor",
+			content: `
+services:
+  test:
+    volumes:
+      - type: bind
+        bind:
+          recursive: &anchor enabled`,
+			line:      6,
+			character: 32,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Recursively mount the source directory.\n\nAllowed values:\n- `disabled`\n- `enabled`\n- `readonly`\n- `writable`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#volumes)",
+				},
+			},
+		},
+		{
 			name: "recursive enum values when hovering over the attribute's value at the end",
 			content: `
 services:
@@ -279,6 +297,21 @@ services:
 				Contents: protocol.MarkupContent{
 					Kind:  protocol.MarkupKindMarkdown,
 					Value: "Order of operations during updates: 'stop-first' (default) or 'start-first'.\n\nAllowed values:\n- `start-first`\n- `stop-first`\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#deploy)",
+				},
+			},
+		},
+		{
+			name: "mapping node defined by an anchor",
+			content: `
+services:
+  &anchor abc:
+    image: alpine:3.21`,
+			line:      3,
+			character: 7,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: "Specify the image to start the container from. Can be a repository/tag, a digest, or a local image ID.\n\nSchema: [compose-spec.json](https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json)\n\n[Online documentation](https://docs.docker.com/reference/compose-file/services/#image)",
 				},
 			},
 		},
@@ -892,6 +925,31 @@ volumes:
 			},
 		},
 		{
+			name: "volumes hover as an array string with anchor definition",
+			content: `
+services:
+  backend:
+    volumes: &anchor
+      - db-data
+volumes:
+  db-data:
+    driver: custom`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 15},
+				},
+			},
+		},
+		{
 			name: "volumes hover as an array string with a container path",
 			content: `
 services:
@@ -988,6 +1046,37 @@ volumes:
 			content: `
 services:
   backend:
+    image: example/backend
+    volumes:
+      - type: volume
+        source: db-data
+        target: /data
+        volume:
+          nocopy: true
+          subpath: sub
+volumes:
+  db-data:
+    driver: custom`,
+			line:      6,
+			character: 20,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `db-data:
+  driver: custom` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 6, Character: 16},
+					End:   protocol.Position{Line: 6, Character: 23},
+				},
+			},
+		},
+		{
+			name: "volumes hover as an array object with an object anchor at the top",
+			content: `
+services:
+  backend: &anchor
     image: example/backend
     volumes:
       - type: volume
