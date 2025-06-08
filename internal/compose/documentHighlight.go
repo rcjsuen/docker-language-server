@@ -14,64 +14,52 @@ type dependencyReference struct {
 	documentHighlights []protocol.DocumentHighlight
 }
 
-func serviceDependencyReferences(node *ast.MappingValueNode, dependencyAttributeName string, arrayOnly bool) []*token.Token {
-	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
-		tokens := []*token.Token{}
-		for _, serviceNode := range servicesNode.Values {
-			serviceNodeValue := serviceNode.Value
-			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
-				serviceNodeValue = anchor.Value
-			}
-			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
-				for _, attributeNode := range serviceAttributes.Values {
-					if attributeNode.Key.GetToken().Value == dependencyAttributeName {
-						if sequenceNode, ok := attributeNode.Value.(*ast.SequenceNode); ok {
-							for _, service := range sequenceNode.Values {
-								tokens = append(tokens, service.GetToken())
-							}
-						} else if !arrayOnly {
-							if mappingNode, ok := attributeNode.Value.(*ast.MappingNode); ok {
-								for _, dependentService := range mappingNode.Values {
-									tokens = append(tokens, dependentService.Key.GetToken())
-								}
+func serviceDependencyReferences(servicesNode *ast.MappingNode, dependencyAttributeName string, arrayOnly bool) []*token.Token {
+	tokens := []*token.Token{}
+	for _, serviceNode := range servicesNode.Values {
+		if serviceAttributes, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
+			for _, attributeNode := range serviceAttributes.Values {
+				if resolveAnchor(attributeNode.Key).GetToken().Value == dependencyAttributeName {
+					if sequenceNode, ok := resolveAnchor(attributeNode.Value).(*ast.SequenceNode); ok {
+						for _, service := range sequenceNode.Values {
+							tokens = append(tokens, resolveAnchor(service).GetToken())
+						}
+					} else if !arrayOnly {
+						if mappingNode, ok := resolveAnchor(attributeNode.Value).(*ast.MappingNode); ok {
+							for _, dependentService := range mappingNode.Values {
+								tokens = append(tokens, resolveAnchor(dependentService.Key).GetToken())
 							}
 						}
 					}
 				}
 			}
 		}
-		return tokens
 	}
-	return nil
+	return tokens
 }
 
-func extendedServiceReferences(node *ast.MappingValueNode) []*token.Token {
-	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
-		tokens := []*token.Token{}
-		for _, serviceNode := range servicesNode.Values {
-			serviceNodeValue := serviceNode.Value
-			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
-				serviceNodeValue = anchor.Value
-			}
-			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
-				for _, attributeNode := range serviceAttributes.Values {
-					if attributeNode.Key.GetToken().Value == "extends" {
-						if extendedValue, ok := attributeNode.Value.(*ast.StringNode); ok {
-							tokens = append(tokens, extendedValue.GetToken())
-						} else if mappingNode, ok := attributeNode.Value.(*ast.MappingNode); ok {
-							localService := true
-							for _, extendsObjectAttribute := range mappingNode.Values {
-								if extendsObjectAttribute.Key.GetToken().Value == "file" {
-									localService = false
-									break
-								}
+func extendedServiceReferences(servicesNode *ast.MappingNode) []*token.Token {
+	tokens := []*token.Token{}
+	for _, serviceNode := range servicesNode.Values {
+		if serviceAttributes, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
+			for _, attributeNode := range serviceAttributes.Values {
+				if resolveAnchor(attributeNode.Key).GetToken().Value == "extends" {
+					attributeNodeValue := resolveAnchor(attributeNode.Value)
+					if extendedValue, ok := attributeNodeValue.(*ast.StringNode); ok {
+						tokens = append(tokens, extendedValue.GetToken())
+					} else if mappingNode, ok := resolveAnchor(attributeNodeValue).(*ast.MappingNode); ok {
+						localService := true
+						for _, extendsObjectAttribute := range mappingNode.Values {
+							if resolveAnchor(extendsObjectAttribute.Key).GetToken().Value == "file" {
+								localService = false
+								break
 							}
+						}
 
-							if localService {
-								for _, extendsObjectAttribute := range mappingNode.Values {
-									if extendsObjectAttribute.Key.GetToken().Value == "service" {
-										tokens = append(tokens, extendsObjectAttribute.Value.GetToken())
-									}
+						if localService {
+							for _, extendsObjectAttribute := range mappingNode.Values {
+								if resolveAnchor(extendsObjectAttribute.Key).GetToken().Value == "service" {
+									tokens = append(tokens, resolveAnchor(extendsObjectAttribute.Value).GetToken())
 								}
 							}
 						}
@@ -79,9 +67,8 @@ func extendedServiceReferences(node *ast.MappingValueNode) []*token.Token {
 				}
 			}
 		}
-		return tokens
 	}
-	return nil
+	return tokens
 }
 
 func volumeToken(t *token.Token) *token.Token {
@@ -96,78 +83,65 @@ func volumeToken(t *token.Token) *token.Token {
 	return t
 }
 
-func volumeReferences(node *ast.MappingValueNode) []*token.Token {
-	if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
-		tokens := []*token.Token{}
-		for _, serviceNode := range servicesNode.Values {
-			serviceNodeValue := serviceNode.Value
-			if anchor, ok := serviceNode.Value.(*ast.AnchorNode); ok {
-				serviceNodeValue = anchor.Value
-			}
-			if serviceAttributes, ok := serviceNodeValue.(*ast.MappingNode); ok {
-				for _, attributeNode := range serviceAttributes.Values {
-					if attributeNode.Key.GetToken().Value == "volumes" {
-						if sequenceNode, ok := attributeNode.Value.(*ast.SequenceNode); ok {
-							for _, service := range sequenceNode.Values {
-								if volumeObjectNode, ok := service.(*ast.MappingNode); ok {
-									for _, volumeAttribute := range volumeObjectNode.Values {
-										if volumeAttribute.Key.GetToken().Value == "source" {
-											tokens = append(tokens, volumeAttribute.Value.GetToken())
-										}
+func volumeReferences(servicesNode *ast.MappingNode) []*token.Token {
+	tokens := []*token.Token{}
+	for _, serviceNode := range servicesNode.Values {
+		if serviceAttributes, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
+			for _, attributeNode := range serviceAttributes.Values {
+				if resolveAnchor(attributeNode.Key).GetToken().Value == "volumes" {
+					volumesValue := resolveAnchor(attributeNode.Value)
+					if sequenceNode, ok := volumesValue.(*ast.SequenceNode); ok {
+						for _, volume := range sequenceNode.Values {
+							volumeNode := resolveAnchor(volume)
+							if volumeObjectNode, ok := volumeNode.(*ast.MappingNode); ok {
+								for _, volumeAttribute := range volumeObjectNode.Values {
+									if resolveAnchor(volumeAttribute.Key).GetToken().Value == "source" {
+										tokens = append(tokens, resolveAnchor(volumeAttribute.Value).GetToken())
 									}
-								} else {
-									tokens = append(tokens, volumeToken(service.GetToken()))
 								}
+							} else {
+								tokens = append(tokens, volumeToken(volumeNode.GetToken()))
 							}
-						} else if mappingNode, ok := attributeNode.Value.(*ast.MappingNode); ok {
-							for _, dependentService := range mappingNode.Values {
-								tokens = append(tokens, dependentService.Key.GetToken())
-							}
+						}
+					} else if mappingNode, ok := volumesValue.(*ast.MappingNode); ok {
+						for _, dependentService := range mappingNode.Values {
+							tokens = append(tokens, resolveAnchor(dependentService.Key).GetToken())
 						}
 					}
 				}
 			}
 		}
-		return tokens
 	}
-	return nil
+	return tokens
 }
 
-func declarations(node *ast.MappingValueNode, dependencyType string) []*token.Token {
-	if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
-		if servicesNode, ok := node.Value.(*ast.MappingNode); ok {
-			tokens := []*token.Token{}
-			for _, serviceNode := range servicesNode.Values {
-				tokens = append(tokens, serviceNode.Key.GetToken())
-			}
-			return tokens
-		}
+func declarations(node *ast.MappingNode) []*token.Token {
+	tokens := []*token.Token{}
+	for _, serviceNode := range node.Values {
+		tokens = append(tokens, resolveAnchor(serviceNode.Key).GetToken())
 	}
-	return nil
+	return tokens
 }
 
-func findFragments(mappingNode *ast.MappingNode, anchors []*ast.AnchorNode, aliases []*ast.AliasNode) ([]*ast.AnchorNode, []*ast.AliasNode) {
-	for _, node := range mappingNode.Values {
-		if anchor, ok := node.Value.(*ast.AnchorNode); ok {
-			anchors = append(anchors, anchor)
-		} else if alias, ok := node.Value.(*ast.AliasNode); ok {
-			aliases = append(aliases, alias)
-		} else if m, ok := node.Value.(*ast.MappingNode); ok {
-			otherAnchors, otherAliases := findFragments(m, []*ast.AnchorNode{}, []*ast.AliasNode{})
+func findFragments(node ast.Node, anchors []*ast.AnchorNode, aliases []*ast.AliasNode) ([]*ast.AnchorNode, []*ast.AliasNode) {
+	if anchor, ok := node.(*ast.AnchorNode); ok {
+		anchors = append(anchors, anchor)
+		otherAnchors, otherAliases := findFragments(resolveAnchor(anchor), []*ast.AnchorNode{}, []*ast.AliasNode{})
+		anchors = append(anchors, otherAnchors...)
+		aliases = append(aliases, otherAliases...)
+	} else if alias, ok := node.(*ast.AliasNode); ok {
+		aliases = append(aliases, alias)
+	} else if m, ok := node.(*ast.MappingNode); ok {
+		for _, v := range m.Values {
+			otherAnchors, otherAliases := findFragments(v.Value, []*ast.AnchorNode{}, []*ast.AliasNode{})
 			anchors = append(anchors, otherAnchors...)
 			aliases = append(aliases, otherAliases...)
-		} else if s, ok := node.Value.(*ast.SequenceNode); ok {
-			for _, item := range s.Values {
-				if anchor, ok := item.(*ast.AnchorNode); ok {
-					anchors = append(anchors, anchor)
-				} else if alias, ok := item.(*ast.AliasNode); ok {
-					aliases = append(aliases, alias)
-				} else if m, ok := item.(*ast.MappingNode); ok {
-					otherAnchors, otherAliases := findFragments(m, []*ast.AnchorNode{}, []*ast.AliasNode{})
-					anchors = append(anchors, otherAnchors...)
-					aliases = append(aliases, otherAliases...)
-				}
-			}
+		}
+	} else if s, ok := node.(*ast.SequenceNode); ok {
+		for _, item := range s.Values {
+			otherAnchors, otherAliases := findFragments(item, []*ast.AnchorNode{}, []*ast.AliasNode{})
+			anchors = append(anchors, otherAnchors...)
+			aliases = append(aliases, otherAliases...)
 		}
 	}
 	return anchors, aliases
@@ -281,6 +255,15 @@ func DocumentHighlight(doc document.ComposeDocument, position protocol.Position)
 	return references.documentHighlights, nil
 }
 
+func convertTopLevelNode(node *ast.MappingValueNode) (*ast.StringNode, *ast.MappingNode) {
+	if s, ok := resolveAnchor(node.Key).(*ast.StringNode); ok {
+		if m, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
+			return s, m
+		}
+	}
+	return nil, nil
+}
+
 func DocumentHighlights(doc document.ComposeDocument, position protocol.Position) (string, dependencyReference) {
 	file := doc.File()
 	if file == nil || len(file.Docs) == 0 {
@@ -299,29 +282,32 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 		var configDeclarations []*token.Token
 		var secretDeclarations []*token.Token
 		for _, node := range mappingNode.Values {
-			if s, ok := node.Key.(*ast.StringNode); ok {
-				switch s.Value {
-				case "services":
-					refs := serviceDependencyReferences(node, "depends_on", false)
-					refs = append(refs, extendedServiceReferences(node)...)
-					decls := declarations(node, "services")
-					name, highlights := highlightReferences("services", refs, decls, line, character)
-					if len(highlights.documentHighlights) > 0 {
-						return name, highlights
-					}
-					networkRefs = serviceDependencyReferences(node, "networks", false)
-					configRefs = serviceDependencyReferences(node, "configs", true)
-					secretRefs = serviceDependencyReferences(node, "secrets", true)
-					volumeRefs = volumeReferences(node)
-				case "networks":
-					networkDeclarations = declarations(node, "networks")
-				case "volumes":
-					volumeDeclarations = declarations(node, "volumes")
-				case "configs":
-					configDeclarations = declarations(node, "configs")
-				case "secrets":
-					secretDeclarations = declarations(node, "secrets")
+			name, value := convertTopLevelNode(node)
+			if name == nil || value == nil {
+				continue
+			}
+
+			switch name.Value {
+			case "services":
+				refs := serviceDependencyReferences(value, "depends_on", false)
+				refs = append(refs, extendedServiceReferences(value)...)
+				decls := declarations(value)
+				name, highlights := highlightReferences("services", refs, decls, line, character)
+				if len(highlights.documentHighlights) > 0 {
+					return name, highlights
 				}
+				networkRefs = serviceDependencyReferences(value, "networks", false)
+				configRefs = serviceDependencyReferences(value, "configs", true)
+				secretRefs = serviceDependencyReferences(value, "secrets", true)
+				volumeRefs = volumeReferences(value)
+			case "networks":
+				networkDeclarations = declarations(value)
+			case "volumes":
+				volumeDeclarations = declarations(value)
+			case "configs":
+				configDeclarations = declarations(value)
+			case "secrets":
+				secretDeclarations = declarations(value)
 			}
 		}
 		name, highlights := highlightReferences("networks", networkRefs, networkDeclarations, line, character)

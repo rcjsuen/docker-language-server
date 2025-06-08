@@ -379,16 +379,10 @@ func hover(schema *jsonschema.Schema, nodes []ast.Node, line, column, lineLength
 }
 
 func constructNodePath(matches []ast.Node, node ast.Node, line, col int) []ast.Node {
-	if anchor, ok := node.(*ast.AnchorNode); ok {
-		node = anchor.Value
-	}
+	node = resolveAnchor(node)
 	switch n := node.(type) {
 	case *ast.MappingValueNode:
-		var nodeKey ast.Node
-		nodeKey = n.Key
-		if anchor, ok := nodeKey.(*ast.AnchorNode); ok {
-			nodeKey = anchor.Value
-		}
+		nodeKey := resolveAnchor(n.Key)
 		if m := constructNodePath(matches, nodeKey, line, col); m != nil {
 			matches = append(matches, m...)
 			return matches
@@ -419,4 +413,11 @@ func constructNodePath(matches []ast.Node, node ast.Node, line, col int) []ast.N
 		return []ast.Node{node}
 	}
 	return nil
+}
+
+func resolveAnchor(node ast.Node) ast.Node {
+	if anchor, ok := node.(*ast.AnchorNode); ok {
+		return anchor.Value
+	}
+	return node
 }
