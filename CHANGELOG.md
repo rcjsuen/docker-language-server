@@ -7,10 +7,18 @@ All notable changes to the Docker Language Server will be documented in this fil
 ### Added
 
 - Compose
+  - textDocument/definition
+    - recurse into anchors when evaluating the cursor's position ([#305](https://github.com/docker/docker-language-server/issues/305))
+  - textDocument/documentHighlight
+    - recurse into anchors when evaluating the cursor's position ([#305](https://github.com/docker/docker-language-server/issues/305))
   - textDocument/documentLink
     - ensure the image attribute is valid before trying to process it for document links ([#306](https://github.com/docker/docker-language-server/issues/306))
   - textDocument/hover
     - resolve anchors when constructing the path of the hovered item ([#303](https://github.com/docker/docker-language-server/issues/303))
+  - textDocument/prepareRename
+    - recurse into anchors when evaluating the cursor's position ([#305](https://github.com/docker/docker-language-server/issues/305))
+  - textDocument/rename
+    - recurse into anchors when evaluating the cursor's position ([#305](https://github.com/docker/docker-language-server/issues/305))
 
 ## [0.10.2] - 2025-06-06
 
