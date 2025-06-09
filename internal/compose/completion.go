@@ -136,18 +136,19 @@ func prefix(line string, character int) string {
 	return sb.String()
 }
 
-func array(line string, character int) bool {
-	isArray := false
-	for i := range character {
-		if unicode.IsSpace(rune(line[i])) {
-			continue
-		} else if line[i] == '-' {
-			isArray = true
-		} else if isArray && line[i] == ':' {
-			return false
+func createSpacing(line string, whitespaceLine, arrayAttributes bool) string {
+	if whitespaceLine && arrayAttributes {
+		// 2 more for the attribute, then 2 more for the array offset = 4 total
+		return strings.Repeat(" ", len(line)+4)
+	}
+	sb := strings.Builder{}
+	for i := range line {
+		if unicode.IsSpace(rune(line[i])) || line[i] == '-' {
+			sb.WriteString(" ")
 		}
 	}
-	return isArray
+	sb.WriteString("  ")
+	return sb.String()
 }
 
 func createTopLevelItems() []protocol.CompletionItem {
@@ -225,17 +226,12 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return &protocol.CompletionList{Items: items}, nil
 	}
 
-	items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)), whitespaceLine)
-	if len(items) > 0 {
-		return &protocol.CompletionList{Items: items}, nil
-	}
 	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
 	if len(items) == 0 {
 		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
 	}
-	isArray := array(lines[lspLine], character-1)
-	if isArray != arrayAttributes {
-		return nil, nil
+	if len(items) == 0 {
+		items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
 	}
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
@@ -267,7 +263,10 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			}
 		}
 		sb.WriteString("  ")
-		spacing := sb.String()
+		if whitespaceLine && arrayAttributes {
+			sb.WriteString("  ")
+		}
+		spacing := createSpacing(lines[lspLine], whitespaceLine, arrayAttributes)
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
 				Detail: extractDetail(schema),
@@ -328,6 +327,15 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	slices.SortFunc(items, func(a, b protocol.CompletionItem) int {
 		return strings.Compare(a.Label, b.Label)
 	})
+	if whitespaceLine && arrayAttributes {
+		for i := range items {
+			edit := items[i].TextEdit.(protocol.TextEdit)
+			items[i].TextEdit = protocol.TextEdit{
+				NewText: fmt.Sprintf("%v%v", "- ", edit.NewText),
+				Range:   edit.Range,
+			}
+		}
+	}
 	return &protocol.CompletionList{Items: items}, nil
 }
 
@@ -493,17 +501,12 @@ func volumeDependencyCompletionItems(
 	path []*ast.MappingValueNode,
 	params *protocol.CompletionParams,
 	prefixLength protocol.UInteger,
-	whitespaceLine bool,
 ) []protocol.CompletionItem {
 	items := namedDependencyCompletionItems(file, path, "volumes", "volumes", params, prefixLength)
-	arrayItemPrefix := ""
-	if whitespaceLine {
-		arrayItemPrefix = "- "
-	}
 	for i := range items {
 		edit := items[i].TextEdit.(protocol.TextEdit)
 		items[i].TextEdit = protocol.TextEdit{
-			NewText: fmt.Sprintf("%v%v:${1:/container/path}", arrayItemPrefix, edit.NewText),
+			NewText: fmt.Sprintf("%v:${1:/container/path}", edit.NewText),
 			Range:   edit.Range,
 		}
 		items[i].InsertTextFormat = types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet)
