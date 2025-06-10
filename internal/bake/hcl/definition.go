@@ -70,7 +70,7 @@ func ResolveAttributeValue(ctx context.Context, definitionLinkSupport bool, mana
 	if tupleConsExpr, ok := attribute.Expr.(*hclsyntax.TupleConsExpr); ok {
 		for _, e := range tupleConsExpr.Exprs {
 			if isInsideRange(e.Range(), position) {
-				if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok {
+				if templateExpr, ok := e.(*hclsyntax.TemplateExpr); ok && sourceBlock != nil {
 					if templateExpr.IsStringLiteral() {
 						// look up a target reference if it's inside a
 						// target block's inherits attribute, or a
@@ -169,7 +169,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if objectConsExpression, ok := expression.(*hclsyntax.ObjectConsExpr); ok {
 		for _, item := range objectConsExpression.Items {
-			if isInsideRange(item.KeyExpr.Range(), position) {
+			if isInsideRange(item.KeyExpr.Range(), position) && sourceBlock != nil {
 				if attributeName == "args" && sourceBlock.Type == "target" {
 					dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
 					if dockerfilePath == "" || err != nil {
