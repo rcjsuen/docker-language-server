@@ -206,6 +206,9 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	character := int(params.Position.Character) + 1
 	path := constructCompletionNodePath(file, line)
 	if len(path) == 0 {
+		if topLevelNodeOffset != -1 && params.Position.Character != uint32(topLevelNodeOffset) {
+			return nil, nil
+		}
 		return &protocol.CompletionList{Items: createTopLevelItems()}, nil
 	} else if len(path) == 1 {
 		return nil, nil
@@ -570,6 +573,8 @@ func NodeStructure(line int, rootNodes []*ast.MappingValueNode) []*ast.MappingVa
 			candidate = node
 		} else if node.GetToken().Position.Line == line {
 			return []*ast.MappingValueNode{node}
+		} else if candidate == nil {
+			return []*ast.MappingValueNode{}
 		} else {
 			break
 		}
