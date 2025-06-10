@@ -983,6 +983,99 @@ func TestDefinition(t *testing.T) {
 			},
 		},
 		{
+			name:         "attribute whitespace should resolve to nothing",
+			content:      "a1  = \"value\"",
+			line:         0,
+			character:    3,
+			endCharacter: -1,
+			locations:    nil,
+			links:        nil,
+		},
+		{
+			name:         "attribute array string value",
+			content:      "a1 = [\"value\"]",
+			line:         0,
+			character:    10,
+			endCharacter: -1,
+			locations:    nil,
+			links:        nil,
+		},
+		{
+			name:         "attribute array string has a templated variable",
+			content:      "a1 = \"\"\na2 = [\"${a1}\"]",
+			line:         1,
+			character:    10,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: bakeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 9},
+						End:   protocol.Position{Line: 1, Character: 11},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+				},
+			},
+		},
+		{
+			name:         "attribute object value's attribute name",
+			content:      "args = { var = value }",
+			line:         0,
+			character:    11,
+			endCharacter: -1,
+			locations:    nil,
+			links:        nil,
+		},
+		{
+			name:         "attribute object value's attribute name",
+			content:      "a1 = \"\"\nargs = { var = a1 }",
+			line:         1,
+			character:    16,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: bakeFileURI,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 15},
+						End:   protocol.Position{Line: 1, Character: 17},
+					},
+					TargetURI: bakeFileURI,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 2},
+					},
+				},
+			},
+		},
+		{
 			name:         "variable referenced in for loop conditional",
 			content:      "variable num { default = 3 }\nvariable varList { default = [\"tag\"] }\ntarget default {\n  tags = [for var in varList : upper(var) if num > 2]\n}",
 			line:         3,

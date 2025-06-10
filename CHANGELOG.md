@@ -24,6 +24,9 @@ All notable changes to the Docker Language Server will be documented in this fil
     - stop volume named references from causing volume attributes to not be suggested ([#309](https://github.com/docker/docker-language-server/issues/309))
   - textDocument/documentLink
     - ensure the image attribute is valid before trying to process it for document links ([#306](https://github.com/docker/docker-language-server/issues/306))
+- Bake
+  - textDocument/definition
+    - fix nil pointers when navigating around a top level attribute that is not in any block ([#311](https://github.com/docker/docker-language-server/issues/311))
 
 ## [0.10.2] - 2025-06-06
 
