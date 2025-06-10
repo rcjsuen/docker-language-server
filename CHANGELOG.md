@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Compose
+  - textDocument/completion
+    - fix error case triggered by using code completion before the first node ([#314](https://github.com/docker/docker-language-server/issues/314))
+
 ## [0.11.0] - 2025-06-10
 
 ### Added

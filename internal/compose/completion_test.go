@@ -2559,6 +2559,20 @@ services:
 			character: 0,
 			list:      nil,
 		},
+		{
+			name:      "completion is on a line before the first node and after it positionally",
+			content:   " \nservices:",
+			line:      0,
+			character: 1,
+			list:      nil,
+		},
+		{
+			name:      "completion is on a line before the first node and before it positionally",
+			content:   " \n  services:",
+			line:      0,
+			character: 1,
+			list:      nil,
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
