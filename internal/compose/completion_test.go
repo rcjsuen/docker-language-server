@@ -1986,6 +1986,93 @@ services:
 			},
 		},
 		{
+			name: "properties of an embedded object with a custom name with extra trailing whitespace",
+			content: `
+services:
+  test:
+    networks:
+      abc:
+          `,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "aliases",
+						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "A list of unique string values.",
+						TextEdit:         textEdit("aliases:\n          - ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "driver_opts",
+						Detail:           types.CreateStringPointer("object"),
+						Documentation:    "Driver options for this network.",
+						TextEdit:         textEdit("driver_opts:\n          ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "gw_priority",
+						Detail:           types.CreateStringPointer("number"),
+						Documentation:    "Specify the gateway priority for the network connection.",
+						TextEdit:         textEdit("gw_priority: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "interface_name",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Interface network name used to connect to network",
+						TextEdit:         textEdit("interface_name: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "ipv4_address",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a static IPv4 address for this service on this network.",
+						TextEdit:         textEdit("ipv4_address: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "ipv6_address",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a static IPv6 address for this service on this network.",
+						TextEdit:         textEdit("ipv6_address: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "link_local_ips",
+						Detail:           types.CreateStringPointer("array"),
+						Documentation:    "A list of unique string values.",
+						TextEdit:         textEdit("link_local_ips:\n          - ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "mac_address",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Specify a MAC address for this service on this network.",
+						TextEdit:         textEdit("mac_address: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "priority",
+						Detail:           types.CreateStringPointer("number"),
+						Documentation:    "Specify the priority for the network connection.",
+						TextEdit:         textEdit("priority: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
 			name: "oneOf results of a service object's networks attribute",
 			content: `
 services:
@@ -2572,6 +2659,108 @@ services:
 			line:      0,
 			character: 1,
 			list:      nil,
+		},
+		{
+			name:      "include properties with no array hyphen present",
+			content:   "include:\n  ",
+			line:      1,
+			character: 2,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "env_file",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("- env_file:", 1, 2, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "path",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("- path:", 1, 2, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "project_directory",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to resolve relative paths set in the Compose file",
+						TextEdit:         textEdit("- project_directory: ", 1, 2, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
+			name:      "include properties with array hyphen present",
+			content:   "include:\n  - ",
+			line:      1,
+			character: 4,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "env_file",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("env_file:", 1, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "path",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("path:", 1, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "project_directory",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to resolve relative paths set in the Compose file",
+						TextEdit:         textEdit("project_directory: ", 1, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
+			name:      "include properties with a prefix",
+			content:   "include:\n  - e",
+			line:      1,
+			character: 5,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "env_file",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("env_file:", 1, 5, 1),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "path",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("path:", 1, 5, 1),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "project_directory",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to resolve relative paths set in the Compose file",
+						TextEdit:         textEdit("project_directory: ", 1, 5, 1),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
 		},
 	}
 

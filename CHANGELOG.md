@@ -4,6 +4,12 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- Compose
+  - textDocument/completion
+    - add support for suggesting `include` properties ([#316](https://github.com/docker/docker-language-server/issues/316))
+
 ### Fixed
 
 - Compose

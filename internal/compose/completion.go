@@ -126,6 +126,7 @@ var textEditModifiers = []textEditModifier{buildTargetModifier, serviceSuggestio
 
 func prefix(line string, character int) string {
 	sb := strings.Builder{}
+	sb.Grow(character)
 	for i := range character {
 		if unicode.IsSpace(rune(line[i])) {
 			sb.Reset()
@@ -136,13 +137,14 @@ func prefix(line string, character int) string {
 	return sb.String()
 }
 
-func createSpacing(line string, whitespaceLine, arrayAttributes bool) string {
-	if whitespaceLine && arrayAttributes {
+func createSpacing(line string, character int, arrayAttributes bool) string {
+	if arrayAttributes {
 		// 2 more for the attribute, then 2 more for the array offset = 4 total
-		return strings.Repeat(" ", len(line)+4)
+		return strings.Repeat(" ", character+4)
 	}
 	sb := strings.Builder{}
-	for i := range line {
+	sb.Grow(character + 2)
+	for i := range character {
 		if unicode.IsSpace(rune(line[i])) || line[i] == '-' {
 			sb.WriteString(" ")
 		}
@@ -201,75 +203,87 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		return nil, nil
 	}
 
+	character := int(params.Position.Character) + 1
+	if len(lines[lspLine]) < character-1 {
+		return nil, nil
+	}
 	whitespaceLine := currentLineTrimmed == ""
 	line := int(lspLine) + 1
-	character := int(params.Position.Character) + 1
 	path := constructCompletionNodePath(file, line)
+	wordPrefix := protocol.UInteger(len(prefix(lines[lspLine], character-1)))
 	if len(path) == 0 {
 		if topLevelNodeOffset != -1 && params.Position.Character != uint32(topLevelNodeOffset) {
 			return nil, nil
 		}
 		return &protocol.CompletionList{Items: createTopLevelItems()}, nil
 	} else if len(path) == 1 {
+		if path[0].Key.GetToken().Value == "include" {
+			schema := schemaProperties()["include"].Items.(*jsonschema.Schema)
+			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, wordPrefix, file, manager, u, path)
+			return processItems(items, whitespaceLine), nil
+		}
 		return nil, nil
 	} else if path[1].Key.GetToken().Position.Column >= character {
 		return nil, nil
-	} else if len(lines[lspLine]) < character-1 {
-		return nil, nil
 	}
 
-	wordPrefix := prefix(lines[lspLine], character-1)
 	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
-	dependencies := dependencyCompletionItems(file, u, path, params, protocol.UInteger(len(wordPrefix)))
+	dependencies := dependencyCompletionItems(file, u, path, params, wordPrefix)
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
-	items, stop := buildTargetCompletionItems(params, manager, path, u, protocol.UInteger(len(wordPrefix)))
+	items, stop := buildTargetCompletionItems(params, manager, path, u, wordPrefix)
 	if stop {
 		return &protocol.CompletionList{Items: items}, nil
 	}
 
-	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, protocol.UInteger(len(wordPrefix)))
+	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, wordPrefix)
 	if len(items) == 0 {
-		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, protocol.UInteger(len(wordPrefix)))
+		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, wordPrefix)
 	}
 	if len(items) == 0 {
-		items = volumeDependencyCompletionItems(file, path, params, protocol.UInteger(len(wordPrefix)))
+		items = volumeDependencyCompletionItems(file, path, params, wordPrefix)
 	}
+	schemaItems := createSchemaItems(params, nodeProps, lines, lspLine, whitespaceLine && arrayAttributes, wordPrefix, file, manager, u, path)
+	items = append(items, schemaItems...)
+	if len(items) == 0 {
+		return nil, nil
+	}
+	return processItems(items, whitespaceLine && arrayAttributes), nil
+}
+
+func createEnumItems(schema *jsonschema.Schema, params *protocol.CompletionParams, wordPrefixLength protocol.UInteger) []protocol.CompletionItem {
+	items := []protocol.CompletionItem{}
+	for _, value := range schema.Enum.Values {
+		enumValue := value.(string)
+		item := protocol.CompletionItem{
+			Label:         enumValue,
+			Documentation: schema.Description,
+			Detail:        extractDetail(schema),
+			TextEdit: protocol.TextEdit{
+				NewText: enumValue,
+				Range: protocol.Range{
+					Start: protocol.Position{
+						Line:      params.Position.Line,
+						Character: params.Position.Character - wordPrefixLength,
+					},
+					End: params.Position,
+				},
+			},
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+func createSchemaItems(params *protocol.CompletionParams, nodeProps any, lines []string, lspLine int, whitespacePrefixedArrayAttribute bool, wordPrefixLength protocol.UInteger, file *ast.File, manager *document.Manager, u *url.URL, path []*ast.MappingValueNode) []protocol.CompletionItem {
+	items := []protocol.CompletionItem{}
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
-			for _, value := range schema.Enum.Values {
-				enumValue := value.(string)
-				item := protocol.CompletionItem{
-					Label:         enumValue,
-					Documentation: schema.Description,
-					Detail:        extractDetail(schema),
-					TextEdit: protocol.TextEdit{
-						NewText: enumValue,
-						Range: protocol.Range{
-							Start: protocol.Position{
-								Line:      params.Position.Line,
-								Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
-							},
-							End: params.Position,
-						},
-					},
-				}
-				items = append(items, item)
-			}
+			return createEnumItems(schema, params, wordPrefixLength)
 		}
 	} else if properties, ok := nodeProps.(map[string]*jsonschema.Schema); ok {
-		sb := strings.Builder{}
-		for i := range lines[lspLine] {
-			if unicode.IsSpace(rune(lines[lspLine][i])) || lines[lspLine][i] == '-' {
-				sb.WriteString(" ")
-			}
-		}
-		sb.WriteString("  ")
-		if whitespaceLine && arrayAttributes {
-			sb.WriteString("  ")
-		}
-		spacing := createSpacing(lines[lspLine], whitespaceLine, arrayAttributes)
+		spacing := createSpacing(lines[lspLine], int(params.Position.Character), whitespacePrefixedArrayAttribute)
 		for attributeName, schema := range properties {
 			item := protocol.CompletionItem{
 				Detail: extractDetail(schema),
@@ -279,7 +293,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					Range: protocol.Range{
 						Start: protocol.Position{
 							Line:      params.Position.Line,
-							Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
+							Character: params.Position.Character - protocol.UInteger(wordPrefixLength),
 						},
 						End: params.Position,
 					},
@@ -314,7 +328,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 					Range: protocol.Range{
 						Start: protocol.Position{
 							Line:      params.Position.Line,
-							Character: params.Position.Character - protocol.UInteger(len(wordPrefix)),
+							Character: params.Position.Character - protocol.UInteger(wordPrefixLength),
 						},
 						End: params.Position,
 					},
@@ -324,13 +338,14 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			items = append(items, item)
 		}
 	}
-	if len(items) == 0 {
-		return nil, nil
-	}
+	return items
+}
+
+func processItems(items []protocol.CompletionItem, arrayPrefix bool) *protocol.CompletionList {
 	slices.SortFunc(items, func(a, b protocol.CompletionItem) int {
 		return strings.Compare(a.Label, b.Label)
 	})
-	if whitespaceLine && arrayAttributes {
+	if arrayPrefix {
 		for i := range items {
 			edit := items[i].TextEdit.(protocol.TextEdit)
 			items[i].TextEdit = protocol.TextEdit{
@@ -339,7 +354,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 			}
 		}
 	}
-	return &protocol.CompletionList{Items: items}, nil
+	return &protocol.CompletionList{Items: items}
 }
 
 func createChoiceSnippetText(itemTexts []completionItemText) string {
