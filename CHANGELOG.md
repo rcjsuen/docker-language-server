@@ -6,6 +6,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Added
 
+- Dockerfile
+  - textDocument/publishDiagnostics
+    - provide code actions to easily ignore build checks ([#320](https://github.com/docker/docker-language-server/issues/320))
 - Compose
   - textDocument/completion
     - add support for suggesting `include` properties ([#316](https://github.com/docker/docker-language-server/issues/316))

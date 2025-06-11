@@ -93,38 +93,32 @@ func encloseWithQuotes(s string) string {
 	return fmt.Sprintf(`"%v"`, s)
 }
 
-func setDiagnosticData(diagnostic *protocol.Diagnostic, instruction *parser.Node, warning lint.Warning) {
+func createResolutionEdit(instruction *parser.Node, warning lint.Warning) *types.NamedEdit {
 	if instruction != nil && instruction.StartLine == int(warning.Location.Ranges[0].Start.Line) && instruction.Next != nil {
 		if warning.RuleName == "MaintainerDeprecated" {
-			diagnostic.Data = []types.NamedEdit{
-				{
-					Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
-					Edit:  fmt.Sprintf(`LABEL org.opencontainers.image.authors=%v`, encloseWithQuotes(instruction.Next.Value)),
-				},
+			return &types.NamedEdit{
+				Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
+				Edit:  fmt.Sprintf(`LABEL org.opencontainers.image.authors=%v`, encloseWithQuotes(instruction.Next.Value)),
 			}
 		} else if warning.RuleName == "StageNameCasing" {
 			stageName := instruction.Next.Next.Next.Value
 			lowercase := strings.ToLower(stageName)
 			words := []string{instruction.Value, instruction.Next.Value, instruction.Next.Next.Value, lowercase}
-			diagnostic.Data = []types.NamedEdit{
-				{
-					Title: fmt.Sprintf("Convert stage name (%v) to lowercase (%v)", stageName, lowercase),
-					Edit:  strings.Join(words, " "),
-				},
+			return &types.NamedEdit{
+				Title: fmt.Sprintf("Convert stage name (%v) to lowercase (%v)", stageName, lowercase),
+				Edit:  strings.Join(words, " "),
 			}
 		} else if warning.RuleName == "RedundantTargetPlatform" {
 			words := getWords(instruction)
 			for i := range words {
 				if words[i] == "--platform=$TARGETPLATFORM" {
 					words = slices.Delete(words, i, i+1)
-					diagnostic.Data = []types.NamedEdit{
-						{
-							Title: "Remove unnecessary --platform flag",
-							Edit:  strings.Join(words, " "),
-						},
-					}
 					break
 				}
+			}
+			return &types.NamedEdit{
+				Title: "Remove unnecessary --platform flag",
+				Edit:  strings.Join(words, " "),
 			}
 		} else if warning.RuleName == "ConsistentInstructionCasing" {
 			words := getWords(instruction)
@@ -134,14 +128,13 @@ func setDiagnosticData(diagnostic *protocol.Diagnostic, instruction *parser.Node
 				suggestion = strings.ToLower(suggestion)
 			}
 			words[0] = suggestion
-			diagnostic.Data = []types.NamedEdit{
-				{
-					Title: fmt.Sprintf("Convert to %v", caseSuggestion),
-					Edit:  strings.Join(words, " "),
-				},
+			return &types.NamedEdit{
+				Title: fmt.Sprintf("Convert to %v", caseSuggestion),
+				Edit:  strings.Join(words, " "),
 			}
 		}
 	}
+	return nil
 }
 
 func convertToDiagnostics(source string, doc document.DockerfileDocument, lines []string, warnings []lint.Warning) []protocol.Diagnostic {
@@ -168,10 +161,69 @@ func convertToDiagnostics(source string, doc document.DockerfileDocument, lines 
 			diagnostic.Tags = []protocol.DiagnosticTag{protocol.DiagnosticTagDeprecated}
 		}
 		instruction := doc.Instruction(protocol.Position{Line: uint32(warning.Location.Ranges[0].Start.Line) - 1})
-		setDiagnosticData(diagnostic, instruction, warning)
+		ignoreEdit := createIgnoreEdit(warning.RuleName)
+		resolutionEdit := createResolutionEdit(instruction, warning)
+		if resolutionEdit == nil {
+			if ignoreEdit != nil {
+				diagnostic.Data = []types.NamedEdit{*ignoreEdit}
+			}
+		} else {
+			diagnostic.Data = []types.NamedEdit{*resolutionEdit, *ignoreEdit}
+		}
 		diagnostics = append(diagnostics, *diagnostic)
 	}
 	return diagnostics
+}
+
+func createIgnoreEdit(ruleName string) *types.NamedEdit {
+	switch ruleName {
+	case "ConsistentInstructionCasing":
+		fallthrough
+	case "CopyIgnoredFile":
+		fallthrough
+	case "DuplicateStageName":
+		fallthrough
+	case "FromAsCasing":
+		fallthrough
+	case "FromPlatformFlagConstDisallowed":
+		fallthrough
+	case "InvalidDefaultArgInFrom":
+		fallthrough
+	case "InvalidDefinitionDescription":
+		fallthrough
+	case "JSONArgsRecommended":
+		fallthrough
+	case "LegacyKeyValueFormat":
+		fallthrough
+	case "MaintainerDeprecated":
+		fallthrough
+	case "MultipleInstructionsDisallowed":
+		fallthrough
+	case "NoEmptyContinuation":
+		fallthrough
+	case "RedundantTargetPlatform":
+		fallthrough
+	case "ReservedStageName":
+		fallthrough
+	case "SecretsUsedInArgOrEnv":
+		fallthrough
+	case "StageNameCasing":
+		fallthrough
+	case "UndefinedArgInFrom":
+		fallthrough
+	case "UndefinedVar":
+		fallthrough
+	case "WorkdirRelativePath":
+		return &types.NamedEdit{
+			Title: fmt.Sprintf("Ignore this type of error with check=skip=%v", ruleName),
+			Edit:  fmt.Sprintf("# check=skip=%v\n", ruleName),
+			Range: &protocol.Range{
+				Start: protocol.Position{Line: 0, Character: 0},
+				End:   protocol.Position{Line: 0, Character: 0},
+			},
+		}
+	}
+	return nil
 }
 
 func lintWithBuildKitBinary(contextPath, source string, doc document.DockerfileDocument, content string) ([]protocol.Diagnostic, error) {
