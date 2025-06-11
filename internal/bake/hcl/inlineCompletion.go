@@ -40,6 +40,9 @@ func shouldSuggest(content []byte, body *hclsyntax.Body, position protocol.Posit
 	}
 
 	lines := strings.Split(string(content), "\n")
+	if len(lines) <= int(position.Line) {
+		return false
+	}
 	return strings.TrimSpace(lines[position.Line]) != "}"
 }
 
