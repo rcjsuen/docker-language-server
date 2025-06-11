@@ -31,12 +31,16 @@ func TestInlineCompletion(t *testing.T) {
 	testCases := []struct {
 		name              string
 		content           string
+		line              protocol.UInteger
+		character         protocol.UInteger
 		dockerfileContent string
 		items             []protocol.InlineCompletionItem
 	}{
 		{
 			name:              "one build stage",
 			content:           "",
+			line:              0,
+			character:         0,
 			dockerfileContent: "FROM scratch AS simple",
 			items: []protocol.InlineCompletionItem{
 				{
@@ -47,6 +51,14 @@ func TestInlineCompletion(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			name:              "outside document bounds",
+			content:           "",
+			line:              1,
+			character:         0,
+			dockerfileContent: "FROM scratch AS simple",
+			items:             nil,
 		},
 	}
 
@@ -81,7 +93,7 @@ func TestInlineCompletion(t *testing.T) {
 			err = conn.Call(context.Background(), protocol.MethodTextDocumentInlineCompletion, protocol.InlineCompletionParams{
 				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
 					TextDocument: protocol.TextDocumentIdentifier{URI: didOpenBakeFile.TextDocument.URI},
-					Position:     protocol.Position{Line: 0, Character: 0},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
 				},
 			}, &result)
 			require.NoError(t, err)
