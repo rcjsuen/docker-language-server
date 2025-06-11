@@ -117,6 +117,14 @@ func TestParse(t *testing.T) {
 							Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 							Edit:  "LABEL org.opencontainers.image.authors=\"test123@docker.com\"",
 						},
+						{
+							Title: "Ignore this type of error with check=skip=MaintainerDeprecated",
+							Edit:  "# check=skip=MaintainerDeprecated\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -143,6 +151,14 @@ func TestParse(t *testing.T) {
 						{
 							Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 							Edit:  "LABEL org.opencontainers.image.authors=\"hello world\"",
+						},
+						{
+							Title: "Ignore this type of error with check=skip=MaintainerDeprecated",
+							Edit:  "# check=skip=MaintainerDeprecated\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
 						},
 					},
 				},
@@ -171,6 +187,14 @@ func TestParse(t *testing.T) {
 							Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 							Edit:  "LABEL org.opencontainers.image.authors=\"hello world\"",
 						},
+						{
+							Title: "Ignore this type of error with check=skip=MaintainerDeprecated",
+							Edit:  "# check=skip=MaintainerDeprecated\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -197,6 +221,14 @@ func TestParse(t *testing.T) {
 						{
 							Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 							Edit:  "LABEL org.opencontainers.image.authors=\"hello world\"",
+						},
+						{
+							Title: "Ignore this type of error with check=skip=MaintainerDeprecated",
+							Edit:  "# check=skip=MaintainerDeprecated\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
 						},
 					},
 				},
@@ -225,6 +257,14 @@ func TestParse(t *testing.T) {
 							Title: "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 							Edit:  "LABEL org.opencontainers.image.authors=\"hello world\"",
 						},
+						{
+							Title: "Ignore this type of error with check=skip=MaintainerDeprecated",
+							Edit:  "# check=skip=MaintainerDeprecated\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -250,6 +290,14 @@ func TestParse(t *testing.T) {
 						{
 							Title: "Convert stage name (TEST) to lowercase (test)",
 							Edit:  "FROM scratch AS test",
+						},
+						{
+							Title: "Ignore this type of error with check=skip=StageNameCasing",
+							Edit:  "# check=skip=StageNameCasing\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
 						},
 					},
 				},
@@ -277,6 +325,14 @@ func TestParse(t *testing.T) {
 							Title: "Convert stage name (MixeD) to lowercase (mixed)",
 							Edit:  "FROM scratch AS mixed",
 						},
+						{
+							Title: "Ignore this type of error with check=skip=StageNameCasing",
+							Edit:  "# check=skip=StageNameCasing\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -302,6 +358,14 @@ func TestParse(t *testing.T) {
 						{
 							Title: "Remove unnecessary --platform flag",
 							Edit:  "FROM alpine AS builder",
+						},
+						{
+							Title: "Ignore this type of error with check=skip=RedundantTargetPlatform",
+							Edit:  "# check=skip=RedundantTargetPlatform\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
 						},
 					},
 				},
@@ -329,6 +393,14 @@ func TestParse(t *testing.T) {
 							Title: "Convert to uppercase",
 							Edit:  "COPY --link . .",
 						},
+						{
+							Title: "Ignore this type of error with check=skip=ConsistentInstructionCasing",
+							Edit:  "# check=skip=ConsistentInstructionCasing\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -354,6 +426,14 @@ func TestParse(t *testing.T) {
 						{
 							Title: "Convert to lowercase",
 							Edit:  "copy --link . .",
+						},
+						{
+							Title: "Ignore this type of error with check=skip=ConsistentInstructionCasing",
+							Edit:  "# check=skip=ConsistentInstructionCasing\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
 						},
 					},
 				},
@@ -388,6 +468,16 @@ func TestParse(t *testing.T) {
 					CodeDescription: &protocol.CodeDescription{
 						HRef: "https://docs.docker.com/go/dockerfile/rule/duplicate-stage-name/",
 					},
+					Data: []types.NamedEdit{
+						{
+							Title: "Ignore this type of error with check=skip=DuplicateStageName",
+							Edit:  "# check=skip=DuplicateStageName\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -407,6 +497,16 @@ func TestParse(t *testing.T) {
 					Code:     &protocol.IntegerOrString{Value: "MultipleInstructionsDisallowed"},
 					CodeDescription: &protocol.CodeDescription{
 						HRef: "https://docs.docker.com/go/dockerfile/rule/multiple-instructions-disallowed/",
+					},
+					Data: []types.NamedEdit{
+						{
+							Title: "Ignore this type of error with check=skip=MultipleInstructionsDisallowed",
+							Edit:  "# check=skip=MultipleInstructionsDisallowed\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},
@@ -428,6 +528,16 @@ func TestParse(t *testing.T) {
 					CodeDescription: &protocol.CodeDescription{
 						HRef: "https://docs.docker.com/go/dockerfile/rule/no-empty-continuation/",
 					},
+					Data: []types.NamedEdit{
+						{
+							Title: "Ignore this type of error with check=skip=NoEmptyContinuation",
+							Edit:  "# check=skip=NoEmptyContinuation\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -447,6 +557,16 @@ func TestParse(t *testing.T) {
 					Code:     &protocol.IntegerOrString{Value: "WorkdirRelativePath"},
 					CodeDescription: &protocol.CodeDescription{
 						HRef: "https://docs.docker.com/go/dockerfile/rule/workdir-relative-path/",
+					},
+					Data: []types.NamedEdit{
+						{
+							Title: "Ignore this type of error with check=skip=WorkdirRelativePath",
+							Edit:  "# check=skip=WorkdirRelativePath\n",
+							Range: &protocol.Range{
+								Start: protocol.Position{Line: 0, Character: 0},
+								End:   protocol.Position{Line: 0, Character: 0},
+							},
+						},
 					},
 				},
 			},

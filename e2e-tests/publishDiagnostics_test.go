@@ -128,6 +128,14 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 							"edit":  "LABEL org.opencontainers.image.authors=\"x\"",
 							"title": "Convert MAINTAINER to a org.opencontainers.image.authors LABEL",
 						},
+						map[string]any{
+							"edit":  "# check=skip=MaintainerDeprecated\n",
+							"title": "Ignore this type of error with check=skip=MaintainerDeprecated",
+							"range": map[string]any{
+								"start": map[string]any{"line": float64(0), "character": float64(0)},
+								"end":   map[string]any{"line": float64(0), "character": float64(0)},
+							},
+						},
 					},
 				},
 			},
@@ -149,6 +157,16 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 					Range: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 6},
+					},
+					Data: []any{
+						map[string]any{
+							"edit":  "# check=skip=JSONArgsRecommended\n",
+							"title": "Ignore this type of error with check=skip=JSONArgsRecommended",
+							"range": map[string]any{
+								"start": map[string]any{"line": float64(0), "character": float64(0)},
+								"end":   map[string]any{"line": float64(0), "character": float64(0)},
+							},
+						},
 					},
 				},
 				{
@@ -241,6 +259,16 @@ func testPublishDiagnostics(t *testing.T, initializeParams protocol.InitializePa
 					Range: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 35},
+					},
+					Data: []any{
+						map[string]any{
+							"edit":  "# check=skip=FromPlatformFlagConstDisallowed\n",
+							"title": "Ignore this type of error with check=skip=FromPlatformFlagConstDisallowed",
+							"range": map[string]any{
+								"start": map[string]any{"line": float64(0), "character": float64(0)},
+								"end":   map[string]any{"line": float64(0), "character": float64(0)},
+							},
+						},
 					},
 				},
 			},
