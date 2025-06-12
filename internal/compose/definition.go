@@ -68,9 +68,11 @@ func dependencyLookup(doc document.ComposeDocument, dependencyType, name string)
 			if mappingNode, ok := doc.Body.(*ast.MappingNode); ok {
 				for _, node := range mappingNode.Values {
 					if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
-						for _, service := range node.Value.(*ast.MappingNode).Values {
-							if s, ok := service.Key.(*ast.StringNode); ok && s.Value == name {
-								return service, u
+						if m, ok := node.Value.(*ast.MappingNode); ok {
+							for _, service := range m.Values {
+								if s, ok := service.Key.(*ast.StringNode); ok && s.Value == name {
+									return service, u
+								}
 							}
 						}
 					}

@@ -443,6 +443,22 @@ services:
 				},
 			},
 		},
+		{
+			name: "dependent file is not defined properly",
+			content: `
+include:
+  - compose.other.yaml
+services:
+  test:
+    networks:
+      - other`,
+			otherContent: `
+networks: string`,
+			line:      6,
+			character: 11,
+			locations: nil,
+			links:     nil,
+		},
 	}
 
 	for _, tc := range testCases {
