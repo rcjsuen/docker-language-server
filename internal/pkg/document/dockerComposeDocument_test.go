@@ -112,6 +112,12 @@ include:
   - compose.yaml`,
 			},
 		},
+		{
+			name:            "include node is invalid",
+			content:         "include:",
+			resolved:        true,
+			externalContent: map[string]string{},
+		},
 	}
 
 	folder := os.TempDir()

@@ -130,22 +130,24 @@ func (d *composeDocument) includedPaths() []string {
 		if node, ok := doc.Body.(*ast.MappingNode); ok {
 			for _, topNode := range node.Values {
 				if topNode.Key.GetToken().Value == "include" {
-					for _, sequenceValue := range topNode.Value.(*ast.SequenceNode).Values {
-						if stringArrayItem, ok := sequenceValue.(*ast.StringNode); ok {
-							paths = append(paths, stringArrayItem.Value)
-						} else if includeObject, ok := sequenceValue.(*ast.MappingNode); ok {
-							for _, includeValues := range includeObject.Values {
-								if includeValues.Key.GetToken().Value == "path" {
-									if pathArrayItem, ok := includeValues.Value.(*ast.StringNode); ok {
-										paths = append(paths, pathArrayItem.Value)
-									} else if pathSequence, ok := includeValues.Value.(*ast.SequenceNode); ok {
-										for _, sequenceValue := range pathSequence.Values {
-											if s, ok := sequenceValue.(*ast.StringNode); ok {
-												paths = append(paths, s.Value)
+					if sequenceNode, ok := topNode.Value.(*ast.SequenceNode); ok {
+						for _, sequenceValue := range sequenceNode.Values {
+							if stringArrayItem, ok := sequenceValue.(*ast.StringNode); ok {
+								paths = append(paths, stringArrayItem.Value)
+							} else if includeObject, ok := sequenceValue.(*ast.MappingNode); ok {
+								for _, includeValues := range includeObject.Values {
+									if includeValues.Key.GetToken().Value == "path" {
+										if pathArrayItem, ok := includeValues.Value.(*ast.StringNode); ok {
+											paths = append(paths, pathArrayItem.Value)
+										} else if pathSequence, ok := includeValues.Value.(*ast.SequenceNode); ok {
+											for _, sequenceValue := range pathSequence.Values {
+												if s, ok := sequenceValue.(*ast.StringNode); ok {
+													paths = append(paths, s.Value)
+												}
 											}
 										}
+										break
 									}
-									break
 								}
 							}
 						}
