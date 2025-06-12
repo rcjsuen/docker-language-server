@@ -18,6 +18,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/completion
     - fix error case triggered by using code completion before the first node ([#314](https://github.com/docker/docker-language-server/issues/314))
+  - textDocument/hover
+    - protect the processing of included files if the node is not a proper array ([#322](https://github.com/docker/docker-language-server/issues/322))
 - Bake
   - textDocument/inlineCompletion
     - check that the request is within the document's bounds when processing the request ([#318](https://github.com/docker/docker-language-server/issues/318))

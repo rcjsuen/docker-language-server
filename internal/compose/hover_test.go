@@ -1127,6 +1127,18 @@ volumes:
 			character: 13,
 			result:    nil,
 		},
+		{
+			name: "reference missing and include node is invalid",
+			content: `
+include:
+services:
+  backend:
+    volumes:
+      - volA:/mount`,
+			line:      5,
+			character: 10,
+			result:    nil,
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
