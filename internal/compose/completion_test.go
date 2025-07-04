@@ -2762,6 +2762,13 @@ services:
 				},
 			},
 		},
+		{
+			name:      "empty JSON object",
+			content:   "{}",
+			line:      0,
+			character: 0,
+			list:      nil,
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

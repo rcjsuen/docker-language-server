@@ -187,6 +187,9 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	if file == nil || len(file.Docs) == 0 {
 		return nil, nil
 	}
+	if m, ok := file.Docs[0].Body.(*ast.MappingNode); ok && len(m.Values) == 0 {
+		return nil, nil
+	}
 
 	lspLine := int(params.Position.Line)
 	topLevelNodeOffset := calculateTopLevelNodeOffset(file)
