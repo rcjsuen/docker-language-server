@@ -7,7 +7,7 @@ require (
 	github.com/bugsnag/bugsnag-go v2.5.1+incompatible
 	github.com/docker/buildx v0.25.0
 	github.com/go-git/go-git/v5 v5.14.0
-	github.com/goccy/go-yaml v1.17.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
 	github.com/hashicorp/hcl/v2 v2.23.0
 	github.com/moby/buildkit v0.23.0
