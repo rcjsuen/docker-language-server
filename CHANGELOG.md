@@ -9,6 +9,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/completion
     - prevent errors if an empty JSON object is the content of the YAML file ([#330](https://github.com/docker/docker-language-server/issues/330))
+    - check character offset before processing to prevent errors ([#333](https://github.com/docker/docker-language-server/issues/333))
 
 ## [0.12.0] - 2025-06-12
 

@@ -4269,6 +4269,20 @@ services:
 				}
 			},
 		},
+		{
+			name:              "target attribute finds nothing",
+			dockerfileContent: "FROM scratch",
+			content: `
+services:
+  postgres:
+    build:
+      target:  base`,
+			line:      4,
+			character: 14,
+			list: func() *protocol.CompletionList {
+				return nil
+			},
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
