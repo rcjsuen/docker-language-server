@@ -4,6 +4,12 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- Compose
+  - textDocument/documentLink
+    - support recursing into anchors when searching for document links ([#329](https://github.com/docker/docker-language-server/issues/329))
+
 ### Fixed
 
 - Compose
