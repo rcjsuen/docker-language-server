@@ -54,10 +54,7 @@ func createFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.Doc
 }
 
 func stringNode(value ast.Node) *ast.StringNode {
-	if anchor, ok := value.(*ast.AnchorNode); ok {
-		value = anchor.Value
-	}
-	if s, ok := value.(*ast.StringNode); ok {
+	if s, ok := resolveAnchor(value).(*ast.StringNode); ok {
 		return s
 	}
 	return nil
@@ -65,7 +62,7 @@ func stringNode(value ast.Node) *ast.StringNode {
 
 func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if serviceNode.Key.GetToken().Value == "build" {
-		if mappingNode, ok := serviceNode.Value.(*ast.MappingNode); ok {
+		if mappingNode, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
 				if buildAttribute.Key.GetToken().Value == "dockerfile" {
 					return createFileLink(u, buildAttribute)
@@ -153,7 +150,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 		case "services":
 			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
 				for _, node := range mappingNode.Values {
-					if serviceAttributes, ok := node.Value.(*ast.MappingNode); ok {
+					if serviceAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, serviceAttribute := range serviceAttributes.Values {
 							link := createImageLink(serviceAttribute)
 							if link != nil {
@@ -171,7 +168,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 		case "configs":
 			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
 				for _, node := range mappingNode.Values {
-					if configAttributes, ok := node.Value.(*ast.MappingNode); ok {
+					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
 							link := createObjectFileLink(u, configAttribute)
 							if link != nil {
@@ -184,7 +181,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 		case "secrets":
 			if mappingNode, ok := n.Value.(*ast.MappingNode); ok {
 				for _, node := range mappingNode.Values {
-					if configAttributes, ok := node.Value.(*ast.MappingNode); ok {
+					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
 							link := createObjectFileLink(u, configAttribute)
 							if link != nil {
