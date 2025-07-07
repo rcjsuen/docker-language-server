@@ -612,7 +612,7 @@ services:
 	}
 }
 
-func TestDocumentLink_ServiceDockerfileLinks(t *testing.T) {
+func TestDocumentLink_ServiceBuildDockerfileLinks(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), t.Name())
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
 
@@ -710,6 +710,103 @@ services:
 	}
 }
 
+func TestDocumentLink_ServiceCredentialSpecFileLinks(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), t.Name())
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
+
+	testCases := []struct {
+		name      string
+		content   string
+		path      string
+		linkRange protocol.Range
+	}{
+		{
+			name: "./credential-spec.json",
+			content: `
+services:
+  test:
+    credential_spec:
+      file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+		{
+			name: `"./credential-spec.json"`,
+			content: `
+services:
+  test:
+    credential_spec:
+      file: "./credential-spec.json"`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 13},
+				End:   protocol.Position{Line: 4, Character: 35},
+			},
+		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+secrets:
+  test:
+    credential_spec:
+      file: &credentialSpecFile
+  test2:
+    credential_spec:
+      file: *credentialSpecFile`,
+		},
+		{
+			name: "anchor has string content",
+			content: `
+services:
+  test:
+    credential_spec:
+      file: &credentialSpecFile ./credential-spec.json
+  test2:
+    credential_spec:
+      file: *credentialSpecFile`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 32},
+				End:   protocol.Position{Line: 4, Character: 54},
+			},
+		},
+		{
+			name: "anchor on the credential_spec object",
+			content: `
+services:
+  test:
+    credential_spec: &anchor
+      file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			if tc.path == "" {
+				require.Equal(t, []protocol.DocumentLink{}, links)
+			} else {
+				link := protocol.DocumentLink{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				}
+				require.Equal(t, []protocol.DocumentLink{link}, links)
+			}
+		})
+	}
+}
 func TestDocumentLink_ConfigFileLinks(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), t.Name())
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))

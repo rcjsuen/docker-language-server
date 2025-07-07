@@ -60,11 +60,11 @@ func stringNode(value ast.Node) *ast.StringNode {
 	return nil
 }
 
-func createDockerfileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
-	if serviceNode.Key.GetToken().Value == "build" {
+func createdNestedLink(u *url.URL, serviceNode *ast.MappingValueNode, parent, child string) *protocol.DocumentLink {
+	if serviceNode.Key.GetToken().Value == parent {
 		if mappingNode, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
-				if buildAttribute.Key.GetToken().Value == "dockerfile" {
+				if buildAttribute.Key.GetToken().Value == child {
 					return createFileLink(u, buildAttribute)
 				}
 			}
@@ -157,7 +157,12 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 								links = append(links, *link)
 							}
 
-							link = createDockerfileLink(u, serviceAttribute)
+							link = createdNestedLink(u, serviceAttribute, "build", "dockerfile")
+							if link != nil {
+								links = append(links, *link)
+							}
+
+							link = createdNestedLink(u, serviceAttribute, "credential_spec", "file")
 							if link != nil {
 								links = append(links, *link)
 							}
