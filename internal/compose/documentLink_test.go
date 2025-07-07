@@ -545,6 +545,23 @@ services:
 			},
 		},
 		{
+			name: "anchor on the service object",
+			content: `
+services:
+  test: &anchor
+    image: alpine`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
 			name: "invalid services",
 			content: `
 services:
@@ -658,6 +675,19 @@ services:
 				End:   protocol.Position{Line: 4, Character: 37},
 			},
 		},
+		{
+			name: "anchor on the build object",
+			content: `
+services:
+  test:
+    build: &anchor
+      dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -737,6 +767,18 @@ configs:
 				End:   protocol.Position{Line: 3, Character: 34},
 			},
 		},
+		{
+			name: "anchor on the config object",
+			content: `
+configs:
+  test: &anchor
+    file: ./httpd.conf`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 22},
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -814,6 +856,18 @@ secrets:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 3, Character: 22},
 				End:   protocol.Position{Line: 3, Character: 35},
+			},
+		},
+		{
+			name: "anchor on the secret object",
+			content: `
+secrets:
+  test: &anchor
+    file: ./server.cert`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 23},
 			},
 		},
 	}
