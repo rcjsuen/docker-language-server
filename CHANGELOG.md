@@ -9,6 +9,7 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/documentLink
     - support recursing into anchors when searching for document links ([#329](https://github.com/docker/docker-language-server/issues/329))
+    - return document links for the `file` attribute of a service object's `credential_spec` ([#338](https://github.com/docker/docker-language-server/issues/338))
 
 ### Fixed
 
