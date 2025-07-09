@@ -3964,6 +3964,28 @@ secrets:
 				},
 			},
 		},
+		{
+			name: "model names suggested",
+			content: `
+services:
+  app:
+    image: app
+    models:
+      - 
+models:
+  ai_model:
+    model: ai/model`,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:    "ai_model",
+						TextEdit: textEdit("ai_model", 5, 8, 0),
+					},
+				},
+			},
+		},
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))

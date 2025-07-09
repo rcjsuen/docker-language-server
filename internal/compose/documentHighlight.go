@@ -277,10 +277,12 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 		var volumeRefs []*token.Token
 		var configRefs []*token.Token
 		var secretRefs []*token.Token
+		var modelRefs []*token.Token
 		var networkDeclarations []*token.Token
 		var volumeDeclarations []*token.Token
 		var configDeclarations []*token.Token
 		var secretDeclarations []*token.Token
+		var modelDeclarations []*token.Token
 		for _, node := range mappingNode.Values {
 			name, value := convertTopLevelNode(node)
 			if name == nil || value == nil {
@@ -299,6 +301,7 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 				networkRefs = serviceDependencyReferences(value, "networks", false)
 				configRefs = serviceDependencyReferences(value, "configs", true)
 				secretRefs = serviceDependencyReferences(value, "secrets", true)
+				modelRefs = serviceDependencyReferences(value, "models", false)
 				volumeRefs = volumeReferences(value)
 			case "networks":
 				networkDeclarations = declarations(value)
@@ -308,6 +311,8 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 				configDeclarations = declarations(value)
 			case "secrets":
 				secretDeclarations = declarations(value)
+			case "models":
+				modelDeclarations = declarations(value)
 			}
 		}
 		name, highlights := highlightReferences("networks", networkRefs, networkDeclarations, line, character)
@@ -323,6 +328,10 @@ func DocumentHighlights(doc document.ComposeDocument, position protocol.Position
 			return name, highlights
 		}
 		name, highlights = highlightReferences("secrets", secretRefs, secretDeclarations, line, character)
+		if len(highlights.documentHighlights) > 0 {
+			return name, highlights
+		}
+		name, highlights = highlightReferences("models", modelRefs, modelDeclarations, line, character)
 		if len(highlights.documentHighlights) > 0 {
 			return name, highlights
 		}

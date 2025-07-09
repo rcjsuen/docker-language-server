@@ -156,6 +156,25 @@ func TestDocumentSymbol(t *testing.T) {
 			},
 		},
 		{
+			name: "models block",
+			content: `models:
+  ai_model:`,
+			symbols: []*protocol.DocumentSymbol{
+				{
+					Name: "ai_model",
+					Kind: protocol.SymbolKindModule,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 10},
+					},
+					SelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 2},
+						End:   protocol.Position{Line: 1, Character: 10},
+					},
+				},
+			},
+		},
+		{
 			name: "include array",
 			content: `include:
   - file.yml`,
