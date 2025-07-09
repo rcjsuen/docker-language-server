@@ -144,6 +144,32 @@ func TestDefinition_Secrets(t *testing.T) {
 	}
 }
 
+func TestDefinition_Models(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range modelReferenceTestCases {
+		doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+		params := protocol.DefinitionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+				Position:     protocol.Position{Line: tc.line, Character: tc.character},
+			},
+		}
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			locations, err := Definition(context.Background(), false, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.locations(composeFileURI), locations)
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			links, err := Definition(context.Background(), true, doc, &params)
+			require.NoError(t, err)
+			require.Equal(t, tc.links(composeFileURI), links)
+		})
+	}
+}
+
 func TestDefinition_Fragments(t *testing.T) {
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
 	u := uri.URI(composeFileURI)

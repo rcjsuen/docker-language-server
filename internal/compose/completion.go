@@ -479,6 +479,7 @@ func createBuildStageItems(params *protocol.CompletionParams, manager *document.
 func dependencyCompletionItems(file *ast.File, u *url.URL, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	dependency := map[string]string{
 		"depends_on": "services",
+		"models":     "models",
 		"networks":   "networks",
 	}
 	for serviceAttribute, dependencyType := range dependency {

@@ -8,9 +8,21 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 - Compose
   - update schema to the latest version
+  - textDocument/completion
+    - support completing model object names ([#343](https://github.com/docker/docker-language-server/issues/343))
+  - textDocument/definition
+    - support jumping to referenced model objects ([#343](https://github.com/docker/docker-language-server/issues/343))
+  - textDocument/documentHighlight
+    - support highlighting referenced models objects ([#343](https://github.com/docker/docker-language-server/issues/343))
   - textDocument/documentLink
     - support recursing into anchors when searching for document links ([#329](https://github.com/docker/docker-language-server/issues/329))
     - return document links for the `file` attribute of a service object's `credential_spec` ([#338](https://github.com/docker/docker-language-server/issues/338))
+  - textDocument/documentSymbol
+    - show model objects in the document symbol tree ([#343](https://github.com/docker/docker-language-server/issues/343))
+  - textDocument/prepareRename
+    - allow preparing rename on model objects ([#343](https://github.com/docker/docker-language-server/issues/343))
+  - textDocument/rename
+    - support renaming model objects ([#343](https://github.com/docker/docker-language-server/issues/343))
 
 ### Fixed
 

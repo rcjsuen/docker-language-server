@@ -4539,6 +4539,763 @@ func TestDocumentHighlight_Secrets(t *testing.T) {
 	}
 }
 
+var modelReferenceTestCases = []struct {
+	name          string
+	content       string
+	line          protocol.UInteger
+	character     protocol.UInteger
+	locations     func(protocol.DocumentUri) any
+	links         func(protocol.DocumentUri) any
+	ranges        []protocol.DocumentHighlight
+	renameEdits   func(protocol.DocumentUri) *protocol.WorkspaceEdit
+	prepareRename *protocol.Range
+}{
+	{
+		name: "write highlight on a models object",
+		content: `
+models:
+  test:`,
+		line:      2,
+		character: 4,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 2, 2, 6, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 2},
+								End:   protocol.Position{Line: 2, Character: 6},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
+		},
+	},
+	{
+		name: "write highlight on a model with the top level models object value anchored",
+		content: `
+models: &anchor
+  test:`,
+		line:      2,
+		character: 4,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 2},
+				End:   protocol.Position{Line: 2, Character: 6},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 2, 2, 6, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 2},
+								End:   protocol.Position{Line: 2, Character: 6},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 2},
+			End:   protocol.Position{Line: 2, Character: 6},
+		},
+	},
+	{
+		name: "read highlight on an undefined models array item",
+		content: `
+services:
+  test:
+    models:
+      - test2`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read highlight on an undefined models array item with the models array anchored",
+		content: `
+services:
+  test:
+    &anchor models:
+      - test2`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read highlight on an undefined models array item with the models array value anchor",
+		content: `
+services:
+  test:
+    models: &anchor
+      - test2`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read highlight on an undefined models array item with a string value anchored",
+		content: `
+services:
+  test:
+    models:
+      - &anchor test2`,
+		line:      4,
+		character: 18,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 16, 4, 21, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 16},
+								End:   protocol.Position{Line: 4, Character: 21},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 16},
+			End:   protocol.Position{Line: 4, Character: 21},
+		},
+	},
+	{
+		name: "read highlight on an undefined models object",
+		content: `
+services:
+  test:
+    models:
+      test2:`,
+		line:      4,
+		character: 9,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 6},
+								End:   protocol.Position{Line: 4, Character: 11},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
+		},
+	},
+	{
+		name: "read highlight on an undefined models object with the object itself anchored",
+		content: `
+services:
+  test:
+    models: &anchor
+      test2:`,
+		line:      4,
+		character: 9,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 6},
+								End:   protocol.Position{Line: 4, Character: 11},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
+		},
+	},
+	{
+		name: "read highlight on an undefined volumes array item, duplicated",
+		content: `
+services:
+  test:
+    models:
+      - test2
+      - test2`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any { return nil },
+		links:     func(u protocol.DocumentUri) any { return nil },
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+			documentHighlight(5, 8, 5, 13, protocol.DocumentHighlightKindRead),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 5, Character: 8},
+								End:   protocol.Position{Line: 5, Character: 13},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read/write highlight on a models array item (cursor on read)",
+		content: `
+services:
+  test:
+    models:
+      - test2
+models:
+  test2:`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 8},
+				End:   protocol.Position{Line: 4, Character: 13},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+			documentHighlight(6, 2, 6, 7, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 2},
+								End:   protocol.Position{Line: 6, Character: 7},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 8},
+			End:   protocol.Position{Line: 4, Character: 13},
+		},
+	},
+	{
+		name: "read/write highlight on a models array item (cursor on write)",
+		content: `
+services:
+  test:
+    models:
+      - test2
+models:
+  test2:`,
+		line:      6,
+		character: 5,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 8, 4, 13, protocol.DocumentHighlightKindRead),
+			documentHighlight(6, 2, 6, 7, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 8},
+								End:   protocol.Position{Line: 4, Character: 13},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 2},
+								End:   protocol.Position{Line: 6, Character: 7},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
+		},
+	},
+	{
+		name: "read/write highlight on a models object (cursor on read)",
+		content: `
+services:
+  test:
+    models:
+      test2:
+models:
+  test2:`,
+		line:      4,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 6},
+				End:   protocol.Position{Line: 4, Character: 11},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+			documentHighlight(6, 2, 6, 7, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 6},
+								End:   protocol.Position{Line: 4, Character: 11},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 2},
+								End:   protocol.Position{Line: 6, Character: 7},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 4, Character: 6},
+			End:   protocol.Position{Line: 4, Character: 11},
+		},
+	},
+	{
+		name: "read/write highlight on a models object (cursor on write)",
+		content: `
+services:
+  test:
+    models:
+      test2:
+models:
+  test2:`,
+		line:      6,
+		character: 5,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 6, Character: 2},
+				End:   protocol.Position{Line: 6, Character: 7},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(4, 6, 4, 11, protocol.DocumentHighlightKindRead),
+			documentHighlight(6, 2, 6, 7, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 4, Character: 6},
+								End:   protocol.Position{Line: 4, Character: 11},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 6, Character: 2},
+								End:   protocol.Position{Line: 6, Character: 7},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 6, Character: 2},
+			End:   protocol.Position{Line: 6, Character: 7},
+		},
+	},
+	{
+		name: "anchor name conflicts with a model (cursor on anchor)",
+		content: `
+services:
+  first: &second
+    image: scratch
+    models:
+      - second
+models:
+  second:`,
+		line:      2,
+		character: 13,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 10},
+				End:   protocol.Position{Line: 2, Character: 16},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 10},
+				End:   protocol.Position{Line: 2, Character: 16},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 10},
+				End:   protocol.Position{Line: 2, Character: 16},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(2, 10, 2, 16, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 2, Character: 10},
+								End:   protocol.Position{Line: 2, Character: 16},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 2, Character: 10},
+			End:   protocol.Position{Line: 2, Character: 16},
+		},
+	},
+	{
+		name: "anchor name conflicts with a model (cursor on read reference)",
+		content: `
+services:
+  first: &second
+    image: scratch
+    models:
+      - second
+models:
+  second:`,
+		line:      5,
+		character: 10,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 7, Character: 2},
+				End:   protocol.Position{Line: 7, Character: 8},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 7, Character: 2},
+				End:   protocol.Position{Line: 7, Character: 8},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 5, Character: 8},
+				End:   protocol.Position{Line: 5, Character: 14},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(5, 8, 5, 14, protocol.DocumentHighlightKindRead),
+			documentHighlight(7, 2, 7, 8, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 5, Character: 8},
+								End:   protocol.Position{Line: 5, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 2},
+								End:   protocol.Position{Line: 7, Character: 8},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 5, Character: 8},
+			End:   protocol.Position{Line: 5, Character: 14},
+		},
+	},
+	{
+		name: "anchor name conflicts with a model (cursor on write reference)",
+		content: `
+services:
+  first: &second
+    image: scratch
+    models:
+      - second
+models:
+  second:`,
+		line:      7,
+		character: 6,
+		locations: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(false, protocol.Range{
+				Start: protocol.Position{Line: 7, Character: 2},
+				End:   protocol.Position{Line: 7, Character: 8},
+			}, nil, u)
+		},
+		links: func(u protocol.DocumentUri) any {
+			return types.CreateDefinitionResult(true, protocol.Range{
+				Start: protocol.Position{Line: 7, Character: 2},
+				End:   protocol.Position{Line: 7, Character: 8},
+			}, &protocol.Range{
+				Start: protocol.Position{Line: 7, Character: 2},
+				End:   protocol.Position{Line: 7, Character: 8},
+			}, u)
+		},
+		ranges: []protocol.DocumentHighlight{
+			documentHighlight(5, 8, 5, 14, protocol.DocumentHighlightKindRead),
+			documentHighlight(7, 2, 7, 8, protocol.DocumentHighlightKindWrite),
+		},
+		renameEdits: func(u protocol.DocumentUri) *protocol.WorkspaceEdit {
+			return &protocol.WorkspaceEdit{
+				Changes: map[protocol.DocumentUri][]protocol.TextEdit{
+					u: {
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 5, Character: 8},
+								End:   protocol.Position{Line: 5, Character: 14},
+							},
+						},
+						{
+							NewText: "newName",
+							Range: protocol.Range{
+								Start: protocol.Position{Line: 7, Character: 2},
+								End:   protocol.Position{Line: 7, Character: 8},
+							},
+						},
+					},
+				},
+			}
+		},
+		prepareRename: &protocol.Range{
+			Start: protocol.Position{Line: 7, Character: 2},
+			End:   protocol.Position{Line: 7, Character: 8},
+		},
+	},
+}
+
+func TestDocumentHighlight_Models(t *testing.T) {
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	u := uri.URI(composeFileURI)
+	for _, tc := range modelReferenceTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(document.NewDocumentManager(), u, 1, []byte(tc.content))
+			ranges, err := DocumentHighlight(doc, protocol.Position{Line: tc.line, Character: tc.character})
+			require.NoError(t, err)
+			require.Equal(t, tc.ranges, ranges)
+		})
+	}
+}
+
 var fragmentTestCases = []struct {
 	name          string
 	content       string

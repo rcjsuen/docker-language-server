@@ -15,6 +15,7 @@ var symbolKinds = map[string]protocol.SymbolKind{
 	"volumes":  protocol.SymbolKindFile,
 	"configs":  protocol.SymbolKindVariable,
 	"secrets":  protocol.SymbolKindKey,
+	"models":   protocol.SymbolKindModule,
 }
 
 func findSymbols(value string, n *ast.MappingValueNode, mapping map[string]protocol.SymbolKind) (result []any) {
