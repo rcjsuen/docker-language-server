@@ -1697,6 +1697,37 @@ services:
 			},
 		},
 		{
+			name: "inner attributes of a model object under the service",
+			content: `
+services:
+  llm:
+    models:
+      other:
+        `,
+			line:      5,
+			character: 8,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label:            "endpoint_var",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Environment variable set to AI model endpoint.",
+						TextEdit:         textEdit("endpoint_var: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "model_var",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Environment variable set to AI model name.",
+						TextEdit:         textEdit("model_var: ", 5, 8, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+		{
 			name: "inner attributes of the build object under service",
 			content: `
 services:
