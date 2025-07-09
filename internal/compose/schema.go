@@ -106,6 +106,7 @@ func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffs
 								return recurseNodeProperties(nodes, line, column, nodeOffset+2, nested.Properties, false)
 							}
 						}
+						return recurseNodeProperties(nodes, line, column, nodeOffset+1, property.Properties, false)
 					}
 				}
 			}
