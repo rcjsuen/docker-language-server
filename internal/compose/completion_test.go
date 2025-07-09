@@ -25,6 +25,10 @@ var topLevelNodes = []protocol.CompletionItem{
 		Documentation: "compose sub-projects to be included.",
 	},
 	{
+		Label:         "models",
+		Documentation: "Language models that will be used by your application.",
+	},
+	{
 		Label:         "name",
 		Documentation: "define the Compose project name, until user defines one explicitly.",
 	},
@@ -481,6 +485,14 @@ func serviceProperties(line, character, prefixLength protocol.UInteger, spacing 
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
 		{
+			Label:            "models",
+			Detail:           types.CreateStringPointer("array or object"),
+			Documentation:    "AI Models to use, referencing entries under the top-level models key.",
+			TextEdit:         textEdit(fmt.Sprintf("models:\n%v      ", spacing), line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
 			Label:            "network_mode",
 			Detail:           types.CreateStringPointer("string"),
 			Documentation:    "Network mode. Values can be 'bridge', 'host', 'none', 'service:[service name]', or 'container:[container name]'.",
@@ -717,6 +729,14 @@ func serviceProperties(line, character, prefixLength protocol.UInteger, spacing 
 			Detail:           types.CreateStringPointer("object"),
 			Documentation:    "Container ulimit options, controlling resource limits for processes inside the container.",
 			TextEdit:         textEdit(fmt.Sprintf("ulimits:\n%v      ", spacing), line, character, prefixLength),
+			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+		},
+		{
+			Label:            "use_api_socket",
+			Detail:           types.CreateStringPointer("boolean"),
+			Documentation:    "Bind mount Docker API socket and required auth.",
+			TextEdit:         textEdit("use_api_socket: ${1|true,false|}", line, character, prefixLength),
 			InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
 			InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
 		},
@@ -4331,14 +4351,6 @@ services:
 			character: 6,
 			list: &protocol.CompletionList{
 				Items: []protocol.CompletionItem{
-					{
-						Label:            "configs",
-						Detail:           types.CreateStringPointer("object"),
-						Documentation:    "Config files to pass to the provider.",
-						TextEdit:         textEdit("configs:\n        ", 4, 6, 0),
-						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
-						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
-					},
 					{
 						Label:            "options",
 						Detail:           types.CreateStringPointer("object"),

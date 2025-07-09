@@ -167,6 +167,10 @@ func testCompletion_Compose(t *testing.T, composeSupport bool) {
 					Documentation: "compose sub-projects to be included.",
 				},
 				{
+					Label:         "models",
+					Documentation: "Language models that will be used by your application.",
+				},
+				{
 					Label:         "name",
 					Documentation: "define the Compose project name, until user defines one explicitly.",
 				},
