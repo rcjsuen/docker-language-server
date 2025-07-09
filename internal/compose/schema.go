@@ -52,6 +52,9 @@ func nodeProperties(nodes []*ast.MappingValueNode, line, column int) ([]*ast.Map
 
 func recurseNodeProperties(nodes []*ast.MappingValueNode, line, column, nodeOffset int, properties map[string]*jsonschema.Schema, arrayAttributes bool) ([]*ast.MappingValueNode, any, bool) {
 	if len(nodes) == nodeOffset {
+		if nodes[len(nodes)-1].Key.GetToken().Position.Column >= column {
+			return nodes, nil, false
+		}
 		return nodes, properties, arrayAttributes
 	}
 	if nodes[nodeOffset].Key.GetToken().Position.Column == column {

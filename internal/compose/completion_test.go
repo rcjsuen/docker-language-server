@@ -2632,6 +2632,18 @@ services:
 			list:      nil,
 		},
 		{
+			name: "indentation considered for regexp object properties",
+			content: `
+services:
+  test:
+    networks:
+      abc:
+      `,
+			line:      5,
+			character: 6,
+			list:      nil,
+		},
+		{
 			name: "reservations completion",
 			content: `
 services:
@@ -4319,7 +4331,7 @@ services:
 			},
 		},
 		{
-			name:              "build completion items include autofilled stages when build is empty",
+			name:              "build completion items include autofilled stages when build is empty when build object has other attributes",
 			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
 			content: `
 services:
