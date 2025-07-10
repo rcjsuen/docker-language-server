@@ -231,10 +231,10 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 
 func extractImageLink(nodeValue string) (string, string) {
 	if strings.HasPrefix(nodeValue, "ghcr.io") {
-		idx := strings.LastIndex(nodeValue, ":")
 		if len(nodeValue) <= 8 {
 			return "", ""
 		}
+		idx := strings.LastIndex(nodeValue, ":")
 		if idx == -1 {
 			return nodeValue, fmt.Sprintf("https://%v", nodeValue)
 		}
@@ -242,10 +242,10 @@ func extractImageLink(nodeValue string) (string, string) {
 	}
 
 	if strings.HasPrefix(nodeValue, "mcr.microsoft.com") {
-		idx := strings.LastIndex(nodeValue, ":")
 		if len(nodeValue) <= 18 {
 			return "", ""
 		}
+		idx := strings.LastIndex(nodeValue, ":")
 		if idx == -1 {
 			return nodeValue, fmt.Sprintf("https://mcr.microsoft.com/artifact/mar/%v", nodeValue[18:])
 		}
@@ -253,10 +253,10 @@ func extractImageLink(nodeValue string) (string, string) {
 	}
 
 	if strings.HasPrefix(nodeValue, "quay.io") {
-		idx := strings.LastIndex(nodeValue, ":")
 		if len(nodeValue) <= 8 {
 			return "", ""
 		}
+		idx := strings.LastIndex(nodeValue, ":")
 		if idx == -1 {
 			return nodeValue, fmt.Sprintf("https://quay.io/repository/%v", nodeValue[8:])
 		}
