@@ -502,6 +502,14 @@ services:
 			links: nil,
 		},
 		{
+			name: "image: \"ghcr.io:\"",
+			content: `
+services:
+  test:
+    image: "ghcr.io:"`,
+			links: []protocol.DocumentLink{},
+		},
+		{
 			name: "image: mcr.microsoft.com/powershell",
 			content: `
 services:
@@ -594,6 +602,14 @@ services:
 			links: nil,
 		},
 		{
+			name: "image: \"mcr.microsoft.com:\"",
+			content: `
+services:
+  test:
+    image: "mcr.microsoft.com:"`,
+			links: []protocol.DocumentLink{},
+		},
+		{
 			name: "image: quay.io/prometheus/node-exporter",
 			content: `
 services:
@@ -650,6 +666,14 @@ services:
   test:
     image: quay.io:`,
 			links: nil,
+		},
+		{
+			name: "image: \"quay.io:\"",
+			content: `
+services:
+  test:
+    image: "quay.io:"`,
+			links: []protocol.DocumentLink{},
 		},
 		{
 			name: "anchors and aliases to nothing",
