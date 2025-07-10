@@ -16,6 +16,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Compose
   - textDocument/completion
     - prevent wildcard object attribute suggestions if the text cursor is not at the right indentation for attributes to be inserted ([#342](https://github.com/docker/docker-language-server/issues/342))
+  - textDocument/documentLink
+    - fix bounds index error if a quoted string just has a registry and the colon character at the end ([#351](https://github.com/docker/docker-language-server/issues/351))
 
 ## [0.13.0] - 2025-07-09
 
