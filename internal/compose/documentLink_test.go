@@ -130,6 +130,41 @@ include:
 			},
 		},
 		{
+			name: "anchor on the include object's attribute",
+			content: `
+include: &anchor
+  - file.yml
+  - path: file2.yml
+  - path:
+    - file3.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 12},
+					},
+					Target:  documentLinkTarget(testsFolder, "file.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file.yml"),
+				},
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 10},
+						End:   protocol.Position{Line: 3, Character: 19},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 5, Character: 6},
+						End:   protocol.Position{Line: 5, Character: 15},
+					},
+					Target:  documentLinkTarget(testsFolder, "file3.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file3.yml"),
+				},
+			},
+		},
+		{
 			name:    "include declared with no content",
 			content: "include:",
 			links:   []protocol.DocumentLink{},
@@ -176,6 +211,105 @@ include:
 					},
 					Target:  documentLinkTarget(testsFolder, "compose.other.yaml"),
 					Tooltip: documentLinkTooltip(testsFolder, "compose.other.yaml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the path's string attribute",
+			content: `
+include:
+  - path: &anchor file2.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 18},
+						End:   protocol.Position{Line: 2, Character: 27},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the path's string attribute name",
+			content: `
+include:
+  - &anchor path: file2.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 18},
+						End:   protocol.Position{Line: 2, Character: 27},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the path object's value",
+			content: `
+include:
+  - path: &anchor
+    - file2.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 6},
+						End:   protocol.Position{Line: 3, Character: 15},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the path array item's string value",
+			content: `
+include:
+  - path:
+    - &anchor file2.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 14},
+						End:   protocol.Position{Line: 3, Character: 23},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the include array item itself",
+			content: `
+include:
+  - &anchor { path: file2.yml }`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 20},
+						End:   protocol.Position{Line: 2, Character: 29},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
+				},
+			},
+		},
+		{
+			name: "anchor on the path object",
+			content: `
+include:
+  - &anchor path:
+    - file2.yml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 6},
+						End:   protocol.Position{Line: 3, Character: 15},
+					},
+					Target:  documentLinkTarget(testsFolder, "file2.yml"),
+					Tooltip: documentLinkTooltip(testsFolder, "file2.yml"),
 				},
 			},
 		},
@@ -545,6 +679,56 @@ services:
 			},
 		},
 		{
+			name: "anchor on the services object",
+			content: `
+services: &anchor
+  test:
+    image: alpine`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
+			name: "anchor on the service object itself",
+			content: `
+services:
+  test: &anchor { image: alpine }`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 25},
+						End:   protocol.Position{Line: 2, Character: 31},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
+			name: "anchor on the image attribute",
+			content: `
+services:
+  test:
+    &anchor image: alpine`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 19},
+						End:   protocol.Position{Line: 3, Character: 25},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
 			name: "anchor on the service object",
 			content: `
 services:
@@ -676,6 +860,56 @@ services:
 			},
 		},
 		{
+			name: "anchor on the services object",
+			content: `
+services: &anchor
+  test:
+    build:
+      dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
+		{
+			name: "anchor on the service JSON object",
+			content: `
+services:
+  test: &anchor { build: { dockerfile: ./Dockerfile2 } }`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 39},
+				End:   protocol.Position{Line: 2, Character: 52},
+			},
+		},
+		{
+			name: "anchor on the service object",
+			content: `
+services:
+  test: &anchor
+    build:
+      dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
+		{
+			name: "anchor on the build attribute inside a JSON object",
+			content: `
+services:
+    backend: {
+      &anchor build: { dockerfile: Dockerfile2 }
+    }`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 35},
+				End:   protocol.Position{Line: 3, Character: 46},
+			},
+		},
+		{
 			name: "anchor on the build object",
 			content: `
 services:
@@ -686,6 +920,19 @@ services:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 4, Character: 18},
 				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
+		{
+			name: "anchor on the dockerfile attribute",
+			content: `
+services:
+  test:
+    build:
+      &anchor dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 26},
+				End:   protocol.Position{Line: 4, Character: 39},
 			},
 		},
 	}
@@ -774,6 +1021,56 @@ services:
 			},
 		},
 		{
+			name: "anchor on the services object",
+			content: `
+services: &anchor
+  test:
+    credential_spec:
+      file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+		{
+			name: "anchor on the service JSON object",
+			content: `
+services:
+  test: &anchor { credential_spec: { file: ./credential-spec.json } }`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 43},
+				End:   protocol.Position{Line: 2, Character: 65},
+			},
+		},
+		{
+			name: "anchor on the service object",
+			content: `
+services:
+  test: &anchor
+    credential_spec:
+      file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+		{
+			name: "anchor on the credential_spec attribute inside a JSON object",
+			content: `
+services:
+    backend: {
+      &anchor credential_spec: { file: ./credential-spec.json }
+    }`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 39},
+				End:   protocol.Position{Line: 3, Character: 61},
+			},
+		},
+		{
 			name: "anchor on the credential_spec object",
 			content: `
 services:
@@ -784,6 +1081,19 @@ services:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 4, Character: 12},
 				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+		{
+			name: "anchor on the file attribute",
+			content: `
+services:
+  test:
+    credential_spec:
+      &anchor file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 20},
+				End:   protocol.Position{Line: 4, Character: 42},
 			},
 		},
 	}
@@ -865,6 +1175,18 @@ configs:
 			},
 		},
 		{
+			name: "anchor on the configs object",
+			content: `
+configs: &anchor
+  test:
+    file: ./httpd.conf`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 22},
+			},
+		},
+		{
 			name: "anchor on the config object",
 			content: `
 configs:
@@ -874,6 +1196,18 @@ configs:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 3, Character: 10},
 				End:   protocol.Position{Line: 3, Character: 22},
+			},
+		},
+		{
+			name: "anchor on the file attribute",
+			content: `
+configs:
+  test:
+    &anchor file: ./httpd.conf`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 18},
+				End:   protocol.Position{Line: 3, Character: 30},
 			},
 		},
 	}
@@ -956,6 +1290,18 @@ secrets:
 			},
 		},
 		{
+			name: "anchor on the secrets object",
+			content: `
+secrets: &anchor
+  test:
+    file: ./server.cert`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 23},
+			},
+		},
+		{
 			name: "anchor on the secret object",
 			content: `
 secrets:
@@ -965,6 +1311,18 @@ secrets:
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 3, Character: 10},
 				End:   protocol.Position{Line: 3, Character: 23},
+			},
+		},
+		{
+			name: "anchor on the file attribute",
+			content: `
+secrets:
+  test:
+    &anchor file: ./server.cert`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 18},
+				End:   protocol.Position{Line: 3, Character: 31},
 			},
 		},
 	}
