@@ -166,6 +166,11 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 							if link != nil {
 								links = append(links, *link)
 							}
+
+							link = createdNestedLink(u, serviceAttribute, "extends", "file")
+							if link != nil {
+								links = append(links, *link)
+							}
 						}
 					}
 				}
