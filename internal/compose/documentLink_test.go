@@ -1117,6 +1117,156 @@ services:
 		})
 	}
 }
+
+func TestDocumentLink_ServiceExtendsFileLinks(t *testing.T) {
+	testsFolder := filepath.Join(os.TempDir(), t.Name())
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
+
+	testCases := []struct {
+		name      string
+		content   string
+		path      string
+		linkRange protocol.Range
+	}{
+		{
+			name: "no anchors",
+			content: `
+services:
+  test2:
+    extends:
+      service: test
+      file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 5, Character: 12},
+				End:   protocol.Position{Line: 5, Character: 32},
+			},
+		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+services:
+  test:
+    extends:
+      file: &file
+  test2:
+    extends:
+      file: *file`,
+		},
+		{
+			name: "anchor has string content",
+			content: `
+services:
+  test:
+    extends:
+      file: &file ./compose.other.yaml
+  test2:
+    extends:
+      file: *file`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 38},
+			},
+		},
+		{
+			name: "anchor on the services object",
+			content: `
+services: &anchor
+  test:
+    extends:
+      file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 32},
+			},
+		},
+		{
+			name: "anchor on the service JSON object",
+			content: `
+services:
+  test: &anchor { extends: { file: ./compose.other.yaml } }`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 2, Character: 35},
+				End:   protocol.Position{Line: 2, Character: 55},
+			},
+		},
+		{
+			name: "anchor on the service object",
+			content: `
+services:
+  test: &anchor
+    extends:
+      file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 32},
+			},
+		},
+		{
+			name: "anchor on the build attribute inside a JSON object",
+			content: `
+services:
+  backend: {
+    &anchor extends: { file: ./compose.other.yaml } 
+  }`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 29},
+				End:   protocol.Position{Line: 3, Character: 49},
+			},
+		},
+		{
+			name: "anchor on the extends object",
+			content: `
+services:
+  test:
+    extends: &anchor
+      file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 32},
+			},
+		},
+		{
+			name: "anchor on the file attribute",
+			content: `
+services:
+  test:
+    extends:
+      &anchor file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "./compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 20},
+				End:   protocol.Position{Line: 4, Character: 40},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			if tc.path == "" {
+				require.Equal(t, []protocol.DocumentLink{}, links)
+			} else {
+				link := protocol.DocumentLink{
+					Range:   tc.linkRange,
+					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
+					Tooltip: types.CreateStringPointer(tc.path),
+				}
+				require.Equal(t, []protocol.DocumentLink{link}, links)
+			}
+		})
+	}
+}
+
 func TestDocumentLink_ConfigFileLinks(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), t.Name())
 	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(testsFolder, "compose.yaml")), "/"))
