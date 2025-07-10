@@ -4,6 +4,12 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- Compose
+  - textDocument/documentLink
+    - add anchor resolution for all supported document links ([#348](https://github.com/docker/docker-language-server/issues/348))
+
 ### Fixed
 
 - Compose
