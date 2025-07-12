@@ -50,6 +50,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, doc document.Compo
 			if result != nil {
 				return result, nil
 			}
+			result = modelHover(doc, mappingNode, nodePath)
+			if result != nil {
+				return result, nil
+			}
 			result = hover(composeSchema, nodePath, line, character, len(lines[params.Position.Line])+1)
 			if result != nil {
 				return result, nil
@@ -149,26 +153,6 @@ func networkHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, no
 	return nil
 }
 
-func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, hovered *token.Token, dependencyType, dependencyName string) *protocol.Hover {
-	for _, node := range mappingNode.Values {
-		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
-			if mappingNode, ok := node.Value.(*ast.MappingNode); ok {
-				for _, service := range mappingNode.Values {
-					if service.Key.GetToken().Value == dependencyName {
-						return createYamlHover(service, hovered)
-					}
-				}
-			}
-		}
-	}
-
-	node, _ := dependencyLookup(doc, dependencyType, dependencyName)
-	if node != nil {
-		return createYamlHover(node, hovered)
-	}
-	return nil
-}
-
 func configHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
 	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
 		// array string
@@ -245,6 +229,36 @@ func volumeHover(doc document.ComposeDocument, params *protocol.HoverParams, map
 				return createDependencyHover(doc, mappingNode, t, "volumes", t.Value)
 			}
 		}
+	}
+	return nil
+}
+
+func modelHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, nodePath []ast.Node) *protocol.Hover {
+	if len(nodePath) == 4 && nodePath[0].GetToken().Value == "services" {
+		if nodePath[2].GetToken().Value == "models" {
+			t := nodePath[3].GetToken()
+			return createDependencyHover(doc, mappingNode, t, "models", t.Value)
+		}
+	}
+	return nil
+}
+
+func createDependencyHover(doc document.ComposeDocument, mappingNode *ast.MappingNode, hovered *token.Token, dependencyType, dependencyName string) *protocol.Hover {
+	for _, node := range mappingNode.Values {
+		if s, ok := node.Key.(*ast.StringNode); ok && s.Value == dependencyType {
+			if mappingNode, ok := node.Value.(*ast.MappingNode); ok {
+				for _, service := range mappingNode.Values {
+					if service.Key.GetToken().Value == dependencyName {
+						return createYamlHover(service, hovered)
+					}
+				}
+			}
+		}
+	}
+
+	node, _ := dependencyLookup(doc, dependencyType, dependencyName)
+	if node != nil {
+		return createYamlHover(node, hovered)
 	}
 	return nil
 }

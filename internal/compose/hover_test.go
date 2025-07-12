@@ -1139,6 +1139,89 @@ services:
 			character: 10,
 			result:    nil,
 		},
+		{
+			name: "models hover with a single item",
+			content: `
+services:
+  app:
+    models:
+      - ai_model
+
+models:
+  ai_model:
+    model: ai/model`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `ai_model:
+  model: ai/model` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 8},
+					End:   protocol.Position{Line: 4, Character: 16},
+				},
+			},
+		},
+		{
+			name: "models hover with multiple items",
+			content: `
+services:
+  app:
+    models:
+      - model1
+      - model2
+
+models:
+  model1:
+    model: ai/model
+  model2:
+    model: ai/all-minilm`,
+			line:      5,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `model2:
+  model: ai/all-minilm` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 5, Character: 8},
+					End:   protocol.Position{Line: 5, Character: 14},
+				},
+			},
+		},
+		{
+			name: "models hover on an object reference",
+			content: `
+services:
+  test:
+    models:
+      my_model:
+        endpoint_var: MODEL_URL
+        model_var: MODEL
+
+models:
+  my_model:
+    model: ai/model`,
+			line:      4,
+			character: 12,
+			result: &protocol.Hover{
+				Contents: protocol.MarkupContent{
+					Kind: protocol.MarkupKindMarkdown,
+					Value: "```YAML\n" + `my_model:
+  model: ai/model` +
+						"\n```",
+				},
+				Range: &protocol.Range{
+					Start: protocol.Position{Line: 4, Character: 6},
+					End:   protocol.Position{Line: 4, Character: 14},
+				},
+			},
+		},
 	}
 
 	composeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
