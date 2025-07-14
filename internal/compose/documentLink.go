@@ -97,6 +97,23 @@ func createObjectFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protoc
 	return nil
 }
 
+func createModelLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+	if resolveAnchor(serviceNode.Key).GetToken().Value == "model" {
+		service := stringNode(serviceNode.Value)
+		if service != nil {
+			linkedText, link := extractModelLink(service.Value)
+			if linkedText != "" {
+				return &protocol.DocumentLink{
+					Range:   createRange(service.GetToken(), len(linkedText)),
+					Target:  types.CreateStringPointer(link),
+					Tooltip: types.CreateStringPointer(link),
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func includedFiles(nodes []ast.Node) []*token.Token {
 	tokens := []*token.Token{}
 	for _, entry := range nodes {
@@ -201,6 +218,19 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 					}
 				}
 			}
+		case "models":
+			if mappingNode, ok := resolveAnchor(n.Value).(*ast.MappingNode); ok {
+				for _, node := range mappingNode.Values {
+					if serviceAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
+						for _, serviceAttribute := range serviceAttributes.Values {
+							link := createModelLink(serviceAttribute)
+							if link != nil {
+								links = append(links, *link)
+							}
+						}
+					}
+				}
+			}
 		}
 		return links
 	}
@@ -261,6 +291,34 @@ func extractImageLink(nodeValue string) (string, string) {
 			return nodeValue, fmt.Sprintf("https://quay.io/repository/%v", nodeValue[8:])
 		}
 		return nodeValue[0:idx], fmt.Sprintf("https://quay.io/repository/%v", nodeValue[8:idx])
+	}
+
+	idx := strings.LastIndex(nodeValue, ":")
+	if idx == -1 {
+		idx := strings.Index(nodeValue, "/")
+		if idx == -1 {
+			return nodeValue, fmt.Sprintf("https://hub.docker.com/_/%v", nodeValue)
+		}
+		return nodeValue, fmt.Sprintf("https://hub.docker.com/r/%v", nodeValue)
+	}
+
+	slashIndex := strings.Index(nodeValue, "/")
+	if slashIndex == -1 {
+		return nodeValue[0:idx], fmt.Sprintf("https://hub.docker.com/_/%v", nodeValue[0:idx])
+	}
+	return nodeValue[0:idx], fmt.Sprintf("https://hub.docker.com/r/%v", nodeValue[0:idx])
+}
+
+func extractModelLink(nodeValue string) (string, string) {
+	if strings.HasPrefix(nodeValue, "hf.co") {
+		if len(nodeValue) <= 6 {
+			return "", ""
+		}
+		idx := strings.LastIndex(nodeValue, ":")
+		if idx == -1 {
+			return nodeValue, fmt.Sprintf("https://%v", nodeValue)
+		}
+		return nodeValue[0:idx], fmt.Sprintf("https://%v", nodeValue[0:idx])
 	}
 
 	idx := strings.LastIndex(nodeValue, ":")

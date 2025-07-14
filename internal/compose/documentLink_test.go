@@ -1520,3 +1520,323 @@ secrets:
 		})
 	}
 }
+
+func TestDocumentLink_ModelsModelLinks(t *testing.T) {
+	testCases := []struct {
+		name    string
+		content string
+		links   []protocol.DocumentLink
+	}{
+		{
+			name: "ai/llama3.3",
+			content: `
+models:
+  modelA:
+    model: ai/llama3.3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 22},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+				},
+			},
+		},
+		{
+			name: "ai/llama3.3:latest",
+			content: `
+models:
+  modelA:
+    model: ai/llama3.3:latest`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 22},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+				},
+			},
+		},
+		{
+			name: "\"ai/llama3.3\"",
+			content: `
+models:
+  modelA:
+    model: "ai/llama3.3"`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 23},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+				},
+			},
+		},
+		{
+			name: "\"ai/llama3.3:\"",
+			content: `
+models:
+  modelA:
+    model: "ai/llama3.3:"`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 23},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/llama3.3"),
+				},
+			},
+		},
+		{
+			name: "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF",
+			content: `
+models:
+  modelA:
+    model: hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 53},
+					},
+					Target:  types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+					Tooltip: types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+				},
+			},
+		},
+		{
+			name: "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest",
+			content: `
+models:
+  modelA:
+    model: hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:latest`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 53},
+					},
+					Target:  types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+					Tooltip: types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+				},
+			},
+		},
+		{
+			name: "\"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF\"",
+			content: `
+models:
+  modelA:
+    model: "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 54},
+					},
+					Target:  types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+					Tooltip: types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+				},
+			},
+		},
+		{
+			name: "\"hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:\"",
+			content: `
+models:
+  modelA:
+    model: "hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF:"`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 54},
+					},
+					Target:  types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+					Tooltip: types.CreateStringPointer("https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF"),
+				},
+			},
+		},
+		{
+			name: "hf.co",
+			content: `
+models:
+  modelA:
+    model: hf.co`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "\"hf.co:\"",
+			content: `
+models:
+  modelA:
+    model: "hf.co:"`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "anchors and aliases to nothing",
+			content: `
+models:
+  model1:
+    model: &aiModelHello
+  model2:
+    model: *aiModelHello`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "anchor on the models object's value",
+			content: `
+models: &anchor
+  model1:
+    model: ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 19},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "anchor on the model object itself",
+			content: `
+models:
+  &anchor model1:
+    model: ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 19},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "anchor on the model object's value",
+			content: `
+models:
+  model1: &anchor
+    model: ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 19},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "anchor on the model object's value as JSON",
+			content: `
+models:
+  model1: &anchor { model: ai/qwen3 }`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 27},
+						End:   protocol.Position{Line: 2, Character: 35},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "anchor on the model attribute's value",
+			content: `
+models:
+  model1:
+    &anchor model: ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 19},
+						End:   protocol.Position{Line: 3, Character: 27},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "anchor on the model attribute's value",
+			content: `
+models:
+  model1:
+    model: &anchor ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 19},
+						End:   protocol.Position{Line: 3, Character: 27},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
+		},
+		{
+			name: "invalid models",
+			content: `
+models:
+  - `,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "two documents",
+			content: `
+---
+models:
+  model1:
+    model: ai/smollm2
+---
+models:
+  model2:
+    model: ai/smollm3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 11},
+						End:   protocol.Position{Line: 4, Character: 21},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/smollm2"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/smollm2"),
+				},
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 8, Character: 11},
+						End:   protocol.Position{Line: 8, Character: 21},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/smollm3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/smollm3"),
+				},
+			},
+		},
+	}
+
+	composeStringURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := document.NewDocumentManager()
+			doc := document.NewComposeDocument(mgr, "docker-compose.yml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.links, links)
+		})
+	}
+}
