@@ -152,7 +152,7 @@ func includedFiles(nodes []ast.Node) []*token.Token {
 }
 
 func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
-	if s, ok := n.Key.(*ast.StringNode); ok {
+	if s, ok := resolveAnchor(n.Key).(*ast.StringNode); ok {
 		links := []protocol.DocumentLink{}
 		switch s.Value {
 		case "include":

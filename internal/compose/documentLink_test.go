@@ -215,6 +215,22 @@ include:
 			},
 		},
 		{
+			name: "anchor on the include object itself",
+			content: `
+&anchor include:
+  - compose.other.yaml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 22},
+					},
+					Target:  documentLinkTarget(testsFolder, "compose.other.yaml"),
+					Tooltip: documentLinkTooltip(testsFolder, "compose.other.yaml"),
+				},
+			},
+		},
+		{
 			name: "anchor on the path's string attribute",
 			content: `
 include:
@@ -703,7 +719,24 @@ services:
 			},
 		},
 		{
-			name: "anchor on the services object",
+			name: "anchor on the services object itself",
+			content: `
+&anchor services:
+  test:
+    image: alpine`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/_/alpine"),
+				},
+			},
+		},
+		{
+			name: "anchor on the services object's value",
 			content: `
 services: &anchor
   test:
@@ -884,7 +917,20 @@ services:
 			},
 		},
 		{
-			name: "anchor on the services object",
+			name: "anchor on the services object itself",
+			content: `
+&anchor services:
+  test:
+    build:
+      dockerfile: ./Dockerfile2`,
+			path: filepath.Join(testsFolder, "Dockerfile2"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 18},
+				End:   protocol.Position{Line: 4, Character: 31},
+			},
+		},
+		{
+			name: "anchor on the services object's value",
 			content: `
 services: &anchor
   test:
@@ -1045,7 +1091,20 @@ services:
 			},
 		},
 		{
-			name: "anchor on the services object",
+			name: "anchor on the services object itself",
+			content: `
+&anchor services:
+  test:
+    credential_spec:
+      file: ./credential-spec.json`,
+			path: filepath.Join(testsFolder, "credential-spec.json"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 34},
+			},
+		},
+		{
+			name: "anchor on the services object's value",
 			content: `
 services: &anchor
   test:
@@ -1194,7 +1253,20 @@ services:
 			},
 		},
 		{
-			name: "anchor on the services object",
+			name: "anchor on the services object itself",
+			content: `
+&anchor services:
+  test:
+    extends:
+      file: ./compose.other.yaml`,
+			path: filepath.Join(testsFolder, "compose.other.yaml"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 4, Character: 12},
+				End:   protocol.Position{Line: 4, Character: 32},
+			},
+		},
+		{
+			name: "anchor on the services object's value",
 			content: `
 services: &anchor
   test:
@@ -1349,7 +1421,19 @@ configs:
 			},
 		},
 		{
-			name: "anchor on the configs object",
+			name: "anchor on the configs object itself",
+			content: `
+&anchor configs:
+  test:
+    file: ./httpd.conf`,
+			path: filepath.Join(testsFolder, "httpd.conf"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 22},
+			},
+		},
+		{
+			name: "anchor on the configs object's value",
 			content: `
 configs: &anchor
   test:
@@ -1464,7 +1548,19 @@ secrets:
 			},
 		},
 		{
-			name: "anchor on the secrets object",
+			name: "anchor on the secrets object itself",
+			content: `
+&anchor secrets:
+  test:
+    file: ./server.cert`,
+			path: filepath.Join(testsFolder, "server.cert"),
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 3, Character: 10},
+				End:   protocol.Position{Line: 3, Character: 23},
+			},
+		},
+		{
+			name: "anchor on the secrets object's value",
 			content: `
 secrets: &anchor
   test:
@@ -1688,6 +1784,23 @@ models:
   model2:
     model: *aiModelHello`,
 			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "anchor on the models object itself",
+			content: `
+&anchor models:
+  model1:
+    model: ai/qwen3`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 11},
+						End:   protocol.Position{Line: 3, Character: 19},
+					},
+					Target:  types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+					Tooltip: types.CreateStringPointer("https://hub.docker.com/r/ai/qwen3"),
+				},
+			},
 		},
 		{
 			name: "anchor on the models object's value",
