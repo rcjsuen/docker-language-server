@@ -11,6 +11,7 @@ All notable changes to the Docker Language Server will be documented in this fil
     - add anchor resolution for all supported document links ([#348](https://github.com/docker/docker-language-server/issues/348))
     - return document links for the `file` attribute of a service object's `extends` attribute object ([#172](https://github.com/docker/docker-language-server/issues/172))
     - provide document links for models on Docker Hub and Hugging Face ([#356](https://github.com/docker/docker-language-server/issues/356))
+    - return document links for the `label_file` attribute of a service object ([#360](https://github.com/docker/docker-language-server/issues/360))
   - textDocument/hover
     - support hovering over referenced models ([#343](https://github.com/docker/docker-language-server/issues/343))
 

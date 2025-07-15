@@ -90,6 +90,26 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	return nil
 }
 
+func createLabelFileLink(u *url.URL, serviceNode *ast.MappingValueNode) []protocol.DocumentLink {
+	if resolveAnchor(serviceNode.Key).GetToken().Value == "label_file" {
+		if sequence, ok := resolveAnchor(serviceNode.Value).(*ast.SequenceNode); ok {
+			links := []protocol.DocumentLink{}
+			for _, node := range sequence.Values {
+				if s, ok := resolveAnchor(node).(*ast.StringNode); ok {
+					links = append(links, *createLink(u, s.GetToken()))
+				}
+			}
+			return links
+		}
+
+		link := createFileLink(u, serviceNode)
+		if link != nil {
+			return []protocol.DocumentLink{*link}
+		}
+	}
+	return nil
+}
+
 func createObjectFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == "file" {
 		return createFileLink(u, serviceNode)
@@ -188,6 +208,9 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 							if link != nil {
 								links = append(links, *link)
 							}
+
+							labelFileLinks := createLabelFileLink(u, serviceAttribute)
+							links = append(links, labelFileLinks...)
 						}
 					}
 				}
