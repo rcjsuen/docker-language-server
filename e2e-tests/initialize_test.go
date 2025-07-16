@@ -182,10 +182,28 @@ func TestInitializeFunctionIsolatedCall(t *testing.T) {
 			workspaceFolders: []string{"/a/b/c"},
 		},
 		{
+			name:             "wsl$ rootUri",
+			params:           protocol.InitializeParams{RootURI: types.CreateStringPointer("file://wsl%24/docker-desktop/tmp")},
+			workspaceFolders: []string{"\\\\wsl$\\docker-desktop\\tmp"},
+		},
+		{
+			name: "wsl$ workspace folder",
+			params: protocol.InitializeParams{
+				WorkspaceFolders: []protocol.WorkspaceFolder{{Name: "tmp", URI: "file://wsl%24/docker-desktop/tmp"}},
+			},
+			workspaceFolders: []string{"\\\\wsl$\\docker-desktop\\tmp"},
+		},
+		{
 			name:             "invalid rootUri",
 			params:           protocol.InitializeParams{RootURI: types.CreateStringPointer(":/no/scheme")},
 			workspaceFolders: nil,
 			err:              &jsonrpc2.Error{Code: -32602, Message: "invalid rootUri specified in the initialize request (:/no/scheme): parse \":/no/scheme\": missing protocol scheme"},
+		},
+		{
+			name:             "unrecognized dollar sign",
+			params:           protocol.InitializeParams{RootURI: types.CreateStringPointer("file://abc%24/hello/tmp")},
+			workspaceFolders: nil,
+			err:              &jsonrpc2.Error{Code: -32602, Message: "invalid rootUri specified in the initialize request (file://abc%24/hello/tmp): parse \"file://abc%24/hello/tmp\": invalid URL escape \"%24\""},
 		},
 	}
 

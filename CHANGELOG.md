@@ -17,6 +17,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ### Fixed
 
+- initialize
+  - convert WSL URIs with custom code as the dollar sign in the host cannot be parsed ([#362](https://github.com/docker/docker-language-server/issues/362))
 - Compose
   - textDocument/completion
     - prevent wildcard object attribute suggestions if the text cursor is not at the right indentation for attributes to be inserted ([#342](https://github.com/docker/docker-language-server/issues/342))

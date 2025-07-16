@@ -2,9 +2,11 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"slices"
+	"strings"
 
 	"github.com/docker/docker-language-server/internal/bake/hcl"
 	"github.com/docker/docker-language-server/internal/pkg/buildkit"
@@ -16,6 +18,23 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/sourcegraph/jsonrpc2"
 )
+
+func urlPath(u string) (string, error) {
+	parsed, err := url.Parse(u)
+	if err != nil {
+		var ee url.EscapeError
+		if errors.As(err, &ee) && strings.HasSuffix(err.Error(), "invalid URL escape \"%24\"") {
+			if strings.HasPrefix(u, "file://wsl%24/") {
+				return "\\\\wsl$\\" + strings.ReplaceAll(u[len("file://wsl%24/"):], "/", "\\"), nil
+			}
+		}
+		return "", &jsonrpc2.Error{
+			Code:    -32602,
+			Message: fmt.Sprintf("invalid rootUri specified in the initialize request (%v): %v", u, err.Error()),
+		}
+	}
+	return parsed.Path, nil
+}
 
 func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams) (any, error) {
 	bytes, err := json.Marshal(params.Capabilities.Experimental)
@@ -44,10 +63,11 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 
 	workspaceFolders := []string{}
 	for _, workspaceFolder := range params.WorkspaceFolders {
-		parsed, _ := url.Parse(workspaceFolder.URI)
-		if parsed != nil {
-			workspaceFolders = append(workspaceFolders, parsed.Path)
+		path, err := urlPath(workspaceFolder.URI)
+		if err != nil {
+			return nil, err
 		}
+		workspaceFolders = append(workspaceFolders, path)
 	}
 
 	if clientConfig, ok := params.InitializationOptions.(map[string]any); ok {
@@ -74,14 +94,11 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	if len(workspaceFolders) > 0 {
 		s.workspaceFolders = workspaceFolders
 	} else if params.RootURI != nil {
-		parsed, err := url.Parse(*params.RootURI)
+		path, err := urlPath(*params.RootURI)
 		if err != nil {
-			return nil, &jsonrpc2.Error{
-				Code:    -32602,
-				Message: fmt.Sprintf("invalid rootUri specified in the initialize request (%v): %v", *params.RootURI, err.Error()),
-			}
+			return nil, err
 		}
-		s.workspaceFolders = []string{parsed.Path}
+		s.workspaceFolders = []string{path}
 	} else if params.RootPath != nil {
 		s.workspaceFolders = []string{*params.RootPath}
 	}
