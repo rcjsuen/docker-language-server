@@ -10,7 +10,7 @@ require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/hashicorp/hcl-lang v0.0.0-20250210193002-b2ec3be7c1b8
 	github.com/hashicorp/hcl/v2 v2.23.0
-	github.com/moby/buildkit v0.23.0
+	github.com/moby/buildkit v0.23.0-rc1.0.20250618182037-9b91d20367db // master
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.9.1
