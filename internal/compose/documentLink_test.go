@@ -518,11 +518,43 @@ services:
 			links: nil,
 		},
 		{
+			name: "image: ghcr.io:tag",
+			content: `
+services:
+  test:
+    image: ghcr.io:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: ghcr.io/:tag",
+			content: `
+services:
+  test:
+    image: ghcr.io/:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: ghcr.io/:tag",
+			content: `
+services:
+  test:
+    image: ghcr.io:tag/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: ghcr.io/:tag",
+			content: `
+services:
+  test:
+    image: ghcr.io/:tag/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
 			name: "image: \"ghcr.io:\"",
 			content: `
 services:
   test:
-    image: "ghcr.io:"`,
+    image: "ghcr.io:tag"`,
 			links: []protocol.DocumentLink{},
 		},
 		{
@@ -618,6 +650,38 @@ services:
 			links: nil,
 		},
 		{
+			name: "image: mcr.microsoft.com:tag",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: mcr.microsoft.com/:tag",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com/:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: mcr.microsoft.com:tag/",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com:tag/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: mcr.microsoft.com/:tag/",
+			content: `
+services:
+  test:
+    image: mcr.microsoft.com/:tag/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
 			name: "image: \"mcr.microsoft.com:\"",
 			content: `
 services:
@@ -682,6 +746,38 @@ services:
   test:
     image: quay.io:`,
 			links: nil,
+		},
+		{
+			name: "image: quay.io:tag",
+			content: `
+services:
+  test:
+    image: quay.io:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: quay.io/:tag",
+			content: `
+services:
+  test:
+    image: quay.io/:tag`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: quay.io:tag/",
+			content: `
+services:
+  test:
+    image: quay.io:tag/`,
+			links: []protocol.DocumentLink{},
+		},
+		{
+			name: "image: quay.io/:tag/",
+			content: `
+services:
+  test:
+    image: quay.io/:tag/`,
+			links: []protocol.DocumentLink{},
 		},
 		{
 			name: "image: \"quay.io:\"",
