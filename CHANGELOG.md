@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Compose
+  - textDocument/documentLink
+    - improve handling of malformed image attribute values with registry prefixes ([#369](https://github.com/docker/docker-language-server/issues/369))
+
 ## [0.14.0] - 2025-07-16
 
 ### Added

@@ -282,16 +282,24 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 	return links, nil
 }
 
+func extractNonDockerHubImageLink(nodeValue, prefix, uriPrefix string, startIndex uint) (string, string) {
+	if len(nodeValue) <= len(prefix)+1 {
+		return "", ""
+	}
+	idx := strings.LastIndex(nodeValue, ":")
+	lastSlashIdx := strings.LastIndex(nodeValue, "/")
+	if (idx != -1 && lastSlashIdx > idx) || strings.Index(nodeValue, "/") == lastSlashIdx {
+		return "", ""
+	}
+	if idx == -1 {
+		return nodeValue, fmt.Sprintf("%v%v", uriPrefix, nodeValue[startIndex:])
+	}
+	return nodeValue[0:idx], fmt.Sprintf("%v%v", uriPrefix, nodeValue[startIndex:idx])
+}
+
 func extractImageLink(nodeValue string) (string, string) {
 	if strings.HasPrefix(nodeValue, "ghcr.io") {
-		if len(nodeValue) <= 8 {
-			return "", ""
-		}
-		idx := strings.LastIndex(nodeValue, ":")
-		if idx == -1 {
-			return nodeValue, fmt.Sprintf("https://%v", nodeValue)
-		}
-		return nodeValue[0:idx], fmt.Sprintf("https://%v", nodeValue[0:idx])
+		return extractNonDockerHubImageLink(nodeValue, "ghcr.io", "https://", 0)
 	}
 
 	if strings.HasPrefix(nodeValue, "mcr.microsoft.com") {
@@ -299,6 +307,13 @@ func extractImageLink(nodeValue string) (string, string) {
 			return "", ""
 		}
 		idx := strings.LastIndex(nodeValue, ":")
+		if idx == 17 {
+			return "", ""
+		}
+		lastSlashIdx := strings.LastIndex(nodeValue, "/")
+		if lastSlashIdx == idx-1 || (idx != -1 && lastSlashIdx > idx) {
+			return "", ""
+		}
 		if idx == -1 {
 			return nodeValue, fmt.Sprintf("https://mcr.microsoft.com/artifact/mar/%v", nodeValue[18:])
 		}
@@ -306,14 +321,7 @@ func extractImageLink(nodeValue string) (string, string) {
 	}
 
 	if strings.HasPrefix(nodeValue, "quay.io") {
-		if len(nodeValue) <= 8 {
-			return "", ""
-		}
-		idx := strings.LastIndex(nodeValue, ":")
-		if idx == -1 {
-			return nodeValue, fmt.Sprintf("https://quay.io/repository/%v", nodeValue[8:])
-		}
-		return nodeValue[0:idx], fmt.Sprintf("https://quay.io/repository/%v", nodeValue[8:idx])
+		return extractNonDockerHubImageLink(nodeValue, "quay.io", "https://quay.io/repository/", 8)
 	}
 
 	idx := strings.LastIndex(nodeValue, ":")
