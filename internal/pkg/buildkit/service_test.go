@@ -2,6 +2,7 @@ package buildkit
 
 import (
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -12,6 +13,12 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	if runtime.GOOS == "windows" && os.Getenv("DOCKER_LANGUAGE_SERVER_WINDOWS_CI") == "true" {
+		// not easy to setup Docker and Buildx in Windows CI, skipping for now
+		t.Skip("skipping test on Windows CI")
+		return
+	}
+
 	testCases := []struct {
 		name        string
 		content     string
