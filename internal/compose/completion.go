@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"unicode"
@@ -27,6 +28,13 @@ type textEditModifier struct {
 	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit
 }
 
+func samePath(uriPath, path string) bool {
+	if runtime.GOOS == "windows" {
+		return filepath.ToSlash(uriPath[1:]) == filepath.ToSlash(path)
+	}
+	return filepath.ToSlash(uriPath) == filepath.ToSlash(path)
+}
+
 // extendingCurrentFile checks if the extends object's file attribute is
 // pointing to the current file.
 func extendingCurrentFile(u *url.URL, extendsNode *ast.MappingValueNode) bool {
@@ -34,7 +42,7 @@ func extendingCurrentFile(u *url.URL, extendsNode *ast.MappingValueNode) bool {
 		for _, extendsAttribute := range extends.Values {
 			if extendsAttribute.Key.GetToken().Value == "file" {
 				path, err := types.AbsolutePath(u, extendsAttribute.Value.GetToken().Value)
-				if err != nil || filepath.ToSlash(u.Path) != filepath.ToSlash(path) {
+				if err != nil || !samePath(u.Path, path) {
 					return false
 				}
 				break

@@ -37,7 +37,7 @@ func createLink(folderAbsolutePath string, node *token.Token) *protocol.Document
 	return &protocol.DocumentLink{
 		Range:   createRange(node, len(file)),
 		Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")))),
-		Tooltip: types.CreateStringPointer(abs),
+		Tooltip: types.CreateStringPointer(filepath.FromSlash(abs)),
 	}
 }
 
