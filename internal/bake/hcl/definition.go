@@ -127,6 +127,11 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
 					if child.Next != nil && child.Next.Next != nil && strings.EqualFold(child.Next.Next.Value, "AS") && child.Next.Next.Next != nil && child.Next.Next.Next.Value == target {
+						endLineLength := len(lines[child.EndLine-1])
+						// 13 is ASCII for \r
+						if lines[child.EndLine-1][endLineLength-1] == 13 {
+							endLineLength--
+						}
 						return types.CreateDefinitionResult(
 							definitionLinkSupport,
 							protocol.Range{
@@ -136,7 +141,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 								},
 								End: protocol.Position{
 									Line:      uint32(child.EndLine) - 1,
-									Character: uint32(len(lines[child.EndLine-1])),
+									Character: uint32(endLineLength),
 								},
 							},
 							&protocol.Range{
@@ -211,11 +216,16 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 										originSelectionRange.Start.Character = originSelectionRange.Start.Character + 1
 										originSelectionRange.End.Character = originSelectionRange.End.Character - 1
 									}
+									endLineLength := len(lines[node.EndLine-1])
+									// 13 is ASCII for \r
+									if lines[node.EndLine-1][endLineLength-1] == 13 {
+										endLineLength--
+									}
 									return types.CreateDefinitionResult(
 										definitionLinkSupport,
 										protocol.Range{
 											Start: protocol.Position{Line: uint32(node.StartLine) - 1, Character: 0},
-											End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(len(lines[node.EndLine-1]))},
+											End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(endLineLength)},
 										},
 										&originSelectionRange,
 										protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
