@@ -31,24 +31,20 @@ func createRange(t *token.Token, length int) protocol.Range {
 	}
 }
 
-func createLink(u *url.URL, node *token.Token) *protocol.DocumentLink {
+func createLink(folderAbsolutePath string, node *token.Token) *protocol.DocumentLink {
 	file := node.Value
-	abs, err := types.AbsolutePath(u, file)
-	if err == nil {
-		abs = filepath.ToSlash(abs)
-		return &protocol.DocumentLink{
-			Range:   createRange(node, len(file)),
-			Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")))),
-			Tooltip: types.CreateStringPointer(abs),
-		}
+	abs := filepath.ToSlash(filepath.Join(folderAbsolutePath, file))
+	return &protocol.DocumentLink{
+		Range:   createRange(node, len(file)),
+		Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")))),
+		Tooltip: types.CreateStringPointer(filepath.FromSlash(abs)),
 	}
-	return nil
 }
 
-func createFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	attributeValue := stringNode(serviceNode.Value)
 	if attributeValue != nil {
-		return createLink(u, attributeValue.GetToken())
+		return createLink(folderAbsolutePath, attributeValue.GetToken())
 	}
 	return nil
 }
@@ -60,12 +56,12 @@ func stringNode(value ast.Node) *ast.StringNode {
 	return nil
 }
 
-func createdNestedLink(u *url.URL, serviceNode *ast.MappingValueNode, parent, child string) *protocol.DocumentLink {
+func createdNestedLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode, parent, child string) *protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == parent {
 		if mappingNode, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
 				if resolveAnchor(buildAttribute.Key).GetToken().Value == child {
-					return createFileLink(u, buildAttribute)
+					return createFileLink(folderAbsolutePath, buildAttribute)
 				}
 			}
 		}
@@ -90,19 +86,19 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	return nil
 }
 
-func createLabelFileLink(u *url.URL, serviceNode *ast.MappingValueNode) []protocol.DocumentLink {
+func createLabelFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) []protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == "label_file" {
 		if sequence, ok := resolveAnchor(serviceNode.Value).(*ast.SequenceNode); ok {
 			links := []protocol.DocumentLink{}
 			for _, node := range sequence.Values {
 				if s, ok := resolveAnchor(node).(*ast.StringNode); ok {
-					links = append(links, *createLink(u, s.GetToken()))
+					links = append(links, *createLink(folderAbsolutePath, s.GetToken()))
 				}
 			}
 			return links
 		}
 
-		link := createFileLink(u, serviceNode)
+		link := createFileLink(folderAbsolutePath, serviceNode)
 		if link != nil {
 			return []protocol.DocumentLink{*link}
 		}
@@ -110,9 +106,9 @@ func createLabelFileLink(u *url.URL, serviceNode *ast.MappingValueNode) []protoc
 	return nil
 }
 
-func createObjectFileLink(u *url.URL, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createObjectFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == "file" {
-		return createFileLink(u, serviceNode)
+		return createFileLink(folderAbsolutePath, serviceNode)
 	}
 	return nil
 }
@@ -171,14 +167,14 @@ func includedFiles(nodes []ast.Node) []*token.Token {
 	return tokens
 }
 
-func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
+func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol.DocumentLink {
 	if s, ok := resolveAnchor(n.Key).(*ast.StringNode); ok {
 		links := []protocol.DocumentLink{}
 		switch s.Value {
 		case "include":
 			if sequence, ok := resolveAnchor(n.Value).(*ast.SequenceNode); ok {
 				for _, token := range includedFiles(sequence.Values) {
-					link := createLink(u, token)
+					link := createLink(folderAbsolutePath, token)
 					if link != nil {
 						links = append(links, *link)
 					}
@@ -194,22 +190,22 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(u, serviceAttribute, "build", "dockerfile")
+							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "build", "dockerfile")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(u, serviceAttribute, "credential_spec", "file")
+							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "credential_spec", "file")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(u, serviceAttribute, "extends", "file")
+							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "extends", "file")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							labelFileLinks := createLabelFileLink(u, serviceAttribute)
+							labelFileLinks := createLabelFileLink(folderAbsolutePath, serviceAttribute)
 							links = append(links, labelFileLinks...)
 						}
 					}
@@ -220,7 +216,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 				for _, node := range mappingNode.Values {
 					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
-							link := createObjectFileLink(u, configAttribute)
+							link := createObjectFileLink(folderAbsolutePath, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
@@ -233,7 +229,7 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 				for _, node := range mappingNode.Values {
 					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
-							link := createObjectFileLink(u, configAttribute)
+							link := createObjectFileLink(folderAbsolutePath, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
@@ -260,10 +256,18 @@ func scanForLinks(u *url.URL, n *ast.MappingValueNode) []protocol.DocumentLink {
 	return nil
 }
 
-func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.ComposeDocument) ([]protocol.DocumentLink, error) {
+func documentFolder(documentURI protocol.URI) (string, error) {
 	url, err := url.Parse(string(documentURI))
 	if err != nil {
-		return nil, fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
+		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
+	}
+	return types.AbsoluteFolder(url)
+}
+
+func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.ComposeDocument) ([]protocol.DocumentLink, error) {
+	abs, err := documentFolder(documentURI)
+	if err != nil {
+		return nil, err
 	}
 
 	file := doc.File()
@@ -275,7 +279,7 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			for _, node := range mappingNode.Values {
-				links = append(links, scanForLinks(url, node)...)
+				links = append(links, scanForLinks(abs, node)...)
 			}
 		}
 	}

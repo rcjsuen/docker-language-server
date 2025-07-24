@@ -1191,7 +1191,7 @@ func TestDefinition(t *testing.T) {
 			endCharacter: -1,
 			locations: []protocol.Location{
 				{
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 					Range: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 14},
@@ -1204,7 +1204,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 3, Character: 4},
 						End:   protocol.Position{Line: 3, Character: 14},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 14},
@@ -1429,7 +1429,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 				},
 			},
 			links: []protocol.LocationLink{
@@ -1438,7 +1438,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 2, Character: 22},
 						End:   protocol.Position{Line: 2, Character: 27},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
@@ -1495,7 +1495,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 				},
 			},
 			links: []protocol.LocationLink{
@@ -1504,7 +1504,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 3, Character: 12},
 						End:   protocol.Position{Line: 3, Character: 17},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile"), "/")),
+					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},

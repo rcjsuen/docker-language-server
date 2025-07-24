@@ -1115,7 +1115,7 @@ services:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
@@ -1289,7 +1289,7 @@ services:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
@@ -1451,7 +1451,7 @@ services:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
@@ -1664,7 +1664,7 @@ services:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
@@ -1791,7 +1791,7 @@ configs:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
@@ -1918,7 +1918,7 @@ secrets:
 				link := protocol.DocumentLink{
 					Range:   tc.linkRange,
 					Target:  types.CreateStringPointer(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(tc.path), "/"))),
-					Tooltip: types.CreateStringPointer(tc.path),
+					Tooltip: types.CreateStringPointer(filepath.FromSlash(tc.path)),
 				}
 				require.Equal(t, []protocol.DocumentLink{link}, links)
 			}
