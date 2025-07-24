@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/docker/docker-language-server/internal/configuration"
@@ -47,6 +48,16 @@ func (h *PublishDiagnosticsHandler) Handle(_ context.Context, conn *jsonrpc2.Con
 }
 
 func TestPublishDiagnostics(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		value, exists := os.LookupEnv("DOCKER_LANGUAGE_SERVER_WINDOWS_CI")
+		t.Logf("Windows testing (DOCKER_LANGUAGE_SERVER_WINDOWS_CI environment variable set=%v, value=%v)", exists, value)
+		if exists && value == "true" {
+			// not easy to setup Docker and Buildx in Windows CI, skipping for now
+			t.Skip("skipping test on Windows CI")
+			return
+		}
+	}
+
 	// ensure the language server works without any workspace folders
 	testPublishDiagnostics(t, protocol.InitializeParams{})
 
