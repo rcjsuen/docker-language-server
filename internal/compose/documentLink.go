@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -31,8 +32,15 @@ func createRange(t *token.Token, length int) protocol.Range {
 	}
 }
 
-func createLink(folderAbsolutePath string, node *token.Token) *protocol.DocumentLink {
+func createLink(folderAbsolutePath string, wslDollarSign bool, node *token.Token) *protocol.DocumentLink {
 	file := node.Value
+	if wslDollarSign {
+		return &protocol.DocumentLink{
+			Range:   createRange(node, len(file)),
+			Target:  types.CreateStringPointer("file://wsl%24" + path.Join(strings.ReplaceAll(folderAbsolutePath, "\\", "/"), file)),
+			Tooltip: types.CreateStringPointer("\\\\wsl%24" + strings.ReplaceAll(path.Join(folderAbsolutePath, file), "/", "\\")),
+		}
+	}
 	abs := filepath.ToSlash(filepath.Join(folderAbsolutePath, file))
 	return &protocol.DocumentLink{
 		Range:   createRange(node, len(file)),
@@ -41,10 +49,10 @@ func createLink(folderAbsolutePath string, node *token.Token) *protocol.Document
 	}
 }
 
-func createFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createFileLink(folderAbsolutePath string, wslDollarSign bool, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	attributeValue := stringNode(serviceNode.Value)
 	if attributeValue != nil {
-		return createLink(folderAbsolutePath, attributeValue.GetToken())
+		return createLink(folderAbsolutePath, wslDollarSign, attributeValue.GetToken())
 	}
 	return nil
 }
@@ -56,12 +64,12 @@ func stringNode(value ast.Node) *ast.StringNode {
 	return nil
 }
 
-func createdNestedLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode, parent, child string) *protocol.DocumentLink {
+func createdNestedLink(folderAbsolutePath string, wslDollarSign bool, serviceNode *ast.MappingValueNode, parent, child string) *protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == parent {
 		if mappingNode, ok := resolveAnchor(serviceNode.Value).(*ast.MappingNode); ok {
 			for _, buildAttribute := range mappingNode.Values {
 				if resolveAnchor(buildAttribute.Key).GetToken().Value == child {
-					return createFileLink(folderAbsolutePath, buildAttribute)
+					return createFileLink(folderAbsolutePath, wslDollarSign, buildAttribute)
 				}
 			}
 		}
@@ -86,19 +94,19 @@ func createImageLink(serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	return nil
 }
 
-func createLabelFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) []protocol.DocumentLink {
+func createLabelFileLink(folderAbsolutePath string, wslDollarSign bool, serviceNode *ast.MappingValueNode) []protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == "label_file" {
 		if sequence, ok := resolveAnchor(serviceNode.Value).(*ast.SequenceNode); ok {
 			links := []protocol.DocumentLink{}
 			for _, node := range sequence.Values {
 				if s, ok := resolveAnchor(node).(*ast.StringNode); ok {
-					links = append(links, *createLink(folderAbsolutePath, s.GetToken()))
+					links = append(links, *createLink(folderAbsolutePath, wslDollarSign, s.GetToken()))
 				}
 			}
 			return links
 		}
 
-		link := createFileLink(folderAbsolutePath, serviceNode)
+		link := createFileLink(folderAbsolutePath, wslDollarSign, serviceNode)
 		if link != nil {
 			return []protocol.DocumentLink{*link}
 		}
@@ -106,9 +114,9 @@ func createLabelFileLink(folderAbsolutePath string, serviceNode *ast.MappingValu
 	return nil
 }
 
-func createObjectFileLink(folderAbsolutePath string, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
+func createObjectFileLink(folderAbsolutePath string, wslDollarSign bool, serviceNode *ast.MappingValueNode) *protocol.DocumentLink {
 	if resolveAnchor(serviceNode.Key).GetToken().Value == "file" {
-		return createFileLink(folderAbsolutePath, serviceNode)
+		return createFileLink(folderAbsolutePath, wslDollarSign, serviceNode)
 	}
 	return nil
 }
@@ -167,14 +175,14 @@ func includedFiles(nodes []ast.Node) []*token.Token {
 	return tokens
 }
 
-func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol.DocumentLink {
+func scanForLinks(folderAbsolutePath string, wslDollarSign bool, n *ast.MappingValueNode) []protocol.DocumentLink {
 	if s, ok := resolveAnchor(n.Key).(*ast.StringNode); ok {
 		links := []protocol.DocumentLink{}
 		switch s.Value {
 		case "include":
 			if sequence, ok := resolveAnchor(n.Value).(*ast.SequenceNode); ok {
 				for _, token := range includedFiles(sequence.Values) {
-					link := createLink(folderAbsolutePath, token)
+					link := createLink(folderAbsolutePath, wslDollarSign, token)
 					if link != nil {
 						links = append(links, *link)
 					}
@@ -190,22 +198,22 @@ func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "build", "dockerfile")
+							link = createdNestedLink(folderAbsolutePath, wslDollarSign, serviceAttribute, "build", "dockerfile")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "credential_spec", "file")
+							link = createdNestedLink(folderAbsolutePath, wslDollarSign, serviceAttribute, "credential_spec", "file")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							link = createdNestedLink(folderAbsolutePath, serviceAttribute, "extends", "file")
+							link = createdNestedLink(folderAbsolutePath, wslDollarSign, serviceAttribute, "extends", "file")
 							if link != nil {
 								links = append(links, *link)
 							}
 
-							labelFileLinks := createLabelFileLink(folderAbsolutePath, serviceAttribute)
+							labelFileLinks := createLabelFileLink(folderAbsolutePath, wslDollarSign, serviceAttribute)
 							links = append(links, labelFileLinks...)
 						}
 					}
@@ -216,7 +224,7 @@ func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol
 				for _, node := range mappingNode.Values {
 					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
-							link := createObjectFileLink(folderAbsolutePath, configAttribute)
+							link := createObjectFileLink(folderAbsolutePath, wslDollarSign, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
@@ -229,7 +237,7 @@ func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol
 				for _, node := range mappingNode.Values {
 					if configAttributes, ok := resolveAnchor(node.Value).(*ast.MappingNode); ok {
 						for _, configAttribute := range configAttributes.Values {
-							link := createObjectFileLink(folderAbsolutePath, configAttribute)
+							link := createObjectFileLink(folderAbsolutePath, wslDollarSign, configAttribute)
 							if link != nil {
 								links = append(links, *link)
 							}
@@ -256,16 +264,22 @@ func scanForLinks(folderAbsolutePath string, n *ast.MappingValueNode) []protocol
 	return nil
 }
 
-func documentFolder(documentURI protocol.URI) (string, error) {
+func documentFolder(documentURI protocol.URI) (string, bool, error) {
 	url, err := url.Parse(string(documentURI))
 	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
+		if strings.HasPrefix(documentURI, "file://wsl%24/") {
+			path := documentURI[len("file://wsl%24"):]
+			idx := strings.LastIndex(path, "/")
+			return path[0 : idx+1], true, nil
+		}
+		return "", false, fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
 	}
-	return types.AbsoluteFolder(url)
+	folder, err := types.AbsoluteFolder(url)
+	return folder, false, err
 }
 
 func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.ComposeDocument) ([]protocol.DocumentLink, error) {
-	abs, err := documentFolder(documentURI)
+	abs, wslDollarSign, err := documentFolder(documentURI)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +293,7 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			for _, node := range mappingNode.Values {
-				links = append(links, scanForLinks(abs, node)...)
+				links = append(links, scanForLinks(abs, wslDollarSign, node)...)
 			}
 		}
 	}
