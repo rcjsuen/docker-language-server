@@ -25,6 +25,58 @@ func documentLinkTarget(testsFolder, fileName string) *string {
 	return &target
 }
 
+func TestDocumentLink_WSL(t *testing.T) {
+	composeStringURI := "file://wsl%24/docker-desktop/tmp/compose.yaml"
+	testCases := []struct {
+		name    string
+		content string
+		links   []protocol.DocumentLink
+	}{
+		{
+			name: "included files, string array",
+			content: `include:
+  - file.yaml
+  - ./file2.yaml
+  - ../other/file3.yaml`,
+			links: []protocol.DocumentLink{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 4},
+						End:   protocol.Position{Line: 1, Character: 13},
+					},
+					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/tmp/file.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\tmp\\file.yaml"),
+				},
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 16},
+					},
+					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/tmp/file2.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\tmp\\file2.yaml"),
+				},
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 4},
+						End:   protocol.Position{Line: 3, Character: 23},
+					},
+					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/other/file3.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\other\\file3.yaml"),
+				},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewComposeDocument(document.NewDocumentManager(), "compose.yaml", 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), composeStringURI, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.links, links)
+		})
+	}
+}
+
 func TestDocumentLink_IncludedFiles(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), "composeDocumentLinkTests")
 	composeFilePath := filepath.Join(testsFolder, "docker-compose.yml")
