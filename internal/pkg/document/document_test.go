@@ -127,18 +127,46 @@ func TestDocumentPath(t *testing.T) {
 		wsl      bool
 	}{
 		{
-			name:     "Linux URI",
-			u:        "file:///tmp/Dockerfile",
-			folder:   "/tmp",
-			fileName: "Dockerfile",
-			wsl:      false,
-		},
-		{
 			name:     "Windows wsl$ host URI",
 			u:        "file://wsl%24/docker-desktop/tmp/Dockerfile",
 			folder:   "/docker-desktop/tmp",
 			fileName: "Dockerfile",
 			wsl:      true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mgr := NewDocumentManager()
+			document := NewDocument(mgr, tc.u, protocol.DockerfileLanguage, 1, []byte{})
+			path, err := document.DocumentPath()
+			require.NoError(t, err)
+			require.Equal(t, tc.folder, path.Folder)
+			require.Equal(t, tc.fileName, path.FileName)
+			require.Equal(t, tc.wsl, path.WSLDollarSignHost)
+		})
+	}
+}
+
+func TestDocumentPathNonWindows(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.SkipNow()
+		return
+	}
+
+	testCases := []struct {
+		name     string
+		u        uri.URI
+		folder   string
+		fileName string
+		wsl      bool
+	}{
+		{
+			name:     "Linux URI",
+			u:        "file:///tmp/Dockerfile",
+			folder:   "/tmp",
+			fileName: "Dockerfile",
+			wsl:      false,
 		},
 	}
 
