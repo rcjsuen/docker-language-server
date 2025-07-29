@@ -156,7 +156,7 @@ func TestDocumentPath(t *testing.T) {
 }
 
 func TestDocumentPath_Windows(t *testing.T) {
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS != "windows" {
 		t.SkipNow()
 		return
 	}
