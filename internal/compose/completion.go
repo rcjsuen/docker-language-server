@@ -36,8 +36,9 @@ func extendingCurrentFile(documentPath document.DocumentPath, extendsNode *ast.M
 	if extends, ok := extendsNode.Value.(*ast.MappingNode); ok {
 		for _, extendsAttribute := range extends.Values {
 			if extendsAttribute.Key.GetToken().Value == "file" {
-				path := filepath.Join(documentPath.Folder, extendsAttribute.Value.GetToken().Value)
-				if !samePath(filepath.Join(documentPath.Folder, documentPath.FileName), path) {
+				_, path := types.Concatenate(documentPath.Folder, extendsAttribute.Value.GetToken().Value, documentPath.WSLDollarSignHost)
+				_, originalPath := types.Concatenate(documentPath.Folder, documentPath.FileName, documentPath.WSLDollarSignHost)
+				if !samePath(originalPath, path) {
 					return false
 				}
 				break
@@ -53,7 +54,7 @@ var buildTargetModifier = textEditModifier{
 	},
 	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		if _, ok := path[2].Value.(*ast.NullNode); ok {
-			dockerfilePath := filepath.Join(documentPath.Folder, "Dockerfile")
+			_, dockerfilePath := types.Concatenate(documentPath.Folder, "Dockerfile", documentPath.WSLDollarSignHost)
 			stages := findBuildStages(manager, dockerfilePath, "")
 			if len(stages) > 0 {
 				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
@@ -70,7 +71,7 @@ var buildTargetModifier = textEditModifier{
 				}
 			}
 
-			dockerfilePath := filepath.Join(documentPath.Folder, dockerfileAttributePath)
+			_, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
 			stages := findBuildStages(manager, dockerfilePath, "")
 			if len(stages) > 0 {
 				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
@@ -434,7 +435,7 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 				}
 			}
 
-			dockerfilePath := filepath.Join(documentPath.Folder, dockerfileAttributePath)
+			_, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
 			if _, ok := path[3].Value.(*ast.NullNode); ok {
 				return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
 			} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
