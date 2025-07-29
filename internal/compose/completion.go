@@ -3,7 +3,6 @@ package compose
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -25,7 +24,7 @@ type completionItemText struct {
 
 type textEditModifier struct {
 	isInterested func(attributeName string, path []*ast.MappingValueNode) bool
-	modify       func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit
+	modify       func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit
 }
 
 func samePath(uriPath, path string) bool {
@@ -37,12 +36,12 @@ func samePath(uriPath, path string) bool {
 
 // extendingCurrentFile checks if the extends object's file attribute is
 // pointing to the current file.
-func extendingCurrentFile(u *url.URL, extendsNode *ast.MappingValueNode) bool {
+func extendingCurrentFile(documentPath document.DocumentPath, extendsNode *ast.MappingValueNode) bool {
 	if extends, ok := extendsNode.Value.(*ast.MappingNode); ok {
 		for _, extendsAttribute := range extends.Values {
 			if extendsAttribute.Key.GetToken().Value == "file" {
-				path, err := types.AbsolutePath(u, extendsAttribute.Value.GetToken().Value)
-				if err != nil || !samePath(u.Path, path) {
+				path := filepath.Join(documentPath.Folder, extendsAttribute.Value.GetToken().Value)
+				if !samePath(filepath.Join(documentPath.Folder, documentPath.FileName), path) {
 					return false
 				}
 				break
@@ -56,15 +55,13 @@ var buildTargetModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "target" && len(path) == 3 && path[2].Key.GetToken().Value == "build"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		if _, ok := path[2].Value.(*ast.NullNode); ok {
-			dockerfilePath, err := types.LocalDockerfile(u)
-			if err == nil {
-				stages := findBuildStages(manager, dockerfilePath, "")
-				if len(stages) > 0 {
-					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
-					return edit
-				}
+			dockerfilePath := filepath.Join(documentPath.Folder, "Dockerfile")
+			stages := findBuildStages(manager, dockerfilePath, "")
+			if len(stages) > 0 {
+				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+				return edit
 			}
 		} else if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
 			dockerfileAttributePath := "Dockerfile"
@@ -77,13 +74,11 @@ var buildTargetModifier = textEditModifier{
 				}
 			}
 
-			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
-			if err == nil {
-				stages := findBuildStages(manager, dockerfilePath, "")
-				if len(stages) > 0 {
-					edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
-					return edit
-				}
+			dockerfilePath := filepath.Join(documentPath.Folder, dockerfileAttributePath)
+			stages := findBuildStages(manager, dockerfilePath, "")
+			if len(stages) > 0 {
+				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
+				return edit
 			}
 		}
 		return edit
@@ -94,8 +89,8 @@ var serviceSuggestionModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "service" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "extends"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
-		if extendingCurrentFile(u, path[2]) {
+	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+		if extendingCurrentFile(documentPath, path[2]) {
 			services := []completionItemText{}
 			for _, service := range findDependencies(file, "services") {
 				if service != path[1].Key.GetToken().Value {
@@ -114,7 +109,7 @@ var serviceProviderModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "provider" && len(path) == 2 && path[0].Key.GetToken().Value == "services"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		edit.NewText = fmt.Sprintf("provider:\n%vtype: ${1:model}\n%voptions:\n%v  ${2:model}: ${3:ai/example-model}", spacing, spacing, spacing)
 		return edit
 	},
@@ -124,7 +119,7 @@ var serviceProviderTypeModifier = textEditModifier{
 	isInterested: func(attributeName string, path []*ast.MappingValueNode) bool {
 		return attributeName == "type" && len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "provider"
 	},
-	modify: func(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		edit.NewText = "type: ${1:model}"
 		return edit
 	},
@@ -186,7 +181,7 @@ func calculateTopLevelNodeOffset(file *ast.File) int {
 }
 
 func Completion(ctx context.Context, params *protocol.CompletionParams, manager *document.Manager, doc document.ComposeDocument) (*protocol.CompletionList, error) {
-	u, err := url.Parse(params.TextDocument.URI)
+	documentPath, err := doc.DocumentPath()
 	if err != nil {
 		return nil, fmt.Errorf("LSP client sent invalid URI: %v", params.TextDocument.URI)
 	}
@@ -230,7 +225,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	} else if len(path) == 1 {
 		if path[0].Key.GetToken().Value == "include" {
 			schema := schemaProperties()["include"].Items.(*jsonschema.Schema)
-			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, wordPrefix, file, manager, u, path)
+			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, wordPrefix, file, manager, documentPath, path)
 			return processItems(items, whitespaceLine), nil
 		}
 		return nil, nil
@@ -239,11 +234,11 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	}
 
 	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
-	dependencies := dependencyCompletionItems(file, u, path, params, wordPrefix)
+	dependencies := dependencyCompletionItems(file, documentPath, path, params, wordPrefix)
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
-	items, stop := buildTargetCompletionItems(params, manager, path, u, wordPrefix)
+	items, stop := buildTargetCompletionItems(params, manager, path, documentPath, wordPrefix)
 	if stop {
 		return &protocol.CompletionList{Items: items}, nil
 	}
@@ -255,7 +250,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	if len(items) == 0 {
 		items = volumeDependencyCompletionItems(file, path, params, wordPrefix)
 	}
-	schemaItems := createSchemaItems(params, nodeProps, lines, lspLine, whitespaceLine && arrayAttributes, wordPrefix, file, manager, u, path)
+	schemaItems := createSchemaItems(params, nodeProps, lines, lspLine, whitespaceLine && arrayAttributes, wordPrefix, file, manager, documentPath, path)
 	items = append(items, schemaItems...)
 	if len(items) == 0 {
 		return nil, nil
@@ -287,7 +282,7 @@ func createEnumItems(schema *jsonschema.Schema, params *protocol.CompletionParam
 	return items
 }
 
-func createSchemaItems(params *protocol.CompletionParams, nodeProps any, lines []string, lspLine int, whitespacePrefixedArrayAttribute bool, wordPrefixLength protocol.UInteger, file *ast.File, manager *document.Manager, u *url.URL, path []*ast.MappingValueNode) []protocol.CompletionItem {
+func createSchemaItems(params *protocol.CompletionParams, nodeProps any, lines []string, lspLine int, whitespacePrefixedArrayAttribute bool, wordPrefixLength protocol.UInteger, file *ast.File, manager *document.Manager, documentPath document.DocumentPath, path []*ast.MappingValueNode) []protocol.CompletionItem {
 	items := []protocol.CompletionItem{}
 	if schema, ok := nodeProps.(*jsonschema.Schema); ok {
 		if schema.Enum != nil {
@@ -345,7 +340,7 @@ func createSchemaItems(params *protocol.CompletionParams, nodeProps any, lines [
 					},
 				}
 			}
-			item.TextEdit = modifyTextEdit(file, manager, u, item.TextEdit.(protocol.TextEdit), attributeName, spacing, path)
+			item.TextEdit = modifyTextEdit(file, manager, documentPath, item.TextEdit.(protocol.TextEdit), attributeName, spacing, path)
 			items = append(items, item)
 		}
 	}
@@ -381,10 +376,10 @@ func createChoiceSnippetText(itemTexts []completionItemText) string {
 	return sb.String()
 }
 
-func modifyTextEdit(file *ast.File, manager *document.Manager, u *url.URL, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
+func modifyTextEdit(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 	for _, modified := range textEditModifiers {
 		if modified.isInterested(attributeName, path) {
-			return modified.modify(file, manager, u, edit, attributeName, spacing, path)
+			return modified.modify(file, manager, documentPath, edit, attributeName, spacing, path)
 		}
 	}
 	return edit
@@ -430,7 +425,7 @@ func findBuildStages(manager *document.Manager, dockerfilePath, prefix string) [
 	return items
 }
 
-func buildTargetCompletionItems(params *protocol.CompletionParams, manager *document.Manager, path []*ast.MappingValueNode, u *url.URL, prefixLength protocol.UInteger) ([]protocol.CompletionItem, bool) {
+func buildTargetCompletionItems(params *protocol.CompletionParams, manager *document.Manager, path []*ast.MappingValueNode, documentPath document.DocumentPath, prefixLength protocol.UInteger) ([]protocol.CompletionItem, bool) {
 	if len(path) == 4 && path[2].Key.GetToken().Value == "build" && path[3].Key.GetToken().Value == "target" {
 		if mappingNode, ok := path[2].Value.(*ast.MappingNode); ok {
 			dockerfileAttributePath := "Dockerfile"
@@ -443,18 +438,16 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 				}
 			}
 
-			dockerfilePath, err := types.AbsolutePath(u, dockerfileAttributePath)
-			if err == nil {
-				if _, ok := path[3].Value.(*ast.NullNode); ok {
-					return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
-				} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
-					if int(params.Position.Line) == path[3].Value.GetToken().Position.Line-1 {
-						offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
-						// offset can be greater than the length if there's just empty whitespace after the string value,
-						// must be non-negative, if negative it suggests the cursor is in the whitespace before the attribute's value
-						if offset >= 0 && offset <= len(prefix.Value) {
-							return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
-						}
+			dockerfilePath := filepath.Join(documentPath.Folder, dockerfileAttributePath)
+			if _, ok := path[3].Value.(*ast.NullNode); ok {
+				return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
+			} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
+				if int(params.Position.Line) == path[3].Value.GetToken().Position.Line-1 {
+					offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
+					// offset can be greater than the length if there's just empty whitespace after the string value,
+					// must be non-negative, if negative it suggests the cursor is in the whitespace before the attribute's value
+					if offset >= 0 && offset <= len(prefix.Value) {
+						return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
 					}
 				}
 			}
@@ -484,7 +477,7 @@ func createBuildStageItems(params *protocol.CompletionParams, manager *document.
 	return items
 }
 
-func dependencyCompletionItems(file *ast.File, u *url.URL, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func dependencyCompletionItems(file *ast.File, documentPath document.DocumentPath, path []*ast.MappingValueNode, params *protocol.CompletionParams, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	dependency := map[string]string{
 		"depends_on": "services",
 		"models":     "models",
@@ -498,7 +491,7 @@ func dependencyCompletionItems(file *ast.File, u *url.URL, path []*ast.MappingVa
 	}
 	if len(path) >= 3 && path[2].Key.GetToken().Value == "extends" && path[0].Key.GetToken().Value == "services" {
 		if (len(path) == 4 && path[3].Key.GetToken().Value == "service") || params.Position.Line == protocol.UInteger(path[2].Key.GetToken().Position.Line)-1 {
-			if !extendingCurrentFile(u, path[2]) {
+			if !extendingCurrentFile(documentPath, path[2]) {
 				return nil
 			}
 
