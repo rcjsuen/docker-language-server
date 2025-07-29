@@ -15,6 +15,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/documentLink
     - convert links properly if a WSL URI with a dollar sign is used ([#378](https://github.com/docker/docker-language-server/issues/378))
+  - textDocument/inlineCompletion
+    - convert links properly if a WSL URI with a dollar sign is used ([#384](https://github.com/docker/docker-language-server/issues/384))
 
 ## [0.14.0] - 2025-07-16
 
