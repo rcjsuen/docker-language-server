@@ -3,14 +3,12 @@ package document
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
 
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
-	"github.com/docker/docker-language-server/internal/types"
 	"github.com/goccy/go-yaml/ast"
 	"github.com/goccy/go-yaml/parser"
 	"go.lsp.dev/uri"
@@ -81,7 +79,7 @@ func isPath(path string) bool {
 }
 
 func searchForIncludedFiles(searched []uri.URI, d *composeDocument) (map[string]*ast.File, bool) {
-	u, err := url.Parse(string(d.uri))
+	documentPath, err := d.document.DocumentPath()
 	if err != nil {
 		return nil, true
 	}
@@ -89,25 +87,23 @@ func searchForIncludedFiles(searched []uri.URI, d *composeDocument) (map[string]
 	files := map[string]*ast.File{}
 	for _, path := range d.includedPaths() {
 		if isPath(path) {
-			includedPath, err := types.AbsolutePath(u, path)
+			includedPath := filepath.Join(documentPath.Folder, path)
+			uriString := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(includedPath), "/"))
+			pathURI := uri.URI(uriString)
+			if slices.Contains(searched, pathURI) {
+				return nil, false
+			}
+			doc, err := d.mgr.tryReading(context.Background(), pathURI, false)
 			if err == nil {
-				uriString := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(includedPath), "/"))
-				pathURI := uri.URI(uriString)
-				if slices.Contains(searched, pathURI) {
-					return nil, false
-				}
-				doc, err := d.mgr.tryReading(context.Background(), pathURI, false)
-				if err == nil {
-					if c, ok := doc.(*composeDocument); ok && c.file != nil {
-						searched = append(searched, pathURI)
-						next, resolvable := searchForIncludedFiles(searched, c)
-						if !resolvable {
-							return nil, false
-						}
-						files[uriString] = c.file
-						for u, f := range next {
-							files[u] = f
-						}
+				if c, ok := doc.(*composeDocument); ok && c.file != nil {
+					searched = append(searched, pathURI)
+					next, resolvable := searchForIncludedFiles(searched, c)
+					if !resolvable {
+						return nil, false
+					}
+					files[uriString] = c.file
+					for u, f := range next {
+						files[u] = f
 					}
 				}
 			}
