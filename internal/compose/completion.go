@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 	"unicode"
@@ -28,9 +27,6 @@ type textEditModifier struct {
 }
 
 func samePath(uriPath, path string) bool {
-	if runtime.GOOS == "windows" {
-		return filepath.ToSlash(uriPath[1:]) == filepath.ToSlash(path)
-	}
 	return filepath.ToSlash(uriPath) == filepath.ToSlash(path)
 }
 
