@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
-	"path/filepath"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -19,7 +17,8 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, document docume
 	if !ok {
 		return nil, errors.New("unrecognized body in HCL document")
 	}
-	url, err := url.Parse(string(documentURI))
+
+	d, err := document.DocumentPath()
 	if err != nil {
 		return nil, fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
 	}
@@ -37,17 +36,15 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, document docume
 
 				dockerfilePath = strings.TrimPrefix(dockerfilePath, "\"")
 				dockerfilePath = strings.TrimSuffix(dockerfilePath, "\"")
-				dockerfilePath, err = types.AbsolutePath(url, dockerfilePath)
-				if err == nil {
-					links = append(links, protocol.DocumentLink{
-						Range: protocol.Range{
-							Start: protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().Start.Column)},
-							End:   protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().End.Column - 2)},
-						},
-						Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/")))),
-						Tooltip: types.CreateStringPointer(dockerfilePath),
-					})
-				}
+				target, tooltip := types.Concatenate(d.Folder, dockerfilePath, d.WSLDollarSignHost)
+				links = append(links, protocol.DocumentLink{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().Start.Column)},
+						End:   protocol.Position{Line: uint32(v.SrcRange.Start.Line) - 1, Character: uint32(v.Expr.Range().End.Column - 2)},
+					},
+					Target:  types.CreateStringPointer(target),
+					Tooltip: types.CreateStringPointer(tooltip),
+				})
 			}
 		}
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
 	"github.com/docker/docker-language-server/internal/types"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func documentLinkTooltip(testsFolder, fileName string) *string {
@@ -69,7 +70,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(document.NewDocumentManager(), "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)
@@ -385,7 +386,7 @@ include:
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			doc := document.NewComposeDocument(document.NewDocumentManager(), "docker-compose.yml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(document.NewDocumentManager(), uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			require.Equal(t, tc.links, links)
@@ -1158,7 +1159,7 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {
@@ -1332,7 +1333,7 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {
@@ -1494,7 +1495,7 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {
@@ -1707,7 +1708,7 @@ services:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {
@@ -1834,7 +1835,7 @@ configs:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {
@@ -1961,7 +1962,7 @@ secrets:
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mgr := document.NewDocumentManager()
-			doc := document.NewComposeDocument(mgr, "compose.yaml", 1, []byte(tc.content))
+			doc := document.NewComposeDocument(mgr, uri.URI(composeStringURI), 1, []byte(tc.content))
 			links, err := DocumentLink(context.Background(), composeStringURI, doc)
 			require.NoError(t, err)
 			if tc.path == "" {

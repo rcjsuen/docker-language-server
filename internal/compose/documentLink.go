@@ -3,9 +3,6 @@ package compose
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -34,18 +31,11 @@ func createRange(t *token.Token, length int) protocol.Range {
 
 func createLink(folderAbsolutePath string, wslDollarSign bool, node *token.Token) *protocol.DocumentLink {
 	file := node.Value
-	if wslDollarSign {
-		return &protocol.DocumentLink{
-			Range:   createRange(node, len(file)),
-			Target:  types.CreateStringPointer("file://wsl%24" + path.Join(strings.ReplaceAll(folderAbsolutePath, "\\", "/"), file)),
-			Tooltip: types.CreateStringPointer("\\\\wsl%24" + strings.ReplaceAll(path.Join(folderAbsolutePath, file), "/", "\\")),
-		}
-	}
-	abs := filepath.ToSlash(filepath.Join(folderAbsolutePath, file))
+	u, path := types.Concatenate(folderAbsolutePath, file, wslDollarSign)
 	return &protocol.DocumentLink{
 		Range:   createRange(node, len(file)),
-		Target:  types.CreateStringPointer(protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")))),
-		Tooltip: types.CreateStringPointer(filepath.FromSlash(abs)),
+		Target:  types.CreateStringPointer(u),
+		Tooltip: types.CreateStringPointer(path),
 	}
 }
 
@@ -264,22 +254,8 @@ func scanForLinks(folderAbsolutePath string, wslDollarSign bool, n *ast.MappingV
 	return nil
 }
 
-func documentFolder(documentURI protocol.URI) (string, bool, error) {
-	url, err := url.Parse(string(documentURI))
-	if err != nil {
-		if strings.HasPrefix(documentURI, "file://wsl%24/") {
-			path := documentURI[len("file://wsl%24"):]
-			idx := strings.LastIndex(path, "/")
-			return path[0 : idx+1], true, nil
-		}
-		return "", false, fmt.Errorf("LSP client sent invalid URI: %v", string(documentURI))
-	}
-	folder, err := types.AbsoluteFolder(url)
-	return folder, false, err
-}
-
 func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.ComposeDocument) ([]protocol.DocumentLink, error) {
-	abs, wslDollarSign, err := documentFolder(documentURI)
+	d, err := doc.DocumentPath()
 	if err != nil {
 		return nil, err
 	}
@@ -293,7 +269,7 @@ func DocumentLink(ctx context.Context, documentURI protocol.URI, doc document.Co
 	for _, documentNode := range file.Docs {
 		if mappingNode, ok := documentNode.Body.(*ast.MappingNode); ok {
 			for _, node := range mappingNode.Values {
-				links = append(links, scanForLinks(abs, wslDollarSign, node)...)
+				links = append(links, scanForLinks(d.Folder, d.WSLDollarSignHost, node)...)
 			}
 		}
 	}

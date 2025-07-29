@@ -99,3 +99,61 @@ func TestDocumentLink(t *testing.T) {
 		})
 	}
 }
+
+func TestDocumentLink_WSL(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		target    string
+		tooltip   string
+		linkRange protocol.Range
+		links     func(path string) []protocol.DocumentLink
+	}{
+		{
+			name:    "Dockerfile",
+			content: "target \"api\" {\n  dockerfile = \"Dockerfile\"\n}",
+			target:  "file://wsl%24/docker-desktop/tmp/Dockerfile",
+			tooltip: "\\\\wsl%24\\docker-desktop\\tmp\\Dockerfile",
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 26},
+			},
+		},
+		{
+			name:    "./Dockerfile",
+			content: "target \"api\" {\n  dockerfile = \"./Dockerfile\"\n}",
+			target:  "file://wsl%24/docker-desktop/tmp/Dockerfile",
+			tooltip: "\\\\wsl%24\\docker-desktop\\tmp\\Dockerfile",
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 28},
+			},
+		},
+		{
+			name:    "../other/Dockerfile",
+			content: "target \"api\" {\n  dockerfile = \"../other/Dockerfile\"\n}",
+			target:  "file://wsl%24/docker-desktop/other/Dockerfile",
+			tooltip: "\\\\wsl%24\\docker-desktop\\other\\Dockerfile",
+			linkRange: protocol.Range{
+				Start: protocol.Position{Line: 1, Character: 16},
+				End:   protocol.Position{Line: 1, Character: 35},
+			},
+		},
+	}
+
+	documentStringURI := "file://wsl%24/docker-desktop/tmp/docker-bake.hcl"
+	documentURI := uri.URI(documentStringURI)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc := document.NewBakeHCLDocument(documentURI, 1, []byte(tc.content))
+			links, err := DocumentLink(context.Background(), documentStringURI, doc)
+			require.NoError(t, err)
+			link := protocol.DocumentLink{
+				Range:   tc.linkRange,
+				Target:  types.CreateStringPointer(tc.target),
+				Tooltip: types.CreateStringPointer(tc.tooltip),
+			}
+			require.Equal(t, []protocol.DocumentLink{link}, links)
+		})
+	}
+}
