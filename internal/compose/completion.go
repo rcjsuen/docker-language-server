@@ -54,8 +54,8 @@ var buildTargetModifier = textEditModifier{
 	},
 	modify: func(file *ast.File, manager *document.Manager, documentPath document.DocumentPath, edit protocol.TextEdit, attributeName, spacing string, path []*ast.MappingValueNode) protocol.TextEdit {
 		if _, ok := path[2].Value.(*ast.NullNode); ok {
-			_, dockerfilePath := types.Concatenate(documentPath.Folder, "Dockerfile", documentPath.WSLDollarSignHost)
-			stages := findBuildStages(manager, dockerfilePath, "")
+			dockerfileURI, dockerfilePath := types.Concatenate(documentPath.Folder, "Dockerfile", documentPath.WSLDollarSignHost)
+			stages := findBuildStages(manager, dockerfileURI, dockerfilePath, "")
 			if len(stages) > 0 {
 				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
 				return edit
@@ -71,8 +71,8 @@ var buildTargetModifier = textEditModifier{
 				}
 			}
 
-			_, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
-			stages := findBuildStages(manager, dockerfilePath, "")
+			dockerfileURI, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
+			stages := findBuildStages(manager, dockerfileURI, dockerfilePath, "")
 			if len(stages) > 0 {
 				edit.NewText = fmt.Sprintf("%v%v", edit.NewText, createChoiceSnippetText(stages))
 				return edit
@@ -402,8 +402,8 @@ func findDependencies(file *ast.File, dependencyType string) []string {
 	return services
 }
 
-func findBuildStages(manager *document.Manager, dockerfilePath, prefix string) []completionItemText {
-	_, nodes := document.OpenDockerfile(context.Background(), manager, dockerfilePath)
+func findBuildStages(manager *document.Manager, dockerfileURI, dockerfilePath, prefix string) []completionItemText {
+	_, nodes := document.OpenDockerfile(context.Background(), manager, dockerfileURI, dockerfilePath)
 	items := []completionItemText{}
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "FROM") {
@@ -435,16 +435,16 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 				}
 			}
 
-			_, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
+			dockerfileURI, dockerfilePath := types.Concatenate(documentPath.Folder, dockerfileAttributePath, documentPath.WSLDollarSignHost)
 			if _, ok := path[3].Value.(*ast.NullNode); ok {
-				return createBuildStageItems(params, manager, dockerfilePath, "", prefixLength), true
+				return createBuildStageItems(params, manager, dockerfileURI, dockerfilePath, "", prefixLength), true
 			} else if prefix, ok := path[3].Value.(*ast.StringNode); ok {
 				if int(params.Position.Line) == path[3].Value.GetToken().Position.Line-1 {
 					offset := int(params.Position.Character) - path[3].Value.GetToken().Position.Column + 1
 					// offset can be greater than the length if there's just empty whitespace after the string value,
 					// must be non-negative, if negative it suggests the cursor is in the whitespace before the attribute's value
 					if offset >= 0 && offset <= len(prefix.Value) {
-						return createBuildStageItems(params, manager, dockerfilePath, prefix.Value[0:offset], prefixLength), true
+						return createBuildStageItems(params, manager, dockerfileURI, dockerfilePath, prefix.Value[0:offset], prefixLength), true
 					}
 				}
 			}
@@ -453,9 +453,9 @@ func buildTargetCompletionItems(params *protocol.CompletionParams, manager *docu
 	return nil, false
 }
 
-func createBuildStageItems(params *protocol.CompletionParams, manager *document.Manager, dockerfilePath, prefix string, prefixLength protocol.UInteger) []protocol.CompletionItem {
+func createBuildStageItems(params *protocol.CompletionParams, manager *document.Manager, dockerfileURI, dockerfilePath, prefix string, prefixLength protocol.UInteger) []protocol.CompletionItem {
 	items := []protocol.CompletionItem{}
-	for _, itemText := range findBuildStages(manager, dockerfilePath, prefix) {
+	for _, itemText := range findBuildStages(manager, dockerfileURI, dockerfilePath, prefix) {
 		items = append(items, protocol.CompletionItem{
 			Label:         itemText.label,
 			Documentation: itemText.documentation,

@@ -4397,6 +4397,128 @@ services:
 	}
 }
 
+func TestCompletion_BuildStageLookups_WSL(t *testing.T) {
+	testCases := []struct {
+		name              string
+		dockerfileContent string
+		content           string
+		line              uint32
+		character         uint32
+		list              func() *protocol.CompletionList
+	}{
+		{
+			name:              "target attribute is null",
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      target: `,
+			line:      4,
+			character: 14,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "scratch",
+							TextEdit:      textEdit("base", 4, 14, 0),
+						},
+					},
+				}
+			},
+		},
+		{
+			name:              "target attribute has a valid prefix",
+			dockerfileContent: "FROM scratch AS base",
+			content: `
+services:
+  postgres:
+    build:
+      target: b`,
+			line:      4,
+			character: 15,
+			list: func() *protocol.CompletionList {
+				return &protocol.CompletionList{
+					Items: []protocol.CompletionItem{
+						{
+							Label:         "base",
+							Documentation: "scratch",
+							TextEdit:      textEdit("base", 4, 15, 1),
+						},
+					},
+				}
+			},
+		},
+		{
+			name:              "build completion items include autofilled stages when build is empty",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      `,
+			line:      4,
+			character: 6,
+			list: func() *protocol.CompletionList {
+				items := serviceBuildProperties(4, 6, 0)
+				for i := range items {
+					if items[i].Label == "target" {
+						items[i].TextEdit = textEdit("target: ${1|bstage,astage|}", 4, 6, 0)
+						break
+					}
+				}
+				return &protocol.CompletionList{Items: items}
+			},
+		},
+		{
+			name:              "build completion items include autofilled stages when build is empty when build object has other attributes",
+			dockerfileContent: "FROM busybox as bstage\nFROM alpine as astage",
+			content: `
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      `,
+			line:      5,
+			character: 6,
+			list: func() *protocol.CompletionList {
+				items := serviceBuildProperties(5, 6, 0)
+				for i := range items {
+					if items[i].Label == "target" {
+						items[i].TextEdit = textEdit("target: ${1|bstage,astage|}", 5, 6, 0)
+						break
+					}
+				}
+				return &protocol.CompletionList{
+					Items: items,
+				}
+			},
+		},
+	}
+
+	dockerfileURI := "file://wsl%24/docker-desktop/tmp/Dockerfile"
+	composeFileURI := "file://wsl%24/docker-desktop/tmp/compose.yaml"
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			changed, err := manager.Write(context.Background(), uri.URI(dockerfileURI), protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+			require.NoError(t, err)
+			require.True(t, changed)
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.list(), list)
+		})
+	}
+}
+
 func TestCompletion_CustomServiceProvider(t *testing.T) {
 	testCases := []struct {
 		name      string

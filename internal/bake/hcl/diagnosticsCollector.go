@@ -231,7 +231,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 						}
 						nodes, ok := dockerfileContent[dockerfile]
 						if !ok {
-							_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+							_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfilePath)
 							dockerfileContent[block.Labels[0]] = nodes
 						}
 						diagnostic := c.checkTargetTarget(nodes, expr, literalValueExpr, source)
@@ -255,7 +255,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 								}
 								nodes, ok := dockerfileContent[dockerfile]
 								if !ok {
-									_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfile)
+									_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfile)
 									dockerfileContent[dockerfile] = nodes
 								}
 								c.collectARGs(nodes, args)
@@ -265,7 +265,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 
 					nodes, ok := dockerfileContent[dockerfilePath]
 					if !ok {
-						_, nodes = document.OpenDockerfile(context.Background(), c.docs, dockerfilePath)
+						_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfilePath)
 						dockerfileContent[dockerfilePath] = nodes
 					}
 					argsDiagnostics := c.checkTargetArgs(nodes, input, expr, source, args)

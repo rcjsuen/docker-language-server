@@ -73,7 +73,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 				continue
 			}
 
-			_, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
+			_, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
 			if nodes != nil {
 				if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
 					if _, ok := attributes["dockerfile-inline"]; ok {

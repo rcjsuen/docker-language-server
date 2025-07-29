@@ -44,8 +44,11 @@ func parseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {
 	return dockerfileBytes, result, err
 }
 
-func OpenDockerfile(ctx context.Context, manager *Manager, path string) ([]byte, []*parser.Node) {
-	doc := manager.Get(ctx, uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))))
+func OpenDockerfile(ctx context.Context, manager *Manager, documentURI, path string) ([]byte, []*parser.Node) {
+	if documentURI == "" {
+		documentURI = fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))
+	}
+	doc := manager.Get(ctx, uri.URI(documentURI))
 	if doc != nil {
 		if dockerfile, ok := doc.(DockerfileDocument); ok {
 			return dockerfile.Input(), dockerfile.Nodes()
