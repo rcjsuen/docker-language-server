@@ -241,3 +241,47 @@ func TestInlineCompletion(t *testing.T) {
 		})
 	}
 }
+func TestInlineCompletion_WSL(t *testing.T) {
+	testCases := []struct {
+		name              string
+		content           string
+		dockerfileContent string
+		position          protocol.Position
+		items             []protocol.InlineCompletionItem
+	}{
+		{
+			name:              "one build stage",
+			content:           "",
+			dockerfileContent: "FROM scratch AS simple",
+			position:          protocol.Position{Line: 0, Character: 0},
+			items: []protocol.InlineCompletionItem{
+				{
+					InsertText: "target \"simple\" {\n  target = \"simple\"\n}\n",
+					Range: &protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 0},
+					},
+				},
+			},
+		},
+	}
+
+	bakeURI := "file://wsl%24/docker-desktop/tmp/docker-bake.hcl"
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			changed, err := manager.Write(context.Background(), "file://wsl%24/docker-desktop/tmp/Dockerfile", protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+			require.NoError(t, err)
+			require.True(t, changed)
+			doc := document.NewBakeHCLDocument(uri.URI(bakeURI), 1, []byte(tc.content))
+			items, err := InlineCompletion(context.Background(), &protocol.InlineCompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: bakeURI},
+					Position:     tc.position,
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.items, items)
+		})
+	}
+}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"slices"
 	"strings"
 	"unicode"
@@ -47,7 +46,7 @@ func shouldSuggest(content []byte, body *hclsyntax.Body, position protocol.Posit
 }
 
 func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionParams, manager *document.Manager, bakeDocument document.BakeHCLDocument) ([]protocol.InlineCompletionItem, error) {
-	url, err := url.Parse(params.TextDocument.URI)
+	documentPath, err := bakeDocument.DocumentPath()
 	if err != nil {
 		return nil, fmt.Errorf("LSP client sent invalid URI: %v", params.TextDocument.URI)
 	}
@@ -57,11 +56,7 @@ func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionPara
 		return nil, errors.New("unrecognized body in HCL document")
 	}
 
-	dockerfilePath, err := types.LocalDockerfile(url)
-	if err != nil {
-		return nil, fmt.Errorf("invalid document path: %v", url.Path)
-	}
-
+	documentURI, dockerfilePath := types.Concatenate(documentPath.Folder, "Dockerfile", documentPath.WSLDollarSignHost)
 	if !shouldSuggest(bakeDocument.Input(), body, params.Position) {
 		return nil, nil
 	}
@@ -90,7 +85,7 @@ func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionPara
 	argNames := []string{}
 	args := map[string]string{}
 	targets := []string{}
-	_, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
+	_, nodes := document.OpenDockerfile(ctx, manager, documentURI, dockerfilePath)
 	before := true
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "ARG") && before {
