@@ -1,12 +1,24 @@
 package document
 
 import (
+	"fmt"
+	"net/url"
+	"strings"
+
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
+	"github.com/docker/docker-language-server/internal/types"
 	"go.lsp.dev/uri"
 )
 
+type DocumentPath struct {
+	Folder            string
+	FileName          string
+	WSLDollarSignHost bool
+}
+
 type Document interface {
 	URI() uri.URI
+	DocumentPath() (DocumentPath, error)
 	Copy() Document
 	Input() []byte
 	Version() int32
@@ -54,6 +66,22 @@ func (d *document) Input() []byte {
 
 func (d *document) URI() uri.URI {
 	return d.uri
+}
+
+func (d *document) DocumentPath() (DocumentPath, error) {
+	uriString := string(d.uri)
+	url, err := url.Parse(uriString)
+	if err != nil {
+		if strings.HasPrefix(uriString, "file://wsl%24/") {
+			path := uriString[len("file://wsl%24"):]
+			idx := strings.LastIndex(path, "/")
+			return DocumentPath{Folder: path[0:idx], FileName: path[idx+1:], WSLDollarSignHost: true}, nil
+		}
+		return DocumentPath{}, fmt.Errorf("Invalid URI: %v", uriString)
+	}
+	folder, err := types.AbsoluteFolder(url)
+	idx := strings.LastIndex(uriString, "/")
+	return DocumentPath{Folder: folder, FileName: uriString[idx+1:]}, err
 }
 
 func (d *document) LanguageIdentifier() protocol.LanguageIdentifier {

@@ -180,9 +180,14 @@ func (d *bakeHCLDocument) extractBakeOutput() {
 		}
 	}
 
+	dd, err := d.DocumentPath()
+	if err != nil {
+		d.bakePrintOutput = nil
+		return
+	}
 	btargets, groups, err := bake.ReadTargets(
 		context.Background(),
-		[]bake.File{{Name: d.uri.Filename(), Data: d.Input()}},
+		[]bake.File{{Name: dd.FileName, Data: d.Input()}},
 		targets,
 		nil,
 		nil,

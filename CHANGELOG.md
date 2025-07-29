@@ -10,6 +10,9 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/documentLink
     - improve handling of malformed image attribute values with registry prefixes ([#369](https://github.com/docker/docker-language-server/issues/369))
     - convert links properly if a WSL URI with a dollar sign is used ([#366](https://github.com/docker/docker-language-server/issues/366))
+- Bake
+  - textDocument/documentLink
+    - convert links properly if a WSL URI with a dollar sign is used ([#378](https://github.com/docker/docker-language-server/issues/378))
 
 ## [0.14.0] - 2025-07-16
 

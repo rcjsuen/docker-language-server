@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"net/url"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -95,6 +96,14 @@ func AbsoluteFolder(documentURL *url.URL) (string, error) {
 		documentPath = documentURL.Path[1:]
 	}
 	return filepath.Abs(filepath.Dir(documentPath))
+}
+
+func Concatenate(folder, file string, wslDollarSign bool) (uri string, absoluteFilePath string) {
+	if wslDollarSign {
+		return "file://wsl%24" + path.Join(strings.ReplaceAll(folder, "\\", "/"), file), "\\\\wsl%24" + strings.ReplaceAll(path.Join(folder, file), "/", "\\")
+	}
+	abs := filepath.ToSlash(filepath.Join(folder, file))
+	return fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")), filepath.FromSlash(abs)
 }
 
 func CreateDefinitionResult(definitionLinkSupport bool, targetRange protocol.Range, originSelectionRange *protocol.Range, linkURI protocol.URI) any {
