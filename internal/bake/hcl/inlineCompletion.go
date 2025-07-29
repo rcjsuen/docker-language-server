@@ -90,7 +90,7 @@ func InlineCompletion(ctx context.Context, params *protocol.InlineCompletionPara
 	argNames := []string{}
 	args := map[string]string{}
 	targets := []string{}
-	_, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
+	_, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
 	before := true
 	for _, child := range nodes {
 		if strings.EqualFold(child.Value, "ARG") && before {

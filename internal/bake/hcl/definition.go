@@ -122,7 +122,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 			target := value.AsString()
 
-			bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
+			bytes, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
 			lines := strings.Split(string(bytes), "\n")
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
@@ -188,7 +188,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 						end--
 					}
 					arg := string(doc.Input()[start:end])
-					bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfilePath)
+					bytes, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
 					lines := strings.Split(string(bytes), "\n")
 					for _, child := range nodes {
 						if strings.EqualFold(child.Value, "ARG") {

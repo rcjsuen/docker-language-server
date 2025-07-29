@@ -113,7 +113,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 			name:    "Dockerfile",
 			content: "target \"api\" {\n  dockerfile = \"Dockerfile\"\n}",
 			target:  "file://wsl%24/docker-desktop/tmp/Dockerfile",
-			tooltip: "\\\\wsl%24\\docker-desktop\\tmp\\Dockerfile",
+			tooltip: "\\\\wsl$\\docker-desktop\\tmp\\Dockerfile",
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 1, Character: 16},
 				End:   protocol.Position{Line: 1, Character: 26},
@@ -123,7 +123,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 			name:    "./Dockerfile",
 			content: "target \"api\" {\n  dockerfile = \"./Dockerfile\"\n}",
 			target:  "file://wsl%24/docker-desktop/tmp/Dockerfile",
-			tooltip: "\\\\wsl%24\\docker-desktop\\tmp\\Dockerfile",
+			tooltip: "\\\\wsl$\\docker-desktop\\tmp\\Dockerfile",
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 1, Character: 16},
 				End:   protocol.Position{Line: 1, Character: 28},
@@ -133,7 +133,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 			name:    "../other/Dockerfile",
 			content: "target \"api\" {\n  dockerfile = \"../other/Dockerfile\"\n}",
 			target:  "file://wsl%24/docker-desktop/other/Dockerfile",
-			tooltip: "\\\\wsl%24\\docker-desktop\\other\\Dockerfile",
+			tooltip: "\\\\wsl$\\docker-desktop\\other\\Dockerfile",
 			linkRange: protocol.Range{
 				Start: protocol.Position{Line: 1, Character: 16},
 				End:   protocol.Position{Line: 1, Character: 35},

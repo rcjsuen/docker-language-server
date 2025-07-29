@@ -46,7 +46,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 						End:   protocol.Position{Line: 1, Character: 13},
 					},
 					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/tmp/file.yaml"),
-					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\tmp\\file.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl$\\docker-desktop\\tmp\\file.yaml"),
 				},
 				{
 					Range: protocol.Range{
@@ -54,7 +54,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 						End:   protocol.Position{Line: 2, Character: 16},
 					},
 					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/tmp/file2.yaml"),
-					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\tmp\\file2.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl$\\docker-desktop\\tmp\\file2.yaml"),
 				},
 				{
 					Range: protocol.Range{
@@ -62,7 +62,7 @@ func TestDocumentLink_WSL(t *testing.T) {
 						End:   protocol.Position{Line: 3, Character: 23},
 					},
 					Target:  types.CreateStringPointer("file://wsl%24/docker-desktop/other/file3.yaml"),
-					Tooltip: types.CreateStringPointer("\\\\wsl%24\\docker-desktop\\other\\file3.yaml"),
+					Tooltip: types.CreateStringPointer("\\\\wsl$\\docker-desktop\\other\\file3.yaml"),
 				},
 			},
 		},

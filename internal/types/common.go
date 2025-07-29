@@ -100,7 +100,7 @@ func AbsoluteFolder(documentURL *url.URL) (string, error) {
 
 func Concatenate(folder, file string, wslDollarSign bool) (uri string, absoluteFilePath string) {
 	if wslDollarSign {
-		return "file://wsl%24" + path.Join(strings.ReplaceAll(folder, "\\", "/"), file), "\\\\wsl%24" + strings.ReplaceAll(path.Join(folder, file), "/", "\\")
+		return "file://wsl%24" + path.Join(strings.ReplaceAll(folder, "\\", "/"), file), "\\\\wsl$" + strings.ReplaceAll(path.Join(folder, file), "/", "\\")
 	}
 	abs := filepath.ToSlash(filepath.Join(folder, file))
 	return fmt.Sprintf("file:///%v", strings.TrimPrefix(abs, "/")), filepath.FromSlash(abs)
