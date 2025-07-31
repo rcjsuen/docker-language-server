@@ -2,6 +2,10 @@ package document
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -113,6 +117,11 @@ target t2 { }`,
 }
 
 func TestDockerfileDocumentPathForTarget(t *testing.T) {
+	root := os.TempDir()
+	tmp := filepath.Join(root, "tmp")
+	tmp2 := filepath.Join(tmp, "tmp2")
+	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp2, "docker-bake.hcl")), "/"))
+
 	testCases := []struct {
 		name        string
 		documentURI string
@@ -135,8 +144,8 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 		{
 			name:    "dockerfile set",
 			content: `target t1 { dockerfile = "Dockerfile2" }`,
-			uri:     "file:///tmp/tmp2/Dockerfile2",
-			path:    "/tmp/tmp2/Dockerfile2",
+			uri:     fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp2, "Dockerfile2")), "/")),
+			path:    filepath.Join(tmp2, "Dockerfile2"),
 		},
 		{
 			name: "dockerfile set to variable",
@@ -147,8 +156,8 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 				variable "var" {
 					default = "Dockerfile2"
 				}`,
-			uri:  "file:///tmp/tmp2/Dockerfile2",
-			path: "/tmp/tmp2/Dockerfile2",
+			uri:  fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp2, "Dockerfile2")), "/")),
+			path: filepath.Join(tmp2, "Dockerfile2"),
 		},
 		{
 			name:    "dockerfile-inline set",
@@ -158,14 +167,14 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 		{
 			name:    "context set to subfolder",
 			content: `target t1 { context = "subfolder" }`,
-			uri:     "file:///tmp/tmp2/subfolder/Dockerfile",
-			path:    "/tmp/tmp2/subfolder/Dockerfile",
+			uri:     fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp2, "subfolder", "Dockerfile")), "/")),
+			path:    filepath.Join(tmp2, "subfolder", "Dockerfile"),
 		},
 		{
 			name:    "context set to ../other",
 			content: `target t1 { context = "../other" }`,
-			uri:     "file:///tmp/other/Dockerfile",
-			path:    "/tmp/other/Dockerfile",
+			uri:     fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp, "other", "Dockerfile")), "/")),
+			path:    filepath.Join(tmp, "other", "Dockerfile"),
 		},
 		{
 			name: "context set to subfolder and dockerfile defined",
@@ -173,8 +182,8 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 				context = "subfolder"
 				dockerfile = "Dockerfile2"
 			}`,
-			uri:  "file:///tmp/tmp2/subfolder/Dockerfile2",
-			path: "/tmp/tmp2/subfolder/Dockerfile2",
+			uri:  fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tmp2, "subfolder", "Dockerfile2")), "/")),
+			path: filepath.Join(tmp2, "subfolder", "Dockerfile2"),
 		},
 		{
 			name:        "wsl$ with dockerfile set",
@@ -203,7 +212,7 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			documentURI := tc.documentURI
 			if tc.documentURI == "" {
-				documentURI = "file:///tmp/tmp2/docker-bake.hcl"
+				documentURI = temporaryBakeFile
 			}
 			doc := NewBakeHCLDocument(uri.URI(documentURI), 1, []byte(tc.content))
 			body, ok := doc.File().Body.(*hclsyntax.Body)
