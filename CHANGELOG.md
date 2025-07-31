@@ -17,6 +17,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - convert links properly if a WSL URI with a dollar sign is used ([#378](https://github.com/docker/docker-language-server/issues/378))
   - textDocument/inlineCompletion
     - convert links properly if a WSL URI with a dollar sign is used ([#384](https://github.com/docker/docker-language-server/issues/384))
+  - textDocument/publishDiagnostics
+    - update the URI handling so that a WSL URI with a dollar sign can be scanned for errors ([#386](https://github.com/docker/docker-language-server/issues/386))
 
 ## [0.14.0] - 2025-07-16
 

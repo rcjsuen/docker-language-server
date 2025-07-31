@@ -1,9 +1,12 @@
 package document
 
 import (
+	"errors"
 	"testing"
 
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/stretchr/testify/require"
+	"go.lsp.dev/uri"
 )
 
 func TestParentTargets(t *testing.T) {
@@ -105,6 +108,110 @@ target t2 { }`,
 			targets, resolved := doc.ParentTargets(tc.target)
 			require.Equal(t, tc.targets, targets)
 			require.Equal(t, tc.resolved, resolved)
+		})
+	}
+}
+
+func TestDockerfileDocumentPathForTarget(t *testing.T) {
+	testCases := []struct {
+		name        string
+		documentURI string
+		content     string
+		uri         string
+		path        string
+		err         error
+	}{
+		{
+			name:    "empty block with no label name",
+			content: `target {}`,
+			err:     errors.New("cannot parse Bake file"),
+		},
+		{
+			name: "group block before target block",
+			content: `group g1 { targets = [ "t1" ] }
+			target t1 {}`,
+			err: errors.New("no target block named g1"),
+		},
+		{
+			name:    "dockerfile set",
+			content: `target t1 { dockerfile = "Dockerfile2" }`,
+			uri:     "file:///tmp/tmp2/Dockerfile2",
+			path:    "/tmp/tmp2/Dockerfile2",
+		},
+		{
+			name: "dockerfile set to variable",
+			content: `
+				target "stage1" {
+					dockerfile = var
+				}
+				variable "var" {
+					default = "Dockerfile2"
+				}`,
+			uri:  "file:///tmp/tmp2/Dockerfile2",
+			path: "/tmp/tmp2/Dockerfile2",
+		},
+		{
+			name:    "dockerfile-inline set",
+			content: `target t1 { dockerfile-inline = "FROM scratch" }`,
+			err:     errors.New("dockerfile-inline defined"),
+		},
+		{
+			name:    "context set to subfolder",
+			content: `target t1 { context = "subfolder" }`,
+			uri:     "file:///tmp/tmp2/subfolder/Dockerfile",
+			path:    "/tmp/tmp2/subfolder/Dockerfile",
+		},
+		{
+			name:    "context set to ../other",
+			content: `target t1 { context = "../other" }`,
+			uri:     "file:///tmp/other/Dockerfile",
+			path:    "/tmp/other/Dockerfile",
+		},
+		{
+			name: "context set to subfolder and dockerfile defined",
+			content: `target t1 {
+				context = "subfolder"
+				dockerfile = "Dockerfile2"
+			}`,
+			uri:  "file:///tmp/tmp2/subfolder/Dockerfile2",
+			path: "/tmp/tmp2/subfolder/Dockerfile2",
+		},
+		{
+			name:        "wsl$ with dockerfile set",
+			documentURI: "file://wsl%24/docker-desktop/tmp/tmp2/docker-bake.hcl",
+			content:     `target t1 { dockerfile = "Dockerfile2" }`,
+			uri:         "file://wsl%24/docker-desktop/tmp/tmp2/Dockerfile2",
+			path:        "\\\\wsl$\\docker-desktop\\tmp\\tmp2\\Dockerfile2",
+		},
+		{
+			name:        "wsl$ with context set",
+			documentURI: "file://wsl%24/docker-desktop/tmp/tmp2/docker-bake.hcl",
+			content:     `target t1 { context = "subfolder" }`,
+			uri:         "file://wsl%24/docker-desktop/tmp/tmp2/subfolder/Dockerfile",
+			path:        "\\\\wsl$\\docker-desktop\\tmp\\tmp2\\subfolder\\Dockerfile",
+		},
+		{
+			name:        "wsl$ with context set to ../other",
+			documentURI: "file://wsl%24/docker-desktop/tmp/tmp2/docker-bake.hcl",
+			content:     `target t1 { context = "../other" }`,
+			uri:         "file://wsl%24/docker-desktop/tmp/other/Dockerfile",
+			path:        "\\\\wsl$\\docker-desktop\\tmp\\other\\Dockerfile",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			documentURI := tc.documentURI
+			if tc.documentURI == "" {
+				documentURI = "file:///tmp/tmp2/docker-bake.hcl"
+			}
+			doc := NewBakeHCLDocument(uri.URI(documentURI), 1, []byte(tc.content))
+			body, ok := doc.File().Body.(*hclsyntax.Body)
+			require.True(t, ok)
+			uri, path, err := doc.DockerfileDocumentPathForTarget(body.Blocks[0])
+			require.Equal(t, tc.err, err)
+			require.Equal(t, tc.uri, uri)
+			require.Equal(t, tc.path, path)
 		})
 	}
 }

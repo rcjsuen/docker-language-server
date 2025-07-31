@@ -65,7 +65,12 @@ func (c *BakeHCLDiagnosticsCollector) SupportsLanguageIdentifier(languageIdentif
 
 func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder string, doc document.Document, text string) []protocol.Diagnostic {
 	input := doc.Input()
-	_, err := bake.ParseFile(input, doc.URI().Filename())
+	dp, err := doc.DocumentPath()
+	if err != nil {
+		return nil
+	}
+
+	_, err = bake.ParseFile(input, dp.FileName)
 	diagnostics := []protocol.Diagnostic{}
 	if err != nil {
 		var sourceError *errdefs.SourceError
@@ -119,12 +124,14 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 		return diagnostics
 	}
 
-	targetDockerfiles := map[string]string{}
 	dockerfileContent := map[string][]*parser.Node{}
 	for _, b := range body.Blocks {
 		if b.Type == "target" && len(b.Labels) == 1 {
-			dockerfilePath, _ := bakeDoc.DockerfileForTarget(b)
-			targetDockerfiles[b.Labels[0]] = dockerfilePath
+			if _, ok := dockerfileContent[b.Labels[0]]; !ok {
+				targetDockerfileURI, targetDockerfilePath, _ := bakeDoc.DockerfileDocumentPathForTarget(b)
+				_, nodes := document.OpenDockerfile(context.Background(), c.docs, targetDockerfileURI, targetDockerfilePath)
+				dockerfileContent[b.Labels[0]] = nodes
+			}
 		}
 	}
 
@@ -217,7 +224,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			dockerfilePath, err := bakeDoc.DockerfileForTarget(block)
+			_, dockerfilePath, err := bakeDoc.DockerfileDocumentPathForTarget(block)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}
@@ -225,18 +232,11 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 			if attribute, ok := block.Body.Attributes["target"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.TemplateExpr); ok && len(expr.Parts) == 1 {
 					if literalValueExpr, ok := expr.Parts[0].(*hclsyntax.LiteralValueExpr); ok {
-						dockerfile := targetDockerfiles[block.Labels[0]]
-						if dockerfile == "" {
-							dockerfileContent[""] = nil
-						}
-						nodes, ok := dockerfileContent[dockerfile]
-						if !ok {
-							_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfilePath)
-							dockerfileContent[block.Labels[0]] = nodes
-						}
-						diagnostic := c.checkTargetTarget(nodes, expr, literalValueExpr, source)
-						if diagnostic != nil {
-							diagnostics = append(diagnostics, *diagnostic)
+						if nodes, ok := dockerfileContent[block.Labels[0]]; ok {
+							diagnostic := c.checkTargetTarget(nodes, expr, literalValueExpr, source)
+							if diagnostic != nil {
+								diagnostics = append(diagnostics, *diagnostic)
+							}
 						}
 					}
 				}
@@ -249,27 +249,17 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 						if b.Type == "target" && len(b.Labels) == 1 && b.Labels[0] != block.Labels[0] {
 							parents, _ := bakeDoc.ParentTargets(b.Labels[0])
 							if slices.Contains(parents, block.Labels[0]) {
-								dockerfile := targetDockerfiles[b.Labels[0]]
-								if dockerfile == "" {
-									dockerfileContent[""] = nil
+								if nodes, ok := dockerfileContent[b.Labels[0]]; ok {
+									c.collectARGs(nodes, args)
 								}
-								nodes, ok := dockerfileContent[dockerfile]
-								if !ok {
-									_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfile)
-									dockerfileContent[dockerfile] = nodes
-								}
-								c.collectARGs(nodes, args)
 							}
 						}
 					}
 
-					nodes, ok := dockerfileContent[dockerfilePath]
-					if !ok {
-						_, nodes = document.OpenDockerfile(context.Background(), c.docs, "", dockerfilePath)
-						dockerfileContent[dockerfilePath] = nodes
+					if nodes, ok := dockerfileContent[block.Labels[0]]; ok {
+						argsDiagnostics := c.checkTargetArgs(nodes, input, expr, source, args)
+						diagnostics = append(diagnostics, argsDiagnostics...)
 					}
-					argsDiagnostics := c.checkTargetArgs(nodes, input, expr, source, args)
-					diagnostics = append(diagnostics, argsDiagnostics...)
 				}
 			}
 		}
