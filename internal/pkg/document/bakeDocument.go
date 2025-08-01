@@ -25,6 +25,7 @@ type BakeHCLDocument interface {
 	Decoder() *decoder.PathDecoder
 	File() *hcl.File
 	DockerfileForTarget(block *hclsyntax.Block) (string, error)
+	DockerfileDocumentPathForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error)
 	ParentTargets(target string) ([]string, bool)
 }
 
@@ -293,4 +294,33 @@ func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (string, e
 		return filepath.Join(contextPath, "Dockerfile"), nil
 	}
 	return "", nil
+}
+
+func (d *bakeHCLDocument) DockerfileDocumentPathForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error) {
+	if d.bakePrintOutput == nil || len(block.Labels) != 1 {
+		return "", "", errors.New("cannot parse Bake file")
+	}
+
+	switch resolvableDockerfile(block) {
+	case Undefined:
+		targets, _ := d.ParentTargets(block.Labels[0])
+		for _, target := range targets {
+			body := d.file.Body.(*hclsyntax.Body)
+			for _, b := range body.Blocks {
+				if len(b.Labels) == 1 && b.Labels[0] == target && resolvableDockerfile(b) == Unresolvable {
+					return "", "", nil
+				}
+			}
+		}
+	}
+
+	path, _ := d.DocumentPath()
+	if target, ok := d.bakePrintOutput.Target[block.Labels[0]]; ok {
+		if target.DockerfileInline != nil {
+			return "", "", errors.New("dockerfile-inline defined")
+		}
+		uri, file := types.Concatenate(filepath.Join(path.Folder, *target.Context), *target.Dockerfile, path.WSLDollarSignHost)
+		return uri, file, nil
+	}
+	return "", "", fmt.Errorf("no target block named %v", block.Labels[0])
 }

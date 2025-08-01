@@ -1,6 +1,7 @@
 package hcl
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,7 +53,7 @@ func TestCollectDiagnostics(t *testing.T) {
 			},
 		},
 		{
-			name:    "target block with network attribute empty string",
+			name:    "target block with alpine:3.17.0 is flagged with vulnerabilities",
 			content: "target \"t1\" {\n  tags = [ \"alpine:3.17.0\" ]\n}",
 			diagnostics: []protocol.Diagnostic{
 				{
@@ -126,9 +127,25 @@ func TestCollectDiagnostics(t *testing.T) {
 			},
 		},
 		{
-			name:        "args resolution to a dockerfile that points to a variable",
-			content:     "variable var { }\ntarget \"t1\" {\n  dockerfile = var\nargs = {\n    missing = \"value\"\n  }\n}",
+			name:        "args resolution to a dockerfile that points to a valid variable",
+			content:     "variable var { default = \"./backend/Dockerfile\" }\ntarget \"t1\" {\n  dockerfile = var\nargs = {\n    BACKEND_VAR = \"newValue\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
+		},
+		{
+			name:    "args resolution to a dockerfile that points to a valid variable",
+			content: "variable var { default = \"./backend/Dockerfile\" }\ntarget \"t1\" {\n  dockerfile = var\nargs = {\n    missing = \"newValue\"\n  }\n}",
+
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "'missing' not defined as an ARG in your Dockerfile",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 4, Character: 4},
+						End:   protocol.Position{Line: 4, Character: 11},
+					},
+				},
+			},
 		},
 		{
 			name:        "args resolution when inherting a parent that points to a var",
@@ -215,30 +232,56 @@ target "lint2" {
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
-			name: "context has a variable",
+			name: "context has a variable and the referenced ARG is valid",
 			content: `
-variable "GITHUB_WORKSPACE" {
-  default = "."
+variable "VAR" {
+  default = "./backend"
 }
 
 target "build" {
-  context = "${GITHUB_WORKSPACE}/folder/subfolder"
+  context = "${VAR}"
   dockerfile = "Dockerfile"
   args = {
-    VAR = "value"
+    BACKEND_VAR = "newValue"
   }
 }`,
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
+			name: "context has a variable and the referenced ARG is invalid",
+			content: `
+variable "VAR" {
+  default = "./backend"
+}
+
+target "build" {
+  context = "${VAR}"
+  dockerfile = "Dockerfile"
+  args = {
+    NON_EXISTENT_VAR = "newValue"
+  }
+}`,
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "'NON_EXISTENT_VAR' not defined as an ARG in your Dockerfile",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 9, Character: 4},
+						End:   protocol.Position{Line: 9, Character: 20},
+					},
+				},
+			},
+		},
+		{
 			name: "context has a variable and the target is inherited",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "."
 }
 
 target "common-base" {
-  context = "${GITHUB_WORKSPACE}/folder/subfolder"
+  context = "${VAR}/folder/subfolder"
   dockerfile = "Dockerfile"
 }
 
@@ -253,12 +296,12 @@ target "build" {
 		{
 			name: "parent target cannot be resolved but local target is resolvable",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "."
 }
 
 target "common-base" {
-  dockerfile = "${GITHUB_WORKSPACE}/folder/subfolder/Dockerfile"
+  dockerfile = "${VAR}/folder/subfolder/Dockerfile"
 }
 
 target "build" {
@@ -336,15 +379,84 @@ target "build" {
 	}
 }
 
-func TestCollectDiagnostics_InterFileDependency(t *testing.T) {
+func TestCollectDiagnostics_WSL(t *testing.T) {
 	testCases := []struct {
-		name        string
-		content     string
-		diagnostics []protocol.Diagnostic
+		name              string
+		content           string
+		dockerfileContent string
+		diagnostics       []protocol.Diagnostic
 	}{
 		{
-			name: "child target's Dockerfile defines the ARG",
-			content: `
+			name:              "target found in Dockerfile",
+			content:           "target \"t1\" {\n  target = \"base\"\n}",
+			dockerfileContent: "FROM scratch AS base",
+			diagnostics:       []protocol.Diagnostic{},
+		},
+		{
+			name:              "target cannot be found in Dockerfile",
+			content:           "target \"t1\" {\n  target = \"nonexistent\"\n}",
+			dockerfileContent: "FROM scratch AS base",
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "target could not be found in your Dockerfile",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 11},
+						End:   protocol.Position{Line: 1, Character: 24},
+					},
+				},
+			},
+		},
+		{
+			name:              "args can be found in Dockerfile",
+			content:           "target \"t1\" {\n  args = {\n    VAR = \"newValue\"\n  }\n}",
+			dockerfileContent: "ARG VAR=value\nFROM scratch",
+			diagnostics:       []protocol.Diagnostic{},
+		},
+		{
+			name:              "args cannot be found in Dockerfile",
+			content:           "target \"t1\" {\n  args = {\n    missing = \"newValue\"\n  }\n}",
+			dockerfileContent: "ARG VAR=value\nFROM scratch",
+			diagnostics: []protocol.Diagnostic{
+				{
+					Message:  "'missing' not defined as an ARG in your Dockerfile",
+					Source:   types.CreateStringPointer("docker-language-server"),
+					Severity: types.CreateDiagnosticSeverityPointer(protocol.DiagnosticSeverityError),
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 11},
+					},
+				},
+			},
+		},
+	}
+
+	dockerfileURI := "file://wsl%24/docker-desktop/tmp/Dockerfile"
+	bakeFileURI := uri.URI("file://wsl%24/docker-desktop/tmp/docker-bake.hcl")
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			changed, err := manager.Write(context.Background(), uri.URI(dockerfileURI), protocol.DockerfileLanguage, 1, []byte(tc.dockerfileContent))
+			require.NoError(t, err)
+			require.True(t, changed)
+			collector := &BakeHCLDiagnosticsCollector{docs: manager, scout: scout.NewService()}
+			doc := document.NewBakeHCLDocument(bakeFileURI, 1, []byte(tc.content))
+			diagnostics := collector.CollectDiagnostics("docker-language-server", "", doc, "")
+			require.Equal(t, tc.diagnostics, diagnostics)
+		})
+	}
+}
+
+var hierarchyTests = []struct {
+	name        string
+	content     string
+	diagnostics []protocol.Diagnostic
+}{
+	{
+		name: "child target's Dockerfile defines the ARG",
+		content: `
 target parent {
   args = {
     other = "value2"
@@ -355,11 +467,11 @@ target foo {
   dockerfile = "Dockerfile2"
   inherits = ["parent"]
 }`,
-			diagnostics: []protocol.Diagnostic{},
-		},
-		{
-			name: "child target's Dockerfile defines the ARG but not another child",
-			content: `
+		diagnostics: []protocol.Diagnostic{},
+	},
+	{
+		name: "child target's Dockerfile defines the ARG but not another child",
+		content: `
 target parent {
   args = {
     other = "value2"
@@ -374,10 +486,11 @@ target foo {
 target foo2 {
   inherits = ["parent"]
 }`,
-			diagnostics: []protocol.Diagnostic{},
-		},
-	}
+		diagnostics: []protocol.Diagnostic{},
+	},
+}
 
+func TestCollectDiagnostics_Hierarchy(t *testing.T) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
@@ -385,9 +498,29 @@ target foo2 {
 	bakeFilePath := filepath.Join(diagnosticsTestFolderPath, "docker-bake.hcl")
 	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(bakeFilePath), "/")))
 
-	for _, tc := range testCases {
+	for _, tc := range hierarchyTests {
 		t.Run(tc.name, func(t *testing.T) {
 			manager := document.NewDocumentManager()
+			bytes := []byte(tc.content)
+			collector := &BakeHCLDiagnosticsCollector{docs: manager, scout: scout.NewService()}
+			doc := document.NewBakeHCLDocument(bakeFileURI, 1, bytes)
+			diagnostics := collector.CollectDiagnostics("docker-language-server", "", doc, "")
+			require.Equal(t, tc.diagnostics, diagnostics)
+		})
+	}
+}
+
+func TestCollectDiagnostics_WSLHierarchy(t *testing.T) {
+	dockerfileContent := "ARG other=value\nFROM scratch AS build"
+	dockerfileURI := uri.URI("file://wsl%24/docker-desktop/tmp/Dockerfile2")
+	bakeFileURI := uri.URI("file://wsl%24/docker-desktop/tmp/docker-bake.hcl")
+
+	for _, tc := range hierarchyTests {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			changed, err := manager.Write(context.Background(), dockerfileURI, protocol.DockerfileLanguage, 1, []byte(dockerfileContent))
+			require.NoError(t, err)
+			require.True(t, changed)
 			bytes := []byte(tc.content)
 			collector := &BakeHCLDiagnosticsCollector{docs: manager, scout: scout.NewService()}
 			doc := document.NewBakeHCLDocument(bakeFileURI, 1, bytes)
