@@ -109,7 +109,7 @@ To support `textDocument/codeLens`, the client must provide a command with the i
 ```JSONC
 {
   "capabilities": {
-    "experiemntal:": {
+    "experimental:": {
       "dockerLanguageServerCapabilities": {
           "commands": [
             "dockerLspClient.bake.build"
