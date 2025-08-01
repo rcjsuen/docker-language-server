@@ -3,6 +3,7 @@ package hcl
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -43,20 +44,30 @@ func TestLocalDockerfileForWindows(t *testing.T) {
 	require.Equal(t, "c:\\Users\\windows\\Dockerfile", path)
 }
 
-func TestDefinition(t *testing.T) {
+func testPaths(t *testing.T) (dockerfilePath, backendDockerfilePath, bakeFilePath string) {
 	wd, err := os.Getwd()
 	require.NoError(t, err)
 	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
 	definitionTestFolderPath := filepath.Join(projectRoot, "testdata", "definition")
 
-	dockerfilePath := filepath.Join(definitionTestFolderPath, "Dockerfile")
-	bakeFilePath := filepath.Join(definitionTestFolderPath, "docker-bake.hcl")
+	dockerfilePath = filepath.Join(definitionTestFolderPath, "Dockerfile")
+	backendDockerfilePath = filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")
+	bakeFilePath = filepath.Join(definitionTestFolderPath, "docker-bake.hcl")
+	return dockerfilePath, backendDockerfilePath, bakeFilePath
+}
 
+func TestDefinition(t *testing.T) {
+	dockerfilePath, backendDockerfilePath, bakeFilePath := testPaths(t)
+	testDefinition(t, dockerfilePath, backendDockerfilePath, bakeFilePath)
+}
+
+func testDefinition(t *testing.T, dockerfilePath, backendDockerfilePath, bakeFilePath string) {
 	dockerfilePath = filepath.ToSlash(dockerfilePath)
 	bakeFilePath = filepath.ToSlash(bakeFilePath)
 
 	dockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(dockerfilePath, "/"))
 	bakeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(bakeFilePath, "/"))
+	backendDockerfileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(backendDockerfilePath), "/"))
 
 	testCases := []struct {
 		name         string
@@ -1191,7 +1202,7 @@ func TestDefinition(t *testing.T) {
 			endCharacter: -1,
 			locations: []protocol.Location{
 				{
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					URI: backendDockerfileURI,
 					Range: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 14},
@@ -1204,7 +1215,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 3, Character: 4},
 						End:   protocol.Position{Line: 3, Character: 14},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					TargetURI: backendDockerfileURI,
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 0, Character: 0},
 						End:   protocol.Position{Line: 0, Character: 14},
@@ -1429,7 +1440,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					URI: backendDockerfileURI,
 				},
 			},
 			links: []protocol.LocationLink{
@@ -1438,7 +1449,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 2, Character: 22},
 						End:   protocol.Position{Line: 2, Character: 27},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					TargetURI: backendDockerfileURI,
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
@@ -1495,7 +1506,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
 					},
-					URI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					URI: backendDockerfileURI,
 				},
 			},
 			links: []protocol.LocationLink{
@@ -1504,7 +1515,7 @@ func TestDefinition(t *testing.T) {
 						Start: protocol.Position{Line: 3, Character: 12},
 						End:   protocol.Position{Line: 3, Character: 17},
 					},
-					TargetURI: fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(definitionTestFolderPath, "backend", "Dockerfile")), "/")),
+					TargetURI: backendDockerfileURI,
 					TargetRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
@@ -1527,9 +1538,9 @@ func TestDefinition(t *testing.T) {
 		},
 		{
 			name:         "no-cache-filter attribute should not work in a variable block",
-			content:      "variable \"var\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\" }",
+			content:      "variable \"var\" {\ndockerfile = \"Dockerfile\"\nno-cache-filter = \"stage\" }",
 			line:         2,
-			character:    13,
+			character:    23,
 			endCharacter: -1,
 			locations:    nil,
 			links:        nil,
@@ -1581,6 +1592,279 @@ func TestDefinition(t *testing.T) {
 			} else {
 				for i := tc.character; i <= uint32(tc.endCharacter); i++ {
 					links, err := Definition(context.Background(), true, manager, u, doc, protocol.Position{Line: tc.line, Character: i})
+					require.NoError(t, err, "endCharacter failed at %v", i)
+					require.Equal(t, tc.links, links, "endCharacter failed at %v", i)
+				}
+			}
+		})
+	}
+}
+
+func TestDefinition_WSL(t *testing.T) {
+	dockerfilePath, backendDockerfilePath, _ := testPaths(t)
+	testDefinition_WSL(t, dockerfilePath, backendDockerfilePath)
+}
+
+func testDefinition_WSL(t *testing.T, dockerfilePath, backendDockerfilePath string) {
+	dockerfileURIString := "file://wsl%24/docker-desktop/tmp/Dockerfile"
+	backendDockerfileURIString := "file://wsl%24/docker-desktop/tmp/backend/Dockerfile"
+	bakeFileURIString := "file://wsl%24/docker-desktop/tmp/docker-bake.hcl"
+
+	testCases := []struct {
+		name         string
+		content      string
+		line         uint32
+		character    uint32
+		endCharacter int
+		locations    any
+		links        any
+	}{
+		{
+			name:         "reference valid stage (target block, target attribute)",
+			content:      "target \"default\" { target = \"stage\" }",
+			line:         0,
+			character:    32,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					URI: dockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 29},
+						End:   protocol.Position{Line: 0, Character: 34},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:         "hyphenated stage is highlighted completely (target block, target attribute)",
+			content:      "target \"default\" { target = \"hyphenated-stage\" }",
+			line:         0,
+			character:    33,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 0},
+						End:   protocol.Position{Line: 3, Character: 32},
+					},
+					URI: dockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 29},
+						End:   protocol.Position{Line: 0, Character: 45},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 0},
+						End:   protocol.Position{Line: 3, Character: 32},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 0},
+						End:   protocol.Position{Line: 3, Character: 32},
+					},
+				},
+			},
+		},
+		{
+			name:         "reference valid stage (target block, no-cache-filter attribute)",
+			content:      "target \"default\" { no-cache-filter = [\"stage\"] }",
+			line:         0,
+			character:    42,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					URI: dockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 39},
+						End:   protocol.Position{Line: 0, Character: 44},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:         "reference valid stage (target block, no-cache-filter attribute) in a different context folder",
+			content:      "target \"default\" {\n  context = \"backend\"\n  no-cache-filter = [\"stage\"]\n}",
+			line:         2,
+			character:    25,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					URI: backendDockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 22},
+						End:   protocol.Position{Line: 2, Character: 27},
+					},
+					TargetURI: backendDockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:         "reference valid stage with target attribute on the right position",
+			content:      "target \"default\" {\ndockerfile = \"Dockerfile\"\ntarget = \"stage\"\n}",
+			line:         2,
+			character:    13,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					URI: dockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 10},
+						End:   protocol.Position{Line: 2, Character: 15},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:         "reference valid stage with target attribute on the right position in a different context folder",
+			content:      "target \"default\" {\n  context = \"backend\"\n  dockerfile = \"Dockerfile\"\n  target = \"stage\"\n}",
+			line:         3,
+			character:    13,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					URI: backendDockerfileURIString,
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 12},
+						End:   protocol.Position{Line: 3, Character: 17},
+					},
+					TargetURI: backendDockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+		},
+	}
+
+	f, err := os.Open(dockerfilePath)
+	require.NoError(t, err)
+	dockerfileBytes, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	f, err = os.Open(backendDockerfilePath)
+	require.NoError(t, err)
+	backendDockerfileBytes, err := io.ReadAll(f)
+	require.NoError(t, err)
+
+	dockerfileURI := uri.URI(dockerfileURIString)
+	backendDockerfileURI := uri.URI(backendDockerfileURIString)
+	bakeFileURI := uri.URI(bakeFileURIString)
+
+	for _, tc := range testCases {
+		manager := document.NewDocumentManager()
+		changed, err := manager.Write(context.Background(), dockerfileURI, protocol.DockerfileLanguage, 1, dockerfileBytes)
+		require.True(t, changed)
+		require.NoError(t, err)
+		changed, err = manager.Write(context.Background(), backendDockerfileURI, protocol.DockerfileLanguage, 1, backendDockerfileBytes)
+		require.True(t, changed)
+		require.NoError(t, err)
+		doc := document.NewBakeHCLDocument(bakeFileURI, 1, []byte(tc.content))
+
+		t.Run(fmt.Sprintf("%v (Location)", tc.name), func(t *testing.T) {
+			if tc.endCharacter == -1 {
+				locations, err := Definition(context.Background(), false, manager, bakeFileURI, doc, protocol.Position{Line: tc.line, Character: tc.character})
+				require.NoError(t, err)
+				require.Equal(t, tc.locations, locations)
+			} else {
+				for i := tc.character; i <= uint32(tc.endCharacter); i++ {
+					locations, err := Definition(context.Background(), false, manager, bakeFileURI, doc, protocol.Position{Line: tc.line, Character: i})
+					require.NoError(t, err)
+					require.Equal(t, tc.locations, locations)
+				}
+			}
+		})
+
+		t.Run(fmt.Sprintf("%v (LocationLink)", tc.name), func(t *testing.T) {
+			if tc.endCharacter == -1 {
+				links, err := Definition(context.Background(), true, manager, bakeFileURI, doc, protocol.Position{Line: tc.line, Character: tc.character})
+				require.NoError(t, err)
+				require.Equal(t, tc.links, links)
+			} else {
+				for i := tc.character; i <= uint32(tc.endCharacter); i++ {
+					links, err := Definition(context.Background(), true, manager, bakeFileURI, doc, protocol.Position{Line: tc.line, Character: i})
 					require.NoError(t, err, "endCharacter failed at %v", i)
 					require.Equal(t, tc.links, links, "endCharacter failed at %v", i)
 				}

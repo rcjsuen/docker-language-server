@@ -15,6 +15,8 @@ All notable changes to the Docker Language Server will be documented in this fil
 - Bake
   - textDocument/codeLens
     - refactor the URI handling code so it will accept a WSL URI with a dollar sign ([#388](https://github.com/docker/docker-language-server/issues/388))
+  - textDocument/definition
+    - handle WSL URIs with a dollar sign properly to fix file looks up on those hosts ([#390](https://github.com/docker/docker-language-server/issues/390))
   - textDocument/documentLink
     - convert links properly if a WSL URI with a dollar sign is used ([#378](https://github.com/docker/docker-language-server/issues/378))
   - textDocument/inlineCompletion

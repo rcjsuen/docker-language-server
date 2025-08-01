@@ -114,7 +114,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if literalValueExpr, ok := expression.(*hclsyntax.LiteralValueExpr); ok && sourceBlock != nil && sourceBlock.Type == "target" {
 		if attributeName == "no-cache-filter" || attributeName == "target" {
-			dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
+			dockerfileURI, dockerfilePath, err := doc.DockerfileDocumentPathForTarget(sourceBlock)
 			if dockerfilePath == "" || err != nil {
 				return nil
 			}
@@ -122,7 +122,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 			value, _ := literalValueExpr.Value(&hcl.EvalContext{})
 			target := value.AsString()
 
-			bytes, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
+			bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfileURI, dockerfilePath)
 			lines := strings.Split(string(bytes), "\n")
 			for _, child := range nodes {
 				if strings.EqualFold(child.Value, "FROM") {
@@ -154,7 +154,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 									Character: uint32(uint32(literalValueExpr.Range().End.Column) - 1),
 								},
 							},
-							protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
+							protocol.URI(dockerfileURI),
 						)
 					}
 				}
