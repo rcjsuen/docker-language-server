@@ -29,7 +29,7 @@ RUN --mount=type=bind,target=.,rw <<EOT
   cp -rf /out/* .
   diff=$(git status --porcelain -- go.mod go.sum)
   if [ -n "$diff" ]; then
-    echo >&2 'ERROR: Vendor result differs. Please vendor your package with "make tidy"'
+    echo >&2 'ERROR: Vendor result differs. Please vendor your package with "make vendor"'
     echo "$diff"
     exit 1
   fi
