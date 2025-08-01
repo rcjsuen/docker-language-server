@@ -18,7 +18,14 @@ func TestCodeLens(t *testing.T) {
 	testsFolder := filepath.Join(os.TempDir(), "codeLensTests")
 	bakeFilePath := filepath.Join(testsFolder, "docker-bake.hcl")
 	uriString := fmt.Sprintf("file:///%v", filepath.ToSlash(bakeFilePath))
+	testCodeLens(t, testsFolder, uriString)
+}
 
+func TestCodeLens_WSL(t *testing.T) {
+	testCodeLens(t, "\\\\wsl$\\docker-desktop\\tmp", "file://wsl%24/docker-desktop/tmp/docker-bake.hcl")
+}
+
+func testCodeLens(t *testing.T, testsFolder, uriString string) {
 	testCases := []struct {
 		name     string
 		content  string
