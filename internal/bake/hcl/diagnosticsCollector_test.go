@@ -234,12 +234,12 @@ target "lint2" {
 		{
 			name: "context has a variable and the referenced ARG is valid",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "./backend"
 }
 
 target "build" {
-  context = "${GITHUB_WORKSPACE}"
+  context = "${VAR}"
   dockerfile = "Dockerfile"
   args = {
     BACKEND_VAR = "newValue"
@@ -250,12 +250,12 @@ target "build" {
 		{
 			name: "context has a variable and the referenced ARG is invalid",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "./backend"
 }
 
 target "build" {
-  context = "${GITHUB_WORKSPACE}"
+  context = "${VAR}"
   dockerfile = "Dockerfile"
   args = {
     NON_EXISTENT_VAR = "newValue"
@@ -276,12 +276,12 @@ target "build" {
 		{
 			name: "context has a variable and the target is inherited",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "."
 }
 
 target "common-base" {
-  context = "${GITHUB_WORKSPACE}/folder/subfolder"
+  context = "${VAR}/folder/subfolder"
   dockerfile = "Dockerfile"
 }
 
@@ -296,12 +296,12 @@ target "build" {
 		{
 			name: "parent target cannot be resolved but local target is resolvable",
 			content: `
-variable "GITHUB_WORKSPACE" {
+variable "VAR" {
   default = "."
 }
 
 target "common-base" {
-  dockerfile = "${GITHUB_WORKSPACE}/folder/subfolder/Dockerfile"
+  dockerfile = "${VAR}/folder/subfolder/Dockerfile"
 }
 
 target "build" {

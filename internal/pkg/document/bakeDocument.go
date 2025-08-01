@@ -319,11 +319,7 @@ func (d *bakeHCLDocument) DockerfileDocumentPathForTarget(block *hclsyntax.Block
 		if target.DockerfileInline != nil {
 			return "", "", errors.New("dockerfile-inline defined")
 		}
-		contextFolder := *target.Context
-		if !filepath.IsAbs(contextFolder) {
-			contextFolder = filepath.Join(path.Folder, contextFolder)
-		}
-		uri, file := types.Concatenate(contextFolder, *target.Dockerfile, path.WSLDollarSignHost)
+		uri, file := types.Concatenate(filepath.Join(path.Folder, *target.Context), *target.Dockerfile, path.WSLDollarSignHost)
 		return uri, file, nil
 	}
 	return "", "", fmt.Errorf("no target block named %v", block.Labels[0])
