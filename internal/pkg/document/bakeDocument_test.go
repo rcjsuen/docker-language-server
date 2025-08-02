@@ -116,7 +116,7 @@ target t2 { }`,
 	}
 }
 
-func TestDockerfileDocumentPathForTarget(t *testing.T) {
+func TestDockerfileForTarget(t *testing.T) {
 	root := os.TempDir()
 	tmp := filepath.Join(root, "tmp")
 	tmp2 := filepath.Join(tmp, "tmp2")
@@ -217,7 +217,7 @@ func TestDockerfileDocumentPathForTarget(t *testing.T) {
 			doc := NewBakeHCLDocument(uri.URI(documentURI), 1, []byte(tc.content))
 			body, ok := doc.File().Body.(*hclsyntax.Body)
 			require.True(t, ok)
-			uri, path, err := doc.DockerfileDocumentPathForTarget(body.Blocks[0])
+			uri, path, err := doc.DockerfileForTarget(body.Blocks[0])
 			require.Equal(t, tc.err, err)
 			require.Equal(t, tc.uri, uri)
 			require.Equal(t, tc.path, path)

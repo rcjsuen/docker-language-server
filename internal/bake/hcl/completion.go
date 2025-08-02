@@ -68,7 +68,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 				}
 			}
 
-			dockerfileURI, dockerfilePath, err := bakeDocument.DockerfileDocumentPathForTarget(b)
+			dockerfileURI, dockerfilePath, err := bakeDocument.DockerfileForTarget(b)
 			if dockerfilePath == "" || err != nil {
 				break
 			}

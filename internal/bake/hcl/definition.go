@@ -112,7 +112,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 
 	if literalValueExpr, ok := expression.(*hclsyntax.LiteralValueExpr); ok && sourceBlock != nil && sourceBlock.Type == "target" {
 		if attributeName == "no-cache-filter" || attributeName == "target" {
-			dockerfileURI, dockerfilePath, err := doc.DockerfileDocumentPathForTarget(sourceBlock)
+			dockerfileURI, dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
 			if dockerfilePath == "" || err != nil {
 				return nil
 			}
@@ -174,7 +174,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 		for _, item := range objectConsExpression.Items {
 			if isInsideRange(item.KeyExpr.Range(), position) && sourceBlock != nil {
 				if attributeName == "args" && sourceBlock.Type == "target" {
-					dockerfileURI, dockerfilePath, err := doc.DockerfileDocumentPathForTarget(sourceBlock)
+					dockerfileURI, dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
 					if dockerfilePath == "" || err != nil {
 						return nil
 					}

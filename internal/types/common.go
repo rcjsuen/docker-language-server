@@ -78,18 +78,6 @@ func StripLeadingSlash(folder string) string {
 	return folder
 }
 
-func LocalDockerfile(u *url.URL) (string, error) {
-	return AbsolutePath(u, "Dockerfile")
-}
-
-func AbsolutePath(documentURL *url.URL, path string) (string, error) {
-	documentPath := documentURL.Path
-	if runtime.GOOS == "windows" {
-		documentPath = documentURL.Path[1:]
-	}
-	return filepath.Abs(filepath.Join(filepath.Dir(documentPath), path))
-}
-
 func AbsoluteFolder(documentURL *url.URL) (string, error) {
 	documentPath := documentURL.Path
 	if runtime.GOOS == "windows" {
