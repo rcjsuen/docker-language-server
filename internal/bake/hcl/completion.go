@@ -68,12 +68,12 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 				}
 			}
 
-			dockerfilePath, err := bakeDocument.DockerfileForTarget(b)
+			dockerfileURI, dockerfilePath, err := bakeDocument.DockerfileDocumentPathForTarget(b)
 			if dockerfilePath == "" || err != nil {
-				continue
+				break
 			}
 
-			_, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
+			_, nodes := document.OpenDockerfile(ctx, manager, dockerfileURI, dockerfilePath)
 			if nodes != nil {
 				if attribute, ok := attributes["target"]; ok && isInsideRange(attribute.Expr.Range(), params.Position) {
 					if _, ok := attributes["dockerfile-inline"]; ok {
@@ -119,8 +119,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 						}
 					}
 				}
-				break
 			}
+			break
 		}
 	}
 

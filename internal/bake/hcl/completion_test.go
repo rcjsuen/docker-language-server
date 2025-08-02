@@ -400,6 +400,111 @@ func TestCompletion(t *testing.T) {
 	}
 }
 
+func TestCompletion_WSL(t *testing.T) {
+	testCases := []struct {
+		name              string
+		content           string
+		dockerfileContent string
+		line              uint32
+		character         uint32
+		items             []protocol.CompletionItem
+	}{
+		{
+			name:              "target attribute in target block",
+			content:           "target \"api\" {\n  target = \"\"\n}",
+			line:              1,
+			dockerfileContent: "",
+			character:         12,
+			items: []protocol.CompletionItem{
+				{
+					Label: "base",
+				},
+				{
+					Label: "tests",
+				},
+				{
+					Label: "release",
+				},
+			},
+		},
+		{
+			name:              "args keys in target block",
+			content:           "target \"api\" {\n  args = {\n    \"blah\" = \"\"\n  }\n}",
+			line:              2,
+			dockerfileContent: "",
+			character:         5,
+			items: []protocol.CompletionItem{
+				{
+					Label: "TARGETOS",
+				},
+				{
+					Label: "TARGETARCH",
+				},
+				{
+					Label: "argOne",
+				},
+				{
+					Label: "argTwo",
+				},
+				{
+					Label: "argOnePredefined",
+				},
+			},
+		},
+		{
+			name:      "resolve build stage targets from a Dockerfile inside a context folder",
+			content:   "target \"backend\" {\n  context = \"./backend\"\n  target=\"\"\n}",
+			line:      2,
+			character: 10,
+			items: []protocol.CompletionItem{
+				{
+					Label: "nested",
+				},
+			},
+		},
+	}
+
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	projectRoot := filepath.Dir(filepath.Dir(filepath.Dir(wd)))
+	completionTestFolderPath := path.Join(projectRoot, "testdata", "completion")
+
+	dockerfilePath := filepath.ToSlash(filepath.Join(completionTestFolderPath, "Dockerfile"))
+	backendDockerfilePath := filepath.ToSlash(filepath.Join(completionTestFolderPath, "backend", "Dockerfile"))
+
+	dockerfileBytes, err := os.ReadFile(dockerfilePath)
+	require.NoError(t, err)
+	backendDockerfileBytes, err := os.ReadFile(backendDockerfilePath)
+	require.NoError(t, err)
+
+	dockerfileURI := uri.URI("file://wsl%24/docker-desktop/tmp/Dockerfile")
+	backendDockerfileURI := uri.URI("file://wsl%24/docker-desktop/tmp/backend/Dockerfile")
+	bakeFileURI := uri.URI("file://wsl%24/docker-desktop/tmp/docker-bake.hcl")
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			changed, err := manager.Write(context.Background(), dockerfileURI, protocol.DockerfileLanguage, 1, dockerfileBytes)
+			require.NoError(t, err)
+			require.True(t, changed)
+			changed, err = manager.Write(context.Background(), backendDockerfileURI, protocol.DockerfileLanguage, 1, backendDockerfileBytes)
+			require.NoError(t, err)
+			require.True(t, changed)
+
+			doc := document.NewBakeHCLDocument(bakeFileURI, 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: string(bakeFileURI)},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.False(t, list.IsIncomplete)
+			require.Equal(t, tc.items, list.Items)
+		})
+	}
+}
+
 func TestIsInsideRange(t *testing.T) {
 	testCases := []struct {
 		name     string
