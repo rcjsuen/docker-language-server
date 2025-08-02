@@ -3,8 +3,6 @@ package hcl
 import (
 	"context"
 	"errors"
-	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
@@ -176,7 +174,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 		for _, item := range objectConsExpression.Items {
 			if isInsideRange(item.KeyExpr.Range(), position) && sourceBlock != nil {
 				if attributeName == "args" && sourceBlock.Type == "target" {
-					dockerfilePath, err := doc.DockerfileForTarget(sourceBlock)
+					dockerfileURI, dockerfilePath, err := doc.DockerfileDocumentPathForTarget(sourceBlock)
 					if dockerfilePath == "" || err != nil {
 						return nil
 					}
@@ -188,7 +186,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 						end--
 					}
 					arg := string(doc.Input()[start:end])
-					bytes, nodes := document.OpenDockerfile(ctx, manager, "", dockerfilePath)
+					bytes, nodes := document.OpenDockerfile(ctx, manager, dockerfileURI, dockerfilePath)
 					lines := strings.Split(string(bytes), "\n")
 					for _, child := range nodes {
 						if strings.EqualFold(child.Value, "ARG") {
@@ -228,7 +226,7 @@ func ResolveExpression(ctx context.Context, definitionLinkSupport bool, manager 
 											End:   protocol.Position{Line: uint32(node.EndLine) - 1, Character: uint32(endLineLength)},
 										},
 										&originSelectionRange,
-										protocol.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(dockerfilePath), "/"))),
+										dockerfileURI,
 									)
 								}
 								child = child.Next
