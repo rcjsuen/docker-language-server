@@ -20,6 +20,8 @@ All notable changes to the Docker Language Server will be documented in this fil
     - handle WSL URIs with a dollar sign properly to fix build ARG reference lookups on those hosts ([#393](https://github.com/docker/docker-language-server/issues/393))
   - textDocument/documentLink
     - convert links properly if a WSL URI with a dollar sign is used ([#378](https://github.com/docker/docker-language-server/issues/378))
+  - textDocument/inlayHint
+    - refactor the URI handling code so it will process a WSL URI with a dollar sign correctly ([#395](https://github.com/docker/docker-language-server/issues/395))
   - textDocument/inlineCompletion
     - convert links properly if a WSL URI with a dollar sign is used ([#384](https://github.com/docker/docker-language-server/issues/384))
   - textDocument/publishDiagnostics
