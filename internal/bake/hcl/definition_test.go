@@ -1045,7 +1045,7 @@ func testDefinition(t *testing.T, dockerfilePath, backendDockerfilePath, bakeFil
 			},
 		},
 		{
-			name:         "attribute object value's attribute name",
+			name:         "top-level args should not lookup anything",
 			content:      "args = { var = value }",
 			line:         0,
 			character:    11,
@@ -1054,7 +1054,7 @@ func testDefinition(t *testing.T, dockerfilePath, backendDockerfilePath, bakeFil
 			links:        nil,
 		},
 		{
-			name:         "attribute object value's attribute name",
+			name:         "top-level args variable reference should work",
 			content:      "a1 = \"\"\nargs = { var = a1 }",
 			line:         1,
 			character:    16,
@@ -1813,6 +1813,138 @@ func testDefinition_WSL(t *testing.T, dockerfilePath, backendDockerfilePath stri
 					TargetSelectionRange: protocol.Range{
 						Start: protocol.Position{Line: 1, Character: 0},
 						End:   protocol.Position{Line: 1, Character: 21},
+					},
+				},
+			},
+		},
+		{
+			name:         "args key references Dockerfile ARG variable (unquoted key, no default value set)",
+			content:      "target default {\n  args = {\n    var = \"value\"\n  }\n}",
+			line:         2,
+			character:    6,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: dockerfileURIString,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 7},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+				},
+			},
+		},
+		{
+			name:         "args key references Dockerfile ARG variable in a Dockerfile from the context attribute",
+			content:      "target default {\n  context = \"backend\"\n  args = {\n    NESTED_VAR = \"value\"\n  }\n}",
+			line:         3,
+			character:    6,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: backendDockerfileURIString,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 3, Character: 4},
+						End:   protocol.Position{Line: 3, Character: 14},
+					},
+					TargetURI: backendDockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 0, Character: 0},
+						End:   protocol.Position{Line: 0, Character: 14},
+					},
+				},
+			},
+		},
+		{
+			name:         "args key references Dockerfile ARG variable (unquoted key, default value set)",
+			content:      "target default {\n  args = {\n    defined = \"value\"\n  }\n}",
+			line:         2,
+			character:    8,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: dockerfileURIString,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 0},
+						End:   protocol.Position{Line: 2, Character: 19},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 4},
+						End:   protocol.Position{Line: 2, Character: 11},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 0},
+						End:   protocol.Position{Line: 2, Character: 19},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 0},
+						End:   protocol.Position{Line: 2, Character: 19},
+					},
+				},
+			},
+		},
+		{
+			name:         "args key references Dockerfile ARG variable (quoted key, no default value set)",
+			content:      "target default {\n  args = {\n    \"var\" = \"value\"\n  }\n}",
+			line:         2,
+			character:    7,
+			endCharacter: -1,
+			locations: []protocol.Location{
+				{
+					URI: dockerfileURIString,
+					Range: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+				},
+			},
+			links: []protocol.LocationLink{
+				{
+					OriginSelectionRange: &protocol.Range{
+						Start: protocol.Position{Line: 2, Character: 5},
+						End:   protocol.Position{Line: 2, Character: 8},
+					},
+					TargetURI: dockerfileURIString,
+					TargetRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
+					},
+					TargetSelectionRange: protocol.Range{
+						Start: protocol.Position{Line: 1, Character: 0},
+						End:   protocol.Position{Line: 1, Character: 7},
 					},
 				},
 			},
