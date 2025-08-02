@@ -51,8 +51,9 @@ var testCases = []struct {
 }
 
 func TestInlayHint(t *testing.T) {
-	bakeFileURI := uri.URI("file:///tmp/docker-bake.hcl")
-	dockerfileURI := uri.URI("file:///tmp/Dockerfile")
+	tempDir := os.TempDir()
+	dockerfileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tempDir, "Dockerfile")), "/")))
+	bakeFileURI := uri.URI(fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(tempDir, "docker-bake.hcl")), "/")))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
