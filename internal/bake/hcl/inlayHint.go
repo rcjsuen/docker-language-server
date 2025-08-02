@@ -25,9 +25,9 @@ func InlayHint(docs *document.Manager, doc document.BakeHCLDocument, rng protoco
 		if block.Type == "target" && len(block.Labels) > 0 {
 			if attribute, ok := block.Body.Attributes["args"]; ok {
 				if expr, ok := attribute.Expr.(*hclsyntax.ObjectConsExpr); ok && len(expr.Items) > 0 {
-					dockerfilePath, err := doc.DockerfileForTarget(block)
+					dockerfileURI, dockerfilePath, err := doc.DockerfileDocumentPathForTarget(block)
 					if dockerfilePath != "" && err == nil {
-						_, nodes := document.OpenDockerfile(context.Background(), docs, "", dockerfilePath)
+						_, nodes := document.OpenDockerfile(context.Background(), docs, dockerfileURI, dockerfilePath)
 						args := map[string]string{}
 						for _, child := range nodes {
 							if strings.EqualFold(child.Value, "ARG") {
