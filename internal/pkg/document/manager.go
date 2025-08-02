@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -45,9 +44,6 @@ func parseDockerfile(dockerfilePath string) ([]byte, *parser.Result, error) {
 }
 
 func OpenDockerfile(ctx context.Context, manager *Manager, documentURI, path string) ([]byte, []*parser.Node) {
-	if documentURI == "" {
-		documentURI = fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(path), "/"))
-	}
 	doc := manager.Get(ctx, uri.URI(documentURI))
 	if doc != nil {
 		if dockerfile, ok := doc.(DockerfileDocument); ok {

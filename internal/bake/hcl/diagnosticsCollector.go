@@ -128,9 +128,13 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 	for _, b := range body.Blocks {
 		if b.Type == "target" && len(b.Labels) == 1 {
 			if _, ok := dockerfileContent[b.Labels[0]]; !ok {
-				targetDockerfileURI, targetDockerfilePath, _ := bakeDoc.DockerfileDocumentPathForTarget(b)
-				_, nodes := document.OpenDockerfile(context.Background(), c.docs, targetDockerfileURI, targetDockerfilePath)
-				dockerfileContent[b.Labels[0]] = nodes
+				targetDockerfileURI, targetDockerfilePath, err := bakeDoc.DockerfileForTarget(b)
+				if targetDockerfilePath != "" && err == nil {
+					_, nodes := document.OpenDockerfile(context.Background(), c.docs, targetDockerfileURI, targetDockerfilePath)
+					dockerfileContent[b.Labels[0]] = nodes
+				} else {
+					dockerfileContent[b.Labels[0]] = nil
+				}
 			}
 		}
 	}
@@ -224,7 +228,7 @@ func (c *BakeHCLDiagnosticsCollector) CollectDiagnostics(source, workspaceFolder
 				}
 			}
 
-			_, dockerfilePath, err := bakeDoc.DockerfileDocumentPathForTarget(block)
+			_, dockerfilePath, err := bakeDoc.DockerfileForTarget(block)
 			if dockerfilePath == "" || err != nil {
 				continue
 			}

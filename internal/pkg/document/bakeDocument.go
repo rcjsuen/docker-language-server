@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/url"
 	"path/filepath"
 	"slices"
 	"sync"
@@ -24,8 +23,7 @@ type BakeHCLDocument interface {
 	Document
 	Decoder() *decoder.PathDecoder
 	File() *hcl.File
-	DockerfileForTarget(block *hclsyntax.Block) (string, error)
-	DockerfileDocumentPathForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error)
+	DockerfileForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error)
 	ParentTargets(target string) ([]string, bool)
 }
 
@@ -248,55 +246,7 @@ func resolvableDockerfile(block *hclsyntax.Block) DockerfileDefinition {
 	return state
 }
 
-func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (string, error) {
-	if d.bakePrintOutput == nil || len(block.Labels) != 1 {
-		return "", errors.New("cannot parse Bake file")
-	}
-
-	switch resolvableDockerfile(block) {
-	case Undefined:
-		targets, _ := d.ParentTargets(block.Labels[0])
-		for _, target := range targets {
-			body := d.file.Body.(*hclsyntax.Body)
-			for _, b := range body.Blocks {
-				if len(b.Labels) == 1 && b.Labels[0] == target && resolvableDockerfile(b) == Unresolvable {
-					return "", nil
-				}
-			}
-		}
-	case Unresolvable:
-		return "", nil
-	}
-
-	url, err := url.Parse(string(d.URI()))
-	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(d.URI()))
-	}
-	contextPath, err := types.AbsoluteFolder(url)
-	if err != nil {
-		return "", fmt.Errorf("LSP client sent invalid URI: %v", string(d.URI()))
-	}
-
-	if target, ok := d.bakePrintOutput.Target[block.Labels[0]]; ok {
-		if target.DockerfileInline != nil {
-			return "", nil
-		} else if target.Context != nil {
-			contextPath = *target.Context
-			contextPath, err = types.AbsolutePath(url, contextPath)
-			if err != nil {
-				return "", nil
-			}
-		}
-
-		if target.Dockerfile != nil {
-			return filepath.Join(contextPath, *target.Dockerfile), nil
-		}
-		return filepath.Join(contextPath, "Dockerfile"), nil
-	}
-	return "", nil
-}
-
-func (d *bakeHCLDocument) DockerfileDocumentPathForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error) {
+func (d *bakeHCLDocument) DockerfileForTarget(block *hclsyntax.Block) (dockerfileURI string, dockerfileAbsolutePath string, err error) {
 	if d.bakePrintOutput == nil || len(block.Labels) != 1 {
 		return "", "", errors.New("cannot parse Bake file")
 	}

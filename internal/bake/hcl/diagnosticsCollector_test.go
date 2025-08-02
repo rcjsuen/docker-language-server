@@ -148,12 +148,12 @@ func TestCollectDiagnostics(t *testing.T) {
 			},
 		},
 		{
-			name:        "args resolution when inherting a parent that points to a var",
+			name:        "args resolution when inheriting a parent that points to a var",
 			content:     "variable var { }\ntarget \"t1\" {\n  inherits = [var]\nargs = {\n    missing = \"value\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
 		},
 		{
-			name:        "args resolution when inherting a parent that points to a ${var}",
+			name:        "args resolution when inheriting a parent that points to a ${var}",
 			content:     "variable var { }\ntarget \"t1\" {\n  inherits = [\"${var}\"]\nargs = {\n    missing = \"value\"\n  }\n}",
 			diagnostics: []protocol.Diagnostic{},
 		},
