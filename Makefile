@@ -34,3 +34,6 @@ vendor:
 .PHONY: validate-vendor
 validate-vendor:
 	docker buildx bake vendor-validate
+
+.PHONY: validate-all
+validate-all: lint validate-vendor
