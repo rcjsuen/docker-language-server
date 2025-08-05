@@ -415,12 +415,12 @@ func folderStructureCompletionItems(documentPath document.DocumentPath, path []*
 }
 
 func directoryForPrefix(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) string {
-	if len(path) == 3 && path[2].Key.GetToken().Value == "volumes" {
+	if len(path) == 3 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "volumes" {
 		if strings.HasPrefix(prefix, "./") {
 			_, folder := types.Concatenate(documentPath.Folder, prefix[0:strings.LastIndex(prefix, "/")], documentPath.WSLDollarSignHost)
 			return folder
 		}
-	} else if len(path) == 4 && path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
+	} else if len(path) == 4 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
 		if volumes, ok := path[2].Value.(*ast.SequenceNode); ok {
 			for _, node := range volumes.Values {
 				if volume, ok := node.(*ast.MappingNode); ok {
