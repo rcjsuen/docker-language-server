@@ -4,6 +4,12 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- Compose
+  - textDocument/completion
+    - provide local file and folder name suggestions when modifying simple strings for service volumes ([#376](https://github.com/docker/docker-language-server/issues/376))
+
 ### Fixed
 
 - Compose
