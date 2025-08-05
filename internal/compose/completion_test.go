@@ -4658,6 +4658,29 @@ services:
 			list:      nil,
 		},
 		{
+			name: "suggests nothing when volumes not under a services node",
+			content: `
+services2:
+  test:
+    volumes:
+      - ./`,
+			line:      4,
+			character: 10,
+			list:      nil,
+		},
+		{
+			name: "suggests nothing when volumes object not under a services node",
+			content: `
+services2:
+  test:
+    volumes:
+      - type: bind
+        source: `,
+			line:      5,
+			character: 16,
+			list:      nil,
+		},
+		{
 			name: "suggest file structure with a ./ prefix",
 			content: `
 services:
