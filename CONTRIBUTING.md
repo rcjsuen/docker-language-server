@@ -54,3 +54,17 @@ Use your real name (sorry, no pseudonyms or anonymous contributions.)
 
 If you set your `user.name` and `user.email` git configs, you can sign your
 commit automatically with `git commit -s`.
+
+### Run the helper commands
+
+To validate PRs before submitting them you should run:
+
+```
+$ make validate-all
+```
+
+To generate and align vendored files with go modules run:
+
+```
+$ make vendor
+```
