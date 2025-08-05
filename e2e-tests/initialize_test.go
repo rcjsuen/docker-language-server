@@ -96,8 +96,10 @@ func createGuaranteedInitializeResult() protocol.InitializeResult {
 	syncKind := protocol.TextDocumentSyncKindFull
 	return protocol.InitializeResult{
 		Capabilities: protocol.ServerCapabilities{
-			CodeActionProvider:        protocol.CodeActionOptions{},
-			CompletionProvider:        &protocol.CompletionOptions{},
+			CodeActionProvider: protocol.CodeActionOptions{},
+			CompletionProvider: &protocol.CompletionOptions{
+				TriggerCharacters: []string{"/"},
+			},
 			DefinitionProvider:        protocol.DefinitionOptions{},
 			DocumentHighlightProvider: &protocol.DocumentHighlightOptions{},
 			DocumentLinkProvider:      &protocol.DocumentLinkOptions{},

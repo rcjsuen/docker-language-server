@@ -128,9 +128,11 @@ func (s *Server) Initialize(ctx *glsp.Context, params *protocol.InitializeParams
 	syncKind := protocol.TextDocumentSyncKindFull
 	result := protocol.InitializeResult{
 		Capabilities: protocol.ServerCapabilities{
-			CodeActionProvider:        protocol.CodeActionOptions{},
-			CodeLensProvider:          codeLensProvider,
-			CompletionProvider:        &protocol.CompletionOptions{},
+			CodeActionProvider: protocol.CodeActionOptions{},
+			CodeLensProvider:   codeLensProvider,
+			CompletionProvider: &protocol.CompletionOptions{
+				TriggerCharacters: []string{"/"},
+			},
 			DefinitionProvider:        protocol.DefinitionOptions{},
 			DocumentHighlightProvider: protocol.DocumentHighlightOptions{},
 			DocumentLinkProvider:      &protocol.DocumentLinkOptions{},

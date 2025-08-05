@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/docker/docker-language-server/internal/pkg/document"
 	"github.com/docker/docker-language-server/internal/tliron/glsp/protocol"
@@ -4560,6 +4561,299 @@ services:
 	}
 
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.list, list)
+		})
+	}
+}
+
+func TestCompletion_VolumeFolderListing(t *testing.T) {
+	dir, err := os.MkdirTemp(os.TempDir(), fmt.Sprintf("%v-%v", t.Name(), time.Now().UnixMilli()))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, os.RemoveAll(dir))
+	})
+
+	fileStructure := []struct {
+		name  string
+		isDir bool
+	}{
+		{name: "a.txt", isDir: false},
+		{name: "b", isDir: true},
+		{name: "folder", isDir: true},
+		{name: "folder/subfile.txt", isDir: false},
+	}
+	for _, entry := range fileStructure {
+		if entry.isDir {
+			require.NoError(t, os.Mkdir(filepath.Join(dir, entry.name), 0755))
+		} else {
+			_, err := os.Create(filepath.Join(dir, entry.name))
+			require.NoError(t, err)
+		}
+	}
+
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		list      *protocol.CompletionList
+	}{
+		{
+			name: "./ prefix ignored on other attributes",
+			content: `
+services:
+  test:
+    depends_on:
+      - ./`,
+			line:      4,
+			character: 10,
+			list:      nil,
+		},
+		{
+			name: "suggests nothing for source attribute with no type specified",
+			content: `
+services:
+  test:
+    volumes:
+      - source: `,
+			line:      4,
+			character: 16,
+			list:      nil,
+		},
+		{
+			name: "suggests nothing for source attribute when type is not bind",
+			content: `
+services:
+  test:
+    volumes:
+      - type: volume
+        source: `,
+			line:      5,
+			character: 16,
+			list:      nil,
+		},
+		{
+			name: "suggests nothing for multiple volumes on a non-bind one",
+			content: `
+services:
+  test:
+    volumes:
+      - type: bind
+      - source: ./`,
+			line:      5,
+			character: 18,
+			list:      nil,
+		},
+		{
+			name: "suggest file structure with a ./ prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - ./`,
+			line:      4,
+			character: 10,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggest file structure with a quoted \"./\" prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - "./"`,
+			line:      4,
+			character: 11,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggest file structure with a quoted './' prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - './'`,
+			line:      4,
+			character: 11,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggest file structure with a ./a prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - ./a`,
+			line:      4,
+			character: 11,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggest file structure with a ./folder/ prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - ./folder/`,
+			line:      4,
+			character: 17,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "subfile.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+				},
+			},
+		},
+		{
+			name: "suggests file structure for source attribute when type is bind with no content",
+			content: `
+services:
+  test:
+    volumes:
+      - type: bind
+        source: `,
+			line:      5,
+			character: 16,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggests file structure for source attribute when type is bind with a ./ prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - type: bind
+        source: ./`,
+			line:      5,
+			character: 18,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+				},
+			},
+		},
+		{
+			name: "suggests inner file structure for source attribute when type is bind with a ./folder/ prefix",
+			content: `
+services:
+  test:
+    volumes:
+      - type: bind
+        source: ./folder/`,
+			line:      5,
+			character: 25,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "subfile.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+				},
+			},
+		},
+	}
+
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(dir, "compose.yaml")), "/"))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {

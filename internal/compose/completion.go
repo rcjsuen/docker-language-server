@@ -3,6 +3,7 @@ package compose
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -213,7 +214,8 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	whitespaceLine := currentLineTrimmed == ""
 	line := int(lspLine) + 1
 	path := constructCompletionNodePath(file, line)
-	wordPrefix := protocol.UInteger(len(prefix(lines[lspLine], character-1)))
+	prefixContent := prefix(lines[lspLine], character-1)
+	prefixLength := protocol.UInteger(len(prefixContent))
 	if len(path) == 0 {
 		if topLevelNodeOffset != -1 && params.Position.Character != uint32(topLevelNodeOffset) {
 			return nil, nil
@@ -222,7 +224,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	} else if len(path) == 1 {
 		if path[0].Key.GetToken().Value == "include" {
 			schema := schemaProperties()["include"].Items.(*jsonschema.Schema)
-			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, wordPrefix, file, manager, documentPath, path)
+			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, prefixLength, file, manager, documentPath, path)
 			return processItems(items, whitespaceLine), nil
 		}
 		return nil, nil
@@ -231,28 +233,39 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 	}
 
 	path, nodeProps, arrayAttributes := nodeProperties(path, line, character)
-	dependencies := dependencyCompletionItems(file, documentPath, path, params, wordPrefix)
+	dependencies := dependencyCompletionItems(file, documentPath, path, params, prefixLength)
 	if len(dependencies) > 0 {
 		return &protocol.CompletionList{Items: dependencies}, nil
 	}
-	items, stop := buildTargetCompletionItems(params, manager, path, documentPath, wordPrefix)
+	items, stop := buildTargetCompletionItems(params, manager, path, documentPath, prefixLength)
 	if stop {
 		return &protocol.CompletionList{Items: items}, nil
 	}
+	folderStructureItems := folderStructureCompletionItems(documentPath, path, removeQuote(prefixContent))
+	if len(folderStructureItems) > 0 {
+		return processItems(folderStructureItems, whitespaceLine && arrayAttributes), nil
+	}
 
-	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, wordPrefix)
+	items = namedDependencyCompletionItems(file, path, "configs", "configs", params, prefixLength)
 	if len(items) == 0 {
-		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, wordPrefix)
+		items = namedDependencyCompletionItems(file, path, "secrets", "secrets", params, prefixLength)
 	}
 	if len(items) == 0 {
-		items = volumeDependencyCompletionItems(file, path, params, wordPrefix)
+		items = volumeDependencyCompletionItems(file, path, params, prefixLength)
 	}
-	schemaItems := createSchemaItems(params, nodeProps, lines, lspLine, whitespaceLine && arrayAttributes, wordPrefix, file, manager, documentPath, path)
+	schemaItems := createSchemaItems(params, nodeProps, lines, lspLine, whitespaceLine && arrayAttributes, prefixLength, file, manager, documentPath, path)
 	items = append(items, schemaItems...)
 	if len(items) == 0 {
 		return nil, nil
 	}
 	return processItems(items, whitespaceLine && arrayAttributes), nil
+}
+
+func removeQuote(prefix string) string {
+	if len(prefix) > 0 && (prefix[0] == 34 || prefix[0] == 39) {
+		return prefix[1:]
+	}
+	return prefix
 }
 
 func createEnumItems(schema *jsonschema.Schema, params *protocol.CompletionParams, wordPrefixLength protocol.UInteger) []protocol.CompletionItem {
@@ -380,6 +393,54 @@ func modifyTextEdit(file *ast.File, manager *document.Manager, documentPath docu
 		}
 	}
 	return edit
+}
+
+func folderStructureCompletionItems(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) []protocol.CompletionItem {
+	folder := directoryForPrefix(documentPath, path, prefix)
+	if folder != "" {
+		items := []protocol.CompletionItem{}
+		entries, _ := os.ReadDir(folder)
+		for _, entry := range entries {
+			item := protocol.CompletionItem{Label: entry.Name()}
+			if entry.IsDir() {
+				item.Kind = types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder)
+			} else {
+				item.Kind = types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile)
+			}
+			items = append(items, item)
+		}
+		return items
+	}
+	return nil
+}
+
+func directoryForPrefix(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) string {
+	if len(path) == 3 && path[2].Key.GetToken().Value == "volumes" {
+		if strings.HasPrefix(prefix, "./") {
+			_, folder := types.Concatenate(documentPath.Folder, prefix[0:strings.LastIndex(prefix, "/")], documentPath.WSLDollarSignHost)
+			return folder
+		}
+	} else if len(path) == 4 && path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
+		if volumes, ok := path[2].Value.(*ast.SequenceNode); ok {
+			for _, node := range volumes.Values {
+				if volume, ok := node.(*ast.MappingNode); ok {
+					if slices.Contains(volume.Values, path[3]) {
+						for _, property := range volume.Values {
+							if property.Key.GetToken().Value == "type" && property.Value.GetToken().Value == "bind" {
+								if strings.HasPrefix(prefix, "./") {
+									_, folder := types.Concatenate(documentPath.Folder, prefix[0:strings.LastIndex(prefix, "/")], documentPath.WSLDollarSignHost)
+									return folder
+								}
+								return documentPath.Folder
+							}
+						}
+						return ""
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
 
 func findDependencies(file *ast.File, dependencyType string) []string {
