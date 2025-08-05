@@ -4598,8 +4598,9 @@ func TestCompletion_VolumeFolderListing(t *testing.T) {
 		if entry.isDir {
 			require.NoError(t, os.Mkdir(filepath.Join(dir, entry.name), 0755))
 		} else {
-			_, err := os.Create(filepath.Join(dir, entry.name))
+			f, err := os.Create(filepath.Join(dir, entry.name))
 			require.NoError(t, err)
+			require.NoError(t, f.Close())
 		}
 	}
 
