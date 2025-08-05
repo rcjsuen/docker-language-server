@@ -8,7 +8,9 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 - Compose
   - textDocument/completion
-    - provide local file and folder name suggestions when modifying simple strings for service volumes ([#376](https://github.com/docker/docker-language-server/issues/376))
+    - provide local file and folder name suggestions when modifying simple strings
+      - service volumes ([#376](https://github.com/docker/docker-language-server/issues/376))
+      - env_file and label_file attributes of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
 
 ### Fixed
 
