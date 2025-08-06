@@ -396,7 +396,7 @@ func modifyTextEdit(file *ast.File, manager *document.Manager, documentPath docu
 }
 
 func folderStructureCompletionItems(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) []protocol.CompletionItem {
-	folder := directoryForPrefix(documentPath, path, prefix)
+	folder := directoryForNode(documentPath, path, prefix)
 	if folder != "" {
 		items := []protocol.CompletionItem{}
 		entries, _ := os.ReadDir(folder)
@@ -414,51 +414,87 @@ func folderStructureCompletionItems(documentPath document.DocumentPath, path []*
 	return nil
 }
 
-func directoryForPrefix(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) string {
-	if len(path) == 3 && path[0].Key.GetToken().Value == "services" {
-		if path[2].Key.GetToken().Value == "env_file" {
-			idx := strings.LastIndex(prefix, "/")
-			if idx == -1 {
-				return documentPath.Folder
+func directoryForNode(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) string {
+	if len(path) == 3 {
+		switch path[0].Key.GetToken().Value {
+		case "services":
+			// services:
+			//   serviceA:
+			//     env_file: ...
+			//     label_file: ...
+			//     volumes:
+			//       - ...
+			switch path[2].Key.GetToken().Value {
+			case "env_file":
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+			case "label_file":
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+			case "volumes":
+				return directoryForPrefix(documentPath, prefix, "", true)
 			}
-			_, folder := types.Concatenate(documentPath.Folder, prefix[0:idx], documentPath.WSLDollarSignHost)
-			return folder
-		}
-		if path[2].Key.GetToken().Value == "label_file" {
-			idx := strings.LastIndex(prefix, "/")
-			if idx == -1 {
-				return documentPath.Folder
+		case "configs":
+			// configs:
+			//   configA:
+			//     file: ...
+			if path[2].Key.GetToken().Value == "file" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
 			}
-			_, folder := types.Concatenate(documentPath.Folder, prefix[0:idx], documentPath.WSLDollarSignHost)
-			return folder
-		}
-		if path[2].Key.GetToken().Value == "volumes" {
-			if strings.HasPrefix(prefix, "./") {
-				_, folder := types.Concatenate(documentPath.Folder, prefix[0:strings.LastIndex(prefix, "/")], documentPath.WSLDollarSignHost)
-				return folder
+		case "secrets":
+			// secrets:
+			//   secretA:
+			//     file: ...
+			if path[2].Key.GetToken().Value == "file" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
 			}
 		}
-	} else if len(path) == 4 && path[0].Key.GetToken().Value == "services" && path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
-		if volumes, ok := path[2].Value.(*ast.SequenceNode); ok {
-			for _, node := range volumes.Values {
-				if volume, ok := node.(*ast.MappingNode); ok {
-					if slices.Contains(volume.Values, path[3]) {
-						for _, property := range volume.Values {
-							if property.Key.GetToken().Value == "type" && property.Value.GetToken().Value == "bind" {
-								if strings.HasPrefix(prefix, "./") {
-									_, folder := types.Concatenate(documentPath.Folder, prefix[0:strings.LastIndex(prefix, "/")], documentPath.WSLDollarSignHost)
-									return folder
+	} else if len(path) == 4 && path[0].Key.GetToken().Value == "services" {
+		// services:
+		//   serviceA:
+		//     build:
+		//       dockerfile: ...
+		//     credential_spec:
+		//       file: ...
+		//     extends:
+		//       file: ...
+		//     volumes:
+		//       - type: bind
+		//         source: ...
+		if path[2].Key.GetToken().Value == "build" && path[3].Key.GetToken().Value == "dockerfile" {
+			return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+		}
+		if (path[2].Key.GetToken().Value == "extends" || path[2].Key.GetToken().Value == "credential_spec") && path[3].Key.GetToken().Value == "file" {
+			return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+		}
+		if path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
+			if volumes, ok := path[2].Value.(*ast.SequenceNode); ok {
+				for _, node := range volumes.Values {
+					if volume, ok := node.(*ast.MappingNode); ok {
+						if slices.Contains(volume.Values, path[3]) {
+							for _, property := range volume.Values {
+								if property.Key.GetToken().Value == "type" && property.Value.GetToken().Value == "bind" {
+									return directoryForPrefix(documentPath, prefix, documentPath.Folder, true)
 								}
-								return documentPath.Folder
 							}
+							return ""
 						}
-						return ""
 					}
 				}
 			}
 		}
 	}
 	return ""
+}
+
+func directoryForPrefix(documentPath document.DocumentPath, prefix, defaultValue string, prefixRequired bool) string {
+	idx := strings.LastIndex(prefix, "/")
+	if idx == -1 {
+		if prefixRequired {
+			return defaultValue
+		}
+		return documentPath.Folder
+	}
+	_, folder := types.Concatenate(documentPath.Folder, prefix[0:idx], documentPath.WSLDollarSignHost)
+	return folder
 }
 
 func findDependencies(file *ast.File, dependencyType string) []string {
