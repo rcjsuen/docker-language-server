@@ -2835,7 +2835,12 @@ services:
 		},
 	}
 
-	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "compose.yaml")), "/"))
+	dir, err := os.MkdirTemp(os.TempDir(), fmt.Sprintf("%v-%v", t.Name(), time.Now().UnixMilli()))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, os.RemoveAll(dir))
+	})
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(dir, "compose.yaml")), "/"))
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -4967,31 +4972,6 @@ services:
 }
 
 func TestCompletion_FileStructure(t *testing.T) {
-	dir, err := os.MkdirTemp(os.TempDir(), fmt.Sprintf("%v-%v", t.Name(), time.Now().UnixMilli()))
-	require.NoError(t, err)
-	t.Cleanup(func() {
-		require.NoError(t, os.RemoveAll(dir))
-	})
-
-	fileStructure := []struct {
-		name  string
-		isDir bool
-	}{
-		{name: "a.txt", isDir: false},
-		{name: "b", isDir: true},
-		{name: "folder", isDir: true},
-		{name: "folder/subfile.txt", isDir: false},
-	}
-	for _, entry := range fileStructure {
-		if entry.isDir {
-			require.NoError(t, os.Mkdir(filepath.Join(dir, entry.name), 0755))
-		} else {
-			f, err := os.Create(filepath.Join(dir, entry.name))
-			require.NoError(t, err)
-			require.NoError(t, f.Close())
-		}
-	}
-
 	testCases := []struct {
 		name      string
 		content   string
@@ -5116,6 +5096,44 @@ secrets:
 			line:      3,
 			character: 10,
 		},
+		{
+			name: "include - env_file attribute",
+			content: `
+include:
+  - env_file: `,
+			hideFiles: false,
+			line:      2,
+			character: 14,
+		},
+		{
+			name: "include - env_file attribute's string array items",
+			content: `
+include:
+  - env_file:
+    - `,
+			hideFiles: false,
+			line:      3,
+			character: 6,
+		},
+		{
+			name: "include - path attribute",
+			content: `
+include:
+  - path: `,
+			hideFiles: false,
+			line:      2,
+			character: 10,
+		},
+		{
+			name: "include - path attribute's string array items",
+			content: `
+include:
+  - path:
+    - `,
+			hideFiles: false,
+			line:      3,
+			character: 6,
+		},
 	}
 
 	setups := []struct {
@@ -5207,6 +5225,7 @@ secrets:
 		},
 	}
 
+	dir := createFileStructure(t)
 	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(dir, "compose.yaml")), "/"))
 
 	for _, tc := range testCases {
@@ -5231,6 +5250,83 @@ secrets:
 	}
 }
 
+func TestCompletion_FileStructureMerged(t *testing.T) {
+	testCases := []struct {
+		name      string
+		content   string
+		line      uint32
+		character uint32
+		list      *protocol.CompletionList
+	}{
+		{
+			name: "include array item suggests attributes and file structure",
+			content: `
+include:
+  - `,
+			line:      2,
+			character: 4,
+			list: &protocol.CompletionList{
+				Items: []protocol.CompletionItem{
+					{
+						Label: "a.txt",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile),
+					},
+					{
+						Label: "b",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label:            "env_file",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("env_file:", 2, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label: "folder",
+						Kind:  types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder),
+					},
+					{
+						Label:            "path",
+						Detail:           types.CreateStringPointer("array or string"),
+						Documentation:    "Either a single string or a list of strings.",
+						TextEdit:         textEdit("path:", 2, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+					{
+						Label:            "project_directory",
+						Detail:           types.CreateStringPointer("string"),
+						Documentation:    "Path to resolve relative paths set in the Compose file",
+						TextEdit:         textEdit("project_directory: ", 2, 4, 0),
+						InsertTextMode:   types.CreateInsertTextModePointer(protocol.InsertTextModeAsIs),
+						InsertTextFormat: types.CreateInsertTextFormatPointer(protocol.InsertTextFormatSnippet),
+					},
+				},
+			},
+		},
+	}
+
+	dir := createFileStructure(t)
+	composeFileURI := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(dir, "compose.yaml")), "/"))
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			manager := document.NewDocumentManager()
+			doc := document.NewComposeDocument(manager, uri.URI(composeFileURI), 1, []byte(tc.content))
+			list, err := Completion(context.Background(), &protocol.CompletionParams{
+				TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+					TextDocument: protocol.TextDocumentIdentifier{URI: composeFileURI},
+					Position:     protocol.Position{Line: tc.line, Character: tc.character},
+				},
+			}, manager, doc)
+			require.NoError(t, err)
+			require.Equal(t, tc.list, list)
+		})
+	}
+}
+
 func textEdit(newText string, line, character, prefixLength protocol.UInteger) protocol.TextEdit {
 	return protocol.TextEdit{
 		NewText: newText,
@@ -5245,4 +5341,32 @@ func textEdit(newText string, line, character, prefixLength protocol.UInteger) p
 			},
 		},
 	}
+}
+
+func createFileStructure(t *testing.T) string {
+	dir, err := os.MkdirTemp(os.TempDir(), fmt.Sprintf("%v-%v", t.Name(), time.Now().UnixMilli()))
+	require.NoError(t, err)
+	t.Cleanup(func() {
+		require.NoError(t, os.RemoveAll(dir))
+	})
+
+	fileStructure := []struct {
+		name  string
+		isDir bool
+	}{
+		{name: "a.txt", isDir: false},
+		{name: "b", isDir: true},
+		{name: "folder", isDir: true},
+		{name: "folder/subfile.txt", isDir: false},
+	}
+	for _, entry := range fileStructure {
+		if entry.isDir {
+			require.NoError(t, os.Mkdir(filepath.Join(dir, entry.name), 0755))
+		} else {
+			f, err := os.Create(filepath.Join(dir, entry.name))
+			require.NoError(t, err)
+			require.NoError(t, f.Close())
+		}
+	}
+	return dir
 }

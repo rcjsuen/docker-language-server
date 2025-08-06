@@ -225,6 +225,7 @@ func Completion(ctx context.Context, params *protocol.CompletionParams, manager 
 		if path[0].Key.GetToken().Value == "include" {
 			schema := schemaProperties()["include"].Items.(*jsonschema.Schema)
 			items := createSchemaItems(params, schema.Ref.OneOf[1].Properties, lines, lspLine, whitespaceLine, prefixLength, file, manager, documentPath, path)
+			items = append(items, folderStructureCompletionItems(documentPath, path, removeQuote(prefixContent))...)
 			return processItems(items, whitespaceLine), nil
 		}
 		return nil, nil
@@ -363,10 +364,11 @@ func processItems(items []protocol.CompletionItem, arrayPrefix bool) *protocol.C
 	})
 	if arrayPrefix {
 		for i := range items {
-			edit := items[i].TextEdit.(protocol.TextEdit)
-			items[i].TextEdit = protocol.TextEdit{
-				NewText: fmt.Sprintf("%v%v", "- ", edit.NewText),
-				Range:   edit.Range,
+			if edit, ok := items[i].TextEdit.(protocol.TextEdit); ok {
+				items[i].TextEdit = protocol.TextEdit{
+					NewText: fmt.Sprintf("%v%v", "- ", edit.NewText),
+					Range:   edit.Range,
+				}
 			}
 		}
 	}
@@ -417,7 +419,25 @@ func folderStructureCompletionItems(documentPath document.DocumentPath, path []*
 }
 
 func directoryForNode(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) (folder string, hideFiles bool) {
-	if len(path) == 3 {
+	if len(path) == 1 && path[0].Key.GetToken().Value == "include" {
+		return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+	} else if len(path) == 2 {
+		// include:
+		//   - env_file: ...
+		//   - env_file:
+		//       - ...
+		//   - path: ...
+		//   - path:
+		//       - ...
+		if path[0].Key.GetToken().Value == "include" {
+			if path[1].Key.GetToken().Value == "env_file" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+			}
+			if path[1].Key.GetToken().Value == "path" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+			}
+		}
+	} else if len(path) == 3 {
 		switch path[0].Key.GetToken().Value {
 		case "services":
 			// services:
