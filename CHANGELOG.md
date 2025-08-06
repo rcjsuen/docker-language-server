@@ -19,6 +19,9 @@ All notable changes to the Docker Language Server will be documented in this fil
       - `label_file` of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
       - `file` attribute of a config ([#403](https://github.com/docker/docker-language-server/issues/403))
       - `file` attribute of a secret ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - string items of include objects ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `env_file` attribute of include objects ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `path` attribute of include objects ([#403](https://github.com/docker/docker-language-server/issues/403))
 
 ### Fixed
 
