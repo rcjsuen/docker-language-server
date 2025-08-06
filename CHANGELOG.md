@@ -10,7 +10,13 @@ All notable changes to the Docker Language Server will be documented in this fil
   - textDocument/completion
     - provide local file and folder name suggestions when modifying simple strings
       - service volumes ([#376](https://github.com/docker/docker-language-server/issues/376))
-      - env_file and label_file attributes of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `env_file` of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `label_file` of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `dockerfile` attribute of a `build` object of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `file` attribute of a `credential_spec` object of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `file` attribute of an `extends` object of a service ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `file` attribute of a config ([#403](https://github.com/docker/docker-language-server/issues/403))
+      - `file` attribute of a secret ([#403](https://github.com/docker/docker-language-server/issues/403))
 
 ### Fixed
 
