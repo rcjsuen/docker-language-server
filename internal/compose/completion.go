@@ -396,25 +396,27 @@ func modifyTextEdit(file *ast.File, manager *document.Manager, documentPath docu
 }
 
 func folderStructureCompletionItems(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) []protocol.CompletionItem {
-	folder := directoryForNode(documentPath, path, prefix)
+	folder, hideFiles := directoryForNode(documentPath, path, prefix)
 	if folder != "" {
 		items := []protocol.CompletionItem{}
 		entries, _ := os.ReadDir(folder)
 		for _, entry := range entries {
-			item := protocol.CompletionItem{Label: entry.Name()}
 			if entry.IsDir() {
+				item := protocol.CompletionItem{Label: entry.Name()}
 				item.Kind = types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFolder)
-			} else {
+				items = append(items, item)
+			} else if !hideFiles {
+				item := protocol.CompletionItem{Label: entry.Name()}
 				item.Kind = types.CreateCompletionItemKindPointer(protocol.CompletionItemKindFile)
+				items = append(items, item)
 			}
-			items = append(items, item)
 		}
 		return items
 	}
 	return nil
 }
 
-func directoryForNode(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) string {
+func directoryForNode(documentPath document.DocumentPath, path []*ast.MappingValueNode, prefix string) (folder string, hideFiles bool) {
 	if len(path) == 3 {
 		switch path[0].Key.GetToken().Value {
 		case "services":
@@ -426,63 +428,72 @@ func directoryForNode(documentPath document.DocumentPath, path []*ast.MappingVal
 			//       - ...
 			switch path[2].Key.GetToken().Value {
 			case "env_file":
-				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
 			case "label_file":
-				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
 			case "volumes":
-				return directoryForPrefix(documentPath, prefix, "", true)
+				return directoryForPrefix(documentPath, prefix, "", true), false
 			}
 		case "configs":
 			// configs:
 			//   configA:
 			//     file: ...
 			if path[2].Key.GetToken().Value == "file" {
-				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
 			}
 		case "secrets":
 			// secrets:
 			//   secretA:
 			//     file: ...
 			if path[2].Key.GetToken().Value == "file" {
-				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
 			}
 		}
 	} else if len(path) == 4 && path[0].Key.GetToken().Value == "services" {
 		// services:
 		//   serviceA:
 		//     build:
+		//       context: ... (folders only)
 		//       dockerfile: ...
 		//     credential_spec:
 		//       file: ...
+		//     env_file:
+		//       - path: ...
 		//     extends:
 		//       file: ...
 		//     volumes:
 		//       - type: bind
 		//         source: ...
-		if path[2].Key.GetToken().Value == "build" && path[3].Key.GetToken().Value == "dockerfile" {
-			return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
-		}
-		if (path[2].Key.GetToken().Value == "extends" || path[2].Key.GetToken().Value == "credential_spec") && path[3].Key.GetToken().Value == "file" {
-			return directoryForPrefix(documentPath, prefix, documentPath.Folder, false)
-		}
-		if path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
+		if path[2].Key.GetToken().Value == "build" {
+			if path[3].Key.GetToken().Value == "context" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), true
+			} else if path[3].Key.GetToken().Value == "dockerfile" {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+			}
+		} else if (path[2].Key.GetToken().Value == "extends" || path[2].Key.GetToken().Value == "credential_spec") && path[3].Key.GetToken().Value == "file" {
+			return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+		} else if path[2].Key.GetToken().Value == "env_file" && path[3].Key.GetToken().Value == "path" {
+			if _, ok := path[2].Value.(*ast.SequenceNode); ok {
+				return directoryForPrefix(documentPath, prefix, documentPath.Folder, false), false
+			}
+		} else if path[2].Key.GetToken().Value == "volumes" && path[3].Key.GetToken().Value == "source" {
 			if volumes, ok := path[2].Value.(*ast.SequenceNode); ok {
 				for _, node := range volumes.Values {
 					if volume, ok := node.(*ast.MappingNode); ok {
 						if slices.Contains(volume.Values, path[3]) {
 							for _, property := range volume.Values {
 								if property.Key.GetToken().Value == "type" && property.Value.GetToken().Value == "bind" {
-									return directoryForPrefix(documentPath, prefix, documentPath.Folder, true)
+									return directoryForPrefix(documentPath, prefix, documentPath.Folder, true), false
 								}
 							}
-							return ""
+							return "", false
 						}
 					}
 				}
 			}
 		}
 	}
-	return ""
+	return "", false
 }
 
 func directoryForPrefix(documentPath document.DocumentPath, prefix, defaultValue string, prefixRequired bool) string {
