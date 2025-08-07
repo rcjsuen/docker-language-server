@@ -42,7 +42,10 @@ func Hover(ctx context.Context, params *protocol.HoverParams, document document.
 	if err != nil {
 		var positionalError *decoder.PositionalError
 		if !errors.As(err, &positionalError) {
-			return nil, fmt.Errorf("hover analysis encountered an error: %w", err)
+			var posOutOfRangeError *decoder.PosOutOfRangeError
+			if !errors.As(err, &posOutOfRangeError) {
+				return nil, fmt.Errorf("hover analysis encountered an error: %w", err)
+			}
 		}
 		return nil, nil
 	}
