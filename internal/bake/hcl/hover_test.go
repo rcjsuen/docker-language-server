@@ -224,6 +224,13 @@ func TestHover(t *testing.T) {
 			character: 11,
 			result:    nil,
 		},
+		{
+			name:      "hover inside a comment returns nothing",
+			content:   "/*target",
+			line:      0,
+			character: 4,
+			result:    nil,
+		},
 	}
 
 	temporaryBakeFile := fmt.Sprintf("file:///%v", strings.TrimPrefix(filepath.ToSlash(filepath.Join(os.TempDir(), "docker-bake.hcl")), "/"))

@@ -2,6 +2,14 @@
 
 All notable changes to the Docker Language Server will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- Bake
+  - textDocument/hover
+    - fix error when hovering inside a comment ([#410](https://github.com/docker/docker-language-server/issues/410))
+
 ## [0.15.0] - 2025-08-06
 
 ### Added
