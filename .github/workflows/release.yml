@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version type"
+        required: true
+        default: "minor"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "${{ github.actor }}"
+
+      - name: Update changelog to the next ${{ github.event.inputs.version_type }} version
+        run: |
+          go run ./releaser/main.go update-changelog ${{ github.event.inputs.version_type }}
+
+      - name: Extract new version from changelog
+        id: version
+        run: |
+          # Extract the version from the first ## header in CHANGELOG.md
+          NEW_VERSION=$(grep -m 1 "^## \[" CHANGELOG.md | sed 's/^## \[\([^]]*\)\].*/\1/')
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Stage and commit changes
+        run: |
+          git add CHANGELOG.md
+          git commit -s -m "Prepare for the v${{ steps.version.outputs.new_version }} release"
+
+      - name: Push commit
+        run: |
+          git push origin ${{ github.ref_name }}
+
+      - name: Create and push tag
+        run: |
+          git tag v${{ steps.version.outputs.new_version }}
+          git push origin v${{ steps.version.outputs.new_version }}
+
+      - name: Generate release notes
+        run: |
+          go run ./releaser/main.go generate-release-notes > release-notes.tmp
+
+      - name: Print release notes
+        run: |
+          cat release-notes.tmp
+
+      - name: Get current date
+        id: date
+        run: echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@c062e08bd532815e2082a85e87e3ef29c3e6d191 # v2.0.8 https://github.com/softprops/action-gh-release/commit/c062e08bd532815e2082a85e87e3ef29c3e6d191
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: v${{ steps.version.outputs.new_version }} - ${{ steps.date.outputs.current_date }}
+          body_path: release-notes.tmp
+          draft: false
+          prerelease: false
