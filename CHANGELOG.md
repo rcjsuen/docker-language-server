@@ -4,6 +4,11 @@ All notable changes to the Docker Language Server will be documented in this fil
 
 ## [Unreleased]
 
+### Added
+
+- Compose
+  - updated Compose schema to the latest version
+
 ### Fixed
 
 - Bake
